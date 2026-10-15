@@ -94,12 +94,12 @@ You don't have to take our word for it:
 - **The code is open.** Every line is in this repository under the [MIT License](LICENSE).
 - **Releases are built in public.** GitHub Actions builds each DMG from the tagged source; the
   [build logs](https://github.com/rodanr/MacMD/actions/workflows/release.yml) are public.
-- **You can verify your download.** Each release has a SHA-256 checksum and a GitHub build attestation that
-  proves the DMG came from this repository's release workflow, unmodified:
+- **You can verify your download.** Each release has a SHA-256 checksum. Releases after 0.1.0 also carry a
+  GitHub build attestation that proves the DMG came from this repository's release workflow, unmodified:
 
   ```sh
   shasum -a 256 -c MacMD-<version>.dmg.sha256          # in the folder with both files
-  gh attestation verify MacMD-<version>.dmg --repo rodanr/MacMD
+  gh attestation verify MacMD-<version>.dmg --repo rodanr/MacMD   # releases after 0.1.0
   ```
 
 - **It stays private.** No accounts, analytics or telemetry. MacMD only goes online when you ask it to
