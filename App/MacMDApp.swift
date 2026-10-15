@@ -49,9 +49,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     @objc func showSettings(_ sender: Any?) {
         if settingsWindow == nil {
             let hosting = NSHostingController(rootView: SettingsView())
+            // The form scrolls, so the window may be shorter than its content: it must fit small screens.
+            hosting.sizingOptions = [.minSize]
             let window = NSWindow(contentViewController: hosting)
             window.title = "Settings"
-            window.styleMask = [.titled, .closable]
+            window.styleMask = [.titled, .closable, .resizable]
+            // The form's full height, measured unconstrained.
+            let ideal = NSHostingView(rootView: SettingsView().fixedSize(horizontal: false, vertical: true)).fittingSize
+            let available = (NSScreen.main?.visibleFrame.height ?? ideal.height) - 60
+            window.setContentSize(NSSize(width: ideal.width, height: min(ideal.height, available)))
+            window.contentMaxSize = NSSize(width: ideal.width, height: ideal.height)
             window.isReleasedWhenClosed = false
             window.center()
             settingsWindow = window

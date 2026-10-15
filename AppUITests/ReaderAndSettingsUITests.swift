@@ -169,6 +169,7 @@ final class ReaderAndSettingsUITests: XCTestCase {
                     || window.descendants(matching: .any)["zoom"].title == "125%"
             }, "the status bar follows")
         settings.buttons["Reset"].firstMatch.click()
+        reveal(settings.descendants(matching: .any)["vimModeToggle"].firstMatch, in: settings)
         settings.descendants(matching: .any)["vimModeToggle"].firstMatch.click()
         XCTAssertTrue(window.staticTexts["vimStatus"].waitForExistence(timeout: 5), "Vim mode turns on in open windows")
         settings.descendants(matching: .any)["vimModeToggle"].firstMatch.click()
@@ -176,6 +177,21 @@ final class ReaderAndSettingsUITests: XCTestCase {
         attach(settings, "settings-after-changes")
         option("Paper").click()
         settings.radioButtons["System"].firstMatch.click()
+        app.terminate()
+    }
+
+    @MainActor
+    func testSettingsFitTheScreen() throws {
+        let app = launch([fixture])
+        XCTAssertTrue(app.windows["kitchen-sink.md"].textViews["editor"].waitForExistence(timeout: 10))
+        app.typeKey(",", modifierFlags: .command)
+        let settings = app.windows["Settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 5))
+        let screen = try XCTUnwrap(NSScreen.main).visibleFrame
+        XCTAssertLessThanOrEqual(settings.frame.height, screen.height, "Settings fits on small screens too")
+        let toggle = settings.descendants(matching: .any)["vimModeToggle"].firstMatch
+        reveal(toggle, in: settings)
+        XCTAssertTrue(toggle.isHittable, "the last setting can be reached")
         app.terminate()
     }
 

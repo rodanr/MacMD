@@ -40,14 +40,10 @@ final class RobustnessUITests: XCTestCase {
         app.typeKey("e", modifierFlags: .command)
         app.typeKey(.F8, modifierFlags: [])
         app.typeKey(.F8, modifierFlags: [])
-        app.menuBars.menuBarItems["View"].click()
-        app.menuBars.menuItems["Theme"].hover()
-        app.menuBars.menuItems["Mono"].click()
+        choose("Mono", in: "Theme", of: "View", app)
         sleep(2)
         XCTAssertFalse(isEdited(window), "nothing here changes the text, so the document stays unedited")
-        app.menuBars.menuBarItems["View"].click()
-        app.menuBars.menuItems["Theme"].hover()
-        app.menuBars.menuItems["Paper"].click()
+        choose("Paper", in: "Theme", of: "View", app)
         app.terminate()
     }
 

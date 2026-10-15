@@ -12,6 +12,7 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
   stepper), or change it with ⌥⌘+ / ⌥⌘−. Zoom still scales the whole window on top of it.
 
 ### Fixed
+- The Settings window fits small screens: it scrolls instead of running off the bottom.
 - Vim mode now matches Vim: a file's final line break no longer counts as an extra line, and `dw`, `cw`, `dG`,
   `2dd`, `J`, `{` / `}`, `v$`, `aw`, `a"`, `i(` and paste follow Vim's rules at line ends, empty lines and the
   end of the file. Checked against real Vim on thousands of commands.

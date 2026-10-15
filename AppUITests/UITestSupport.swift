@@ -22,6 +22,27 @@ extension XCTestCase {
         return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
     }
 
+    /// Scrolls `window`'s scroll view down until `element` can be clicked (small screens shorten Settings).
+    func reveal(_ element: XCUIElement, in window: XCUIElement) {
+        for _ in 0..<5 where !element.isHittable {
+            window.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -400)
+        }
+    }
+
+    /// Picks `item` from `submenu` of the `menu` menu bar item, waiting for the submenu to open
+    /// (hovering opens it after a delay that varies between machines).
+    func choose(_ item: String, in submenu: String, of menu: String, _ app: XCUIApplication) {
+        app.menuBars.menuBarItems[menu].click()
+        let parent = app.menuBars.menuItems[submenu]
+        let target = app.menuBars.menuItems[item]
+        parent.hover()
+        if !waitUntil(timeout: 3, { target.isHittable }) {
+            parent.click()
+            XCTAssertTrue(waitUntil { target.isHittable }, "\(menu) → \(submenu) → \(item) opens")
+        }
+        target.click()
+    }
+
     func export(_ app: XCUIApplication, _ item: String, to url: URL) {
         app.menuBars.menuBarItems["File"].click()
         app.menuBars.menuItems[item].click()
