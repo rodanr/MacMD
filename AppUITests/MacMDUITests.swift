@@ -69,12 +69,12 @@ final class MacMDUITests: XCTestCase {
         XCTAssertTrue(zoom.waitForExistence(timeout: 3))
         app.typeKey("=", modifierFlags: .command)
         app.typeKey("=", modifierFlags: .command)
-        XCTAssertTrue(waitForTitle("125%", of: zoom), "status bar shows the new zoom")
+        XCTAssertTrue(waitForText("125%", of: zoom), "status bar shows the new zoom")
         window.descendants(matching: .any)["sidebarToggle"].firstMatch.click()  // the outline zooms too
         XCTAssertTrue(window.buttons["Lists"].waitForExistence(timeout: 3), "the toolbar button shows the outline")
         attach(window, "zoom-125")
         app.typeKey("0", modifierFlags: .command)
-        XCTAssertTrue(waitForTitle("100%", of: zoom), "⌘0 returns to actual size")
+        XCTAssertTrue(waitForText("100%", of: zoom), "⌘0 returns to actual size")
         app.terminate()
     }
 
@@ -90,7 +90,7 @@ final class MacMDUITests: XCTestCase {
         attach(window, "width-narrow-edit")
 
         // Change it at runtime, the way a user does: View Options → Line Width → Full.
-        window.toolbars.descendants(matching: .any)["View Options"].firstMatch.click()
+        window.toolbars.descendants(matching: .any)["viewOptions"].firstMatch.click()
         app.menuItems["Line Width"].hover()
         app.menuItems["Full"].click()
         attach(window, "width-full-edit")
@@ -280,9 +280,10 @@ final class MacMDUITests: XCTestCase {
         return app
     }
 
-    private func waitForTitle(_ title: String, of element: XCUIElement) -> Bool {
-        let expectation = XCTNSPredicateExpectation(
-            predicate: NSPredicate(format: "title == %@", title), object: element)
+    private func waitForText(_ title: String, of element: XCUIElement) -> Bool {
+        // Xcode versions differ in whether a SwiftUI menu's text is exposed as its title or its label.
+        let predicate = NSPredicate(format: "title == %@ OR label == %@", title, title)
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
         return XCTWaiter.wait(for: [expectation], timeout: 3) == .completed
     }
 

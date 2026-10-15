@@ -95,7 +95,8 @@ struct DocumentView: View {
             } label: {
                 Label("View Options", systemImage: "textformat.size")
             }
-            .help("Text size, focus and typewriter modes, theme and line width")
+            .help("Zoom, focus and typewriter modes, theme and line width")
+            .accessibilityIdentifier("viewOptions")
         }
     }
 }
