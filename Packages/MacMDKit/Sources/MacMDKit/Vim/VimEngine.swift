@@ -215,7 +215,7 @@ public struct VimEngine: Sendable {
             return isVisual
                 ? visualCommand(simple, count: count, document) : simpleCommand(simple, command, cursor, document)
         case .wholeLines:
-            let last = document.lineStart(forLine: document.lineIndex(cursor) + count - 1)
+            guard let last = lastLine(from: cursor, count: count, document) else { return [.beep] }
             let range = NSRange(document.lineStart(cursor)..<document.lineEnd(last))
             return apply(command.op ?? .yank, to: range, linewise: true, cursor: cursor, document)
         case .textObject(let object, let around):
@@ -229,7 +229,10 @@ public struct VimEngine: Sendable {
             visualCursor = document.previous(NSMaxRange(range))
             return [.select(visualRange(document))]
         case .motion(let motion):
-            if let op = command.op { return operate(op, motion: motion, count: count, cursor: cursor, document) }
+            if let op = command.op {
+                // Pass the count as typed: `dG` (no count) and `d1G` go to different lines.
+                return operate(op, motion: motion, count: command.count, cursor: cursor, document)
+            }
             switch motion {
             case .down: return [.moveDisplayLines(count)]
             case .up: return [.moveDisplayLines(-count)]
@@ -237,7 +240,13 @@ public struct VimEngine: Sendable {
             }
             guard let target = target(of: motion, count: command.count, from: cursor, document) else { return [.beep] }
             if isVisual {
-                visualCursor = min(target.position, max(document.length - 1, 0))
+                if motion == .lineEnd {
+                    // In visual mode `$` takes the line break too, so `v$d` joins the lines.
+                    let end = document.contentEnd(target.position)
+                    visualCursor = end < document.length ? end : max(document.length - 1, 0)
+                } else {
+                    visualCursor = min(target.position, max(document.length - 1, 0))
+                }
                 return [.select(visualRange(document))]
             }
             return [.select(NSRange(location: document.clampNormal(target.position), length: 0))]
@@ -278,7 +287,8 @@ public struct VimEngine: Sendable {
         case .firstNonBlank: return Target(position: document.firstNonBlank(cursor))
         case .lineEnd:
             let line = document.lineStart(forLine: document.lineIndex(cursor) + times - 1)
-            return Target(position: document.previous(document.contentEnd(line)), inclusive: true)
+            let end = document.contentEnd(line)
+            return Target(position: end > line ? document.previous(end) : line, inclusive: true)
         case .documentStart, .documentEnd:
             let line = count.map { $0 - 1 } ?? (motion == .documentStart ? 0 : document.lineCount - 1)
             let start = document.lineStart(forLine: min(max(line, 0), document.lineCount - 1))
@@ -289,8 +299,10 @@ public struct VimEngine: Sendable {
         case .repeatFind(let reversed):
             guard let find = lastFind else { return nil }
             let forward = reversed ? !find.forward : find.forward
-            // Repeating `t` skips the character it stopped in front of.
-            let start = find.till ? (forward ? document.next(cursor) : document.previous(cursor)) : cursor
+            // Repeating `t` skips the character it stopped in front of, without leaving the line.
+            var start = cursor
+            if find.till, forward, document.next(cursor) < document.contentEnd(cursor) { start = document.next(cursor) }
+            if find.till, !forward, cursor > document.lineStart(cursor) { start = document.previous(cursor) }
             return findTarget(find.target, forward: forward, till: find.till, times: times, from: start, document)
         case .paragraphForward: return Target(position: document.paragraphForward(from: cursor, count: times))
         case .paragraphBackward: return Target(position: document.paragraphBackward(from: cursor, count: times))
@@ -326,21 +338,32 @@ public struct VimEngine: Sendable {
     // MARK: Operators
 
     private mutating func operate(
-        _ op: VimCommand.Operator, motion: VimCommand.Motion, count: Int, cursor: Int, _ document: VimText
+        _ op: VimCommand.Operator, motion: VimCommand.Motion, count typedCount: Int?, cursor: Int, _ document: VimText
     ) -> [VimAction] {
-        var motion = motion
-        // `cw` changes to the end of the word, like `ce`.
+        let count = typedCount ?? 1
+        // `cw` on a word changes to the end of that word (not into the next one), then `count - 1` more words.
         if op == .change, case .wordForward(let big) = motion, document.characterClass(at: cursor, big: big) != 0 {
-            motion = .wordEnd(big: big)
+            var end = cursor
+            let kind = document.characterClass(at: cursor, big: big)
+            while document.next(end) < document.length,
+                document.characterClass(at: document.next(end), big: big) == kind
+            {
+                end = document.next(end)
+            }
+            for _ in 1..<max(count, 1) { end = document.wordEnd(from: end, big: big) }
+            return operateOnCharacters(op, from: cursor, to: Target(position: end, inclusive: true), document)
+        }
+        // `w` with an operator follows Vim's own rules (see `wordForwardForOperator`).
+        if case .wordForward(let big) = motion {
+            guard let end = document.wordForwardForOperator(from: cursor, count: count, big: big) else {
+                guard op == .change else { return [.beep] }
+                mode = .insert  // `cw` with nowhere to go still starts typing
+                return [.select(NSRange(location: cursor, length: 0))]
+            }
+            return operateOnCharacters(op, from: cursor, to: Target(position: end), document)
         }
         // Operators work on logical lines; `j`/`k` alone move by display lines instead.
-        guard var target = target(of: motion, count: count, from: cursor, document) else { return [.beep] }
-        if case .wordForward = motion, document.lineStart(target.position) != document.lineStart(cursor),
-            !document.isEmptyLine(cursor)
-        {
-            // `dw` on a line's last word stops at the end of the line.
-            target = Target(position: document.contentEnd(cursor))
-        }
+        guard var target = target(of: motion, count: typedCount, from: cursor, document) else { return [.beep] }
         if case .right = motion { target.position = min(target.position, document.contentEnd(cursor)) }
         if target.linewise {
             let lower = min(cursor, target.position)
@@ -349,12 +372,54 @@ public struct VimEngine: Sendable {
                 op, to: NSRange(document.lineStart(lower)..<document.lineEnd(upper)), linewise: true,
                 cursor: cursor, document)
         }
+        return operateOnCharacters(op, from: cursor, to: target, document)
+    }
+
+    private mutating func operateOnCharacters(
+        _ op: VimCommand.Operator, from cursor: Int, to target: Target, _ document: VimText
+    ) -> [VimAction] {
         let lower = min(cursor, target.position)
         let upper = max(cursor, target.position)
-        let end =
+        var end =
             target.inclusive && upper < document.length && !document.isNewline(upper) ? document.next(upper) : upper
-        guard end > lower else { return [.beep] }
+        // The final line break belongs to the last line; only linewise commands remove it.
+        if end == document.length, document.endsWithLineBreak, end > lower { end -= 1 }
+        // Vim's rule for exclusive motions that end in column 1 (`db` from a line start, `d}`): the line break
+        // before the end stays, and if the motion started at or before the first non-blank it covers whole lines.
+        if !target.inclusive, end > lower, document.isLineStart(end), document.lineStart(lower) != end {
+            if lower <= document.firstNonBlank(lower) {
+                return apply(
+                    op, to: NSRange(document.lineStart(lower)..<end), linewise: true, cursor: cursor, document)
+            }
+            end -= 1
+        }
+        guard end > lower else {
+            // `c` over nothing (`cw` on an empty line) still starts typing there.
+            guard op == .change else { return [.beep] }
+            mode = .insert
+            return [.select(NSRange(location: lower, length: 0))]
+        }
+        // Vim's exception for `d`: across lines, with only blanks before the start and nothing but blanks after
+        // the end, the delete takes whole lines instead of leaving an empty one behind.
+        let lastIncluded = target.inclusive ? upper : max(end - 1, lower)
+        if op == .delete, document.lineStart(lower) != document.lineStart(lastIncluded),
+            lower <= document.firstNonBlank(lower),
+            document.substring(min(end, document.contentEnd(lastIncluded))..<document.contentEnd(lastIncluded))
+                .allSatisfy({ $0 == " " || $0 == "\t" })
+        {
+            return apply(
+                op, to: NSRange(document.lineStart(lower)..<document.lineEnd(lastIncluded)), linewise: true,
+                cursor: cursor, document)
+        }
         return apply(op, to: NSRange(lower..<end), linewise: false, cursor: cursor, document)
+    }
+
+    /// The start of the last line covered by a counted line command (`3dd`), or nil when the count needs
+    /// lines below the last one.
+    private func lastLine(from cursor: Int, count: Int, _ document: VimText) -> Int? {
+        let line = document.lineIndex(cursor)
+        guard count <= 1 || line < document.lineCount - 1 else { return nil }
+        return document.lineStart(forLine: min(line + count - 1, document.lineCount - 1))
     }
 
     private mutating func apply(
@@ -378,15 +443,21 @@ public struct VimEngine: Sendable {
                 cursorLine = document.lineStart(range.location)
             }
             let result = VimText(document.text.replacingCharacters(in: range, with: "") as NSString)
-            let position =
-                linewise ? result.firstNonBlank(min(cursorLine, result.length)) : min(range.location, result.length)
+            var position = min(range.location, result.length)
+            if linewise {
+                let line =
+                    min(cursorLine, result.length) == result.length && result.endsWithLineBreak
+                    ? result.lastLineStart : min(cursorLine, result.length)
+                position = result.firstNonBlank(line)
+            }
             return [.replace(range, with: ""), .select(NSRange(location: result.clampNormal(position), length: 0))]
         case .change:
             mode = .insert
             if linewise {
                 let indent = document.indentation(range.location)
+                // Keep the last line break so a line remains to type on.
                 var content = range
-                while content.length > 0, document.isNewline(NSMaxRange(content) - 1) { content.length -= 1 }
+                if content.length > 0, document.isNewline(NSMaxRange(content) - 1) { content.length -= 1 }
                 return [
                     .replace(content, with: indent),
                     .select(NSRange(location: content.location + (indent as NSString).length, length: 0)),
@@ -408,7 +479,7 @@ public struct VimEngine: Sendable {
         case .quote(let quote): return document.quoteObject(quote, at: cursor, around: around).map { ($0, false) }
         case .bracket(let open, let close):
             return document.bracketObject(open: open, close: close, at: cursor, around: around).map { ($0, false) }
-        case .paragraph: return (document.paragraphObject(at: cursor, around: around), true)
+        case .paragraph: return document.paragraphObject(at: cursor, around: around).map { ($0, true) }
         }
     }
 
@@ -445,7 +516,7 @@ public struct VimEngine: Sendable {
             guard cursor < contentEnd || op == .change else { return [.beep] }
             return apply(op, to: NSRange(cursor..<contentEnd), linewise: false, cursor: cursor, document)
         case .yankLine, .substituteLine:
-            let last = document.lineStart(forLine: document.lineIndex(cursor) + count - 1)
+            guard let last = lastLine(from: cursor, count: count, document) else { return [.beep] }
             let range = NSRange(lineStart..<document.lineEnd(last))
             return apply(simple == .yankLine ? .yank : .change, to: range, linewise: true, cursor: cursor, document)
         case .substituteChar:
@@ -523,6 +594,13 @@ public struct VimEngine: Sendable {
         let text = String(repeating: register.text, count: count)
         let length = (text as NSString).length
         if register.linewise {
+            if after, document.length == 0 {
+                // An empty document still has one (empty) line; the pasted lines go below it.
+                return [
+                    .replace(NSRange(location: 0, length: 0), with: "\n" + text),
+                    .select(NSRange(location: 1 + leadingBlanks(text), length: 0)),
+                ]
+            }
             if after {
                 let lineEnd = document.lineEnd(cursor)
                 if lineEnd == document.contentEnd(cursor) {
@@ -547,9 +625,12 @@ public struct VimEngine: Sendable {
         let position = after && cursor < document.contentEnd(cursor) ? document.next(cursor) : cursor
         let result = VimText(
             document.text.replacingCharacters(in: NSRange(location: position, length: 0), with: text) as NSString)
+        // Like Vim: after pasting several lines of text the cursor is at their start, otherwise on the last
+        // pasted character.
+        let caret = text.contains("\n") ? position : result.previous(position + length)
         return [
             .replace(NSRange(location: position, length: 0), with: text),
-            .select(NSRange(location: result.previous(position + length), length: 0)),
+            .select(NSRange(location: caret, length: 0)),
         ]
     }
 
@@ -558,13 +639,15 @@ public struct VimEngine: Sendable {
     }
 
     private mutating func join(from cursor: Int, lines: Int, _ document: VimText) -> [VimAction] {
+        let line = document.lineIndex(cursor)
+        let available = document.lineCount - 1 - line
+        guard available > 0 else { return [.beep] }
         let start = document.lineStart(cursor)
         var joined = document.substring(start..<document.contentEnd(cursor))
         var end = document.contentEnd(cursor)
         var joinPoint = (joined as NSString).length
-        for _ in 1..<lines {
-            let nextLine = document.lineEnd(end)
-            guard nextLine > end, nextLine <= document.length, end < document.length else { break }
+        for offset in 1...min(max(lines - 1, 1), available) {
+            let nextLine = document.lineStart(forLine: line + offset)
             let content = document.substring(document.firstNonBlank(nextLine)..<document.contentEnd(nextLine))
             joinPoint = (joined as NSString).length
             if content.isEmpty {
@@ -575,12 +658,12 @@ public struct VimEngine: Sendable {
                 joined += " " + content
             }
             end = document.contentEnd(nextLine)
-            if nextLine >= document.length { break }
         }
-        guard end > document.contentEnd(cursor) else { return [.beep] }
+        // The cursor goes where the lines were joined, staying on a character when nothing was appended.
+        let result = VimText(document.text.replacingCharacters(in: NSRange(start..<end), with: joined) as NSString)
         return [
             .replace(NSRange(start..<end), with: joined),
-            .select(NSRange(location: start + joinPoint, length: 0)),
+            .select(NSRange(location: result.clampNormal(start + joinPoint), length: 0)),
         ]
     }
 
@@ -597,8 +680,12 @@ public struct VimEngine: Sendable {
     }
 
     private mutating func visualCommand(_ simple: VimCommand.Simple, count: Int, _ document: VimText) -> [VimAction] {
-        let range = visualRange(document)
+        var range = visualRange(document)
         let linewise = mode == .visualLine
+        // A character selection can't take the document's final line break (it belongs to the last line).
+        if !linewise, NSMaxRange(range) == document.length, document.endsWithLineBreak, range.length > 0 {
+            range.length -= 1
+        }
         let start = min(visualAnchor, visualCursor)
         switch simple {
         case .escape:
@@ -616,10 +703,13 @@ public struct VimEngine: Sendable {
             swap(&visualAnchor, &visualCursor)
             return [.select(range)]
         case .deleteChar:
+            guard range.length > 0 || linewise else { return [.beep] }
             return apply(.delete, to: range, linewise: linewise, cursor: start, document)
         case .substituteChar:
+            guard range.length > 0 || linewise else { return [.beep] }
             return apply(.change, to: range, linewise: linewise, cursor: start, document)
         case .yankLine:
+            guard range.length > 0 || linewise else { return [.beep] }
             return apply(.yank, to: range, linewise: linewise, cursor: start, document)
         case .putAfter:
             guard !register.text.isEmpty else { return [.beep] }

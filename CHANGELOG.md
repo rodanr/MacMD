@@ -8,6 +8,9 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 ## [Unreleased]
 
 ### Fixed
+- Vim mode now matches Vim: a file's final line break no longer counts as an extra line, and `dw`, `cw`, `dG`,
+  `2dd`, `J`, `{` / `}`, `v$`, `aw`, `a"`, `i(` and paste follow Vim's rules at line ends, empty lines and the
+  end of the file. Checked against real Vim on thousands of commands.
 - Documents opened straight into Read mode show their relative images and follow links to other files
   (they were resolved before the document's folder was known).
 - VoiceOver names the toolbar's mode buttons "Edit" and "Read" (the Read button was announced as "Bookmark").

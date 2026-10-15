@@ -21,6 +21,56 @@ extension VimText {
         return current
     }
 
+    /// `w` after an operator (`dw`, `c2w`, `y3W`), ported from Vim's `fwd_word()` with `eol` set: on the last
+    /// word it stops where it crosses a line end, and blank lines count as words. Nil when it can't move.
+    func wordForwardForOperator(from position: Int, count: Int, big: Bool) -> Int? {
+        /// Vim's `inc_cursor()`: one step right. 0 = moved, 2 = moved onto the line's end, 1 = moved to the next
+        /// line's start, nil = nowhere to go. A line's end is its line break position here.
+        func step(_ position: Int) -> (Int, Int)? {
+            let end = contentEnd(position)
+            if position >= end {
+                let following = lineEnd(position)
+                guard following < length || (following == length && !endsWithLineBreak && following > position) else {
+                    return nil
+                }
+                return following < length ? (following, 1) : nil
+            }
+            let moved = next(position)
+            return (moved, moved >= end ? 2 : 0)
+        }
+        func kind(_ position: Int) -> Int {
+            position >= contentEnd(position) ? 0 : characterClass(at: position, big: big)
+        }
+
+        var cursor = position
+        for iteration in 0..<max(count, 1) {
+            let isLast = iteration == max(count, 1) - 1
+            let start = kind(cursor)
+            let onLastLine = lineIndex(cursor) == lineCount - 1
+            // At the very end: fail if nothing moved; otherwise the operator ends where earlier steps got to.
+            guard let (first, crossed) = step(cursor) else { return cursor == position ? nil : cursor }
+            // Vim fails here ("started at the last char in the file"), but with an operator pending the failure is
+            // ignored and the cursor has already reached the line's end: `dw` on the last word still deletes it.
+            if crossed >= 1, onLastLine { return first }
+            cursor = first
+            if crossed >= 1, isLast { return cursor }
+            if start != 0 {
+                while kind(cursor) == start {
+                    guard let (moved, crossed) = step(cursor) else { return cursor }
+                    cursor = moved
+                    if crossed >= 1, isLast { return cursor }
+                }
+            }
+            while kind(cursor) == 0 {
+                if isLineStart(cursor), isEmptyLine(cursor) { break }  // a blank line is a word
+                guard let (moved, crossed) = step(cursor) else { return cursor }
+                cursor = moved
+                if crossed >= 1, isLast { return cursor }
+            }
+        }
+        return cursor
+    }
+
     func wordEnd(from position: Int, big: Bool) -> Int {
         var current = next(position)
         while current < length, characterClass(at: current, big: big) == 0 { current = next(current) }
@@ -76,28 +126,24 @@ extension VimText {
 
     // MARK: Paragraphs
 
+    /// `}`: past any blank lines, then through the paragraph, to the blank line after it (or the end).
     func paragraphForward(from position: Int, count: Int) -> Int {
-        var current = position
+        var line = lineStart(position)
         for _ in 0..<count {
-            var line = lineEnd(current)
             while line < length, isBlankLine(line) { line = lineEnd(line) }
             while line < length, !isBlankLine(line) { line = lineEnd(line) }
-            if line >= length { return length }
-            current = line
         }
-        return current
+        return min(line, length)
     }
 
+    /// `{`: the same, backwards, to the blank line before the paragraph (or the start).
     func paragraphBackward(from position: Int, count: Int) -> Int {
-        var current = lineStart(position)
+        var line = lineStart(position)
         for _ in 0..<count {
-            guard current > 0 else { return 0 }
-            var line = lineStart(current - 1)
             while line > 0, isBlankLine(line) { line = lineStart(line - 1) }
             while line > 0, !isBlankLine(line) { line = lineStart(line - 1) }
-            current = line
         }
-        return current
+        return line
     }
 
     // MARK: Search
@@ -150,11 +196,22 @@ extension VimText {
         while lower > lineBegin, characterClass(at: previous(lower), big: big) == kind { lower = previous(lower) }
         var upper = next(position)
         while upper < end, characterClass(at: upper, big: big) == kind { upper = next(upper) }
-        guard around, kind != 0 else { return NSRange(lower..<upper) }
+        guard around else { return NSRange(lower..<upper) }
+        if kind == 0 {
+            // `aw` on white space: the space plus the word after it.
+            guard upper < end else { return NSRange(lower..<upper) }
+            let next = characterClass(at: upper, big: big)
+            var wordEnd = upper
+            while wordEnd < end, characterClass(at: wordEnd, big: big) == next { wordEnd = self.next(wordEnd) }
+            return NSRange(lower..<wordEnd)
+        }
         var extended = upper
         while extended < end, isBlank(extended) { extended = next(extended) }
         if extended == upper {
-            while lower > lineBegin, isBlank(previous(lower)) { lower = previous(lower) }
+            // No trailing space: take the leading space instead, unless it is the line's indentation.
+            var leading = lower
+            while leading > lineBegin, isBlank(previous(leading)) { leading = previous(leading) }
+            if leading > lineBegin { lower = leading }
         }
         return NSRange(lower..<extended)
     }
@@ -176,11 +233,31 @@ extension VimText {
             pairs.append((quotes[index], quotes[index + 1]))
             index += 2
         }
-        guard
-            let pair = pairs.first(where: { $0.0 <= position && position <= $0.1 })
-                ?? pairs.first(where: { $0.0 > position })
-        else { return nil }
-        return around ? NSRange(pair.0..<next(pair.1)) : NSRange(next(pair.0)..<pair.1)
+        // Like Vim: on a quote, pair quotes counting from the line start; elsewhere use the nearest quote on each
+        // side; with none around the cursor, the first pair after it.
+        let pair: (Int, Int)
+        if quotes.contains(position), let found = pairs.first(where: { $0.0 == position || $0.1 == position }) {
+            pair = found
+        } else if let before = quotes.last(where: { $0 < position }), let after = quotes.first(where: { $0 > position })
+        {
+            pair = (before, after)
+        } else if let found = pairs.first(where: { $0.0 > position }) {
+            pair = found
+        } else {
+            return nil
+        }
+        guard around else { return NSRange(next(pair.0)..<pair.1) }
+        // Like Vim: trailing white space is included, or leading white space when there is none.
+        var lower = pair.0
+        var upper = next(pair.1)
+        let lineEnd = contentEnd(position)
+        if upper < lineEnd, isBlank(upper) {
+            while upper < lineEnd, isBlank(upper) { upper = next(upper) }
+        } else {
+            let lineBegin = lineStart(position)
+            while lower > lineBegin, isBlank(previous(lower)) { lower = previous(lower) }
+        }
+        return NSRange(lower..<upper)
     }
 
     func bracketObject(open: Character, close: Character, at position: Int, around: Bool) -> NSRange? {
@@ -190,7 +267,6 @@ extension VimText {
         var depth = 0
         var current = min(position, length)
         if current < length, character(at: current) == openString { opening = current }
-        if opening == nil, current < length, character(at: current) == closeString { depth = 1 }
         while opening == nil, current > 0 {
             current = previous(current)
             let char = character(at: current)
@@ -199,6 +275,12 @@ extension VimText {
             } else if char == openString {
                 if depth == 0 { opening = current } else { depth -= 1 }
             }
+        }
+        if opening == nil {
+            // Not inside a pair: use the next one after the cursor, as Vim 9 does.
+            var ahead = min(position, length)
+            while ahead < length, character(at: ahead) != openString { ahead = next(ahead) }
+            if ahead < length { opening = ahead }
         }
         guard let start = opening else { return nil }
         depth = 0
@@ -219,19 +301,22 @@ extension VimText {
     }
 
     /// `ip` / `ap`: whole lines, so the result is linewise.
-    func paragraphObject(at position: Int, around: Bool) -> NSRange {
+    func paragraphObject(at position: Int, around: Bool) -> NSRange? {
         let blank = isBlankLine(position)
         var first = lineStart(position)
         while first > 0, isBlankLine(first - 1) == blank { first = lineStart(first - 1) }
         var last = lineEnd(position)
         while last < length, isBlankLine(last) == blank { last = lineEnd(last) }
         if around {
+            if blank, last >= length { return nil }  // trailing blank lines have no paragraph after them
             if last < length {
                 while last < length, isBlankLine(last) != blank { last = lineEnd(last) }
             } else {
                 while first > 0, isBlankLine(first - 1) != blank { first = lineStart(first - 1) }
             }
         }
+        // A blank-only stretch with no paragraph next to it is not a paragraph object (Vim fails too).
+        if around, (first..<last).allSatisfy({ isNewline($0) || isBlank($0) }) { return nil }
         return NSRange(first..<last)
     }
 }

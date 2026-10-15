@@ -98,22 +98,31 @@ struct VimText {
         return count
     }
 
-    var lineCount: Int { lineIndex(length) + 1 }
+    /// Like Vim, a final line break ends the last line rather than starting an empty one:
+    /// "a\nb\n" has two lines, and the cursor never rests after the final break.
+    var endsWithLineBreak: Bool { length > 0 && isNewline(length - 1) }
+
+    var lineCount: Int { lineIndex(length) + (endsWithLineBreak ? 0 : 1) }
+
+    var lastLineStart: Int { lineStart(forLine: lineCount - 1) }
 
     func lineStart(forLine index: Int) -> Int {
         var position = 0
-        for _ in 0..<max(index, 0) {
+        for _ in 0..<min(max(index, 0), max(lineCount - 1, 0)) {
             let end = lineEnd(position)
-            // Stop on the last line: either the empty line after a final break, or a line with no break.
-            if end == position || (end == length && !isNewline(length - 1)) { break }
+            if end == position { break }
             position = end
         }
         return position
     }
 
+    func isLineStart(_ position: Int) -> Bool { position == 0 || isNewline(position - 1) }
+
     /// Normal mode keeps the cursor on a character, never on a line break (unless the line is empty).
     func clampNormal(_ position: Int) -> Int {
-        let position = min(max(position, 0), length)
+        var position = min(max(position, 0), length)
+        // The spot after a final line break belongs to the last line.
+        if position == length, endsWithLineBreak { position = length - 1 }
         let start = lineStart(position)
         let end = contentEnd(position)
         if end == start { return start }
