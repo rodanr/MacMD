@@ -274,6 +274,18 @@ final class MarkdownTextView: NSTextView {
         return true
     }
 
+    /// A plain-text view disables Paste when the pasteboard holds only an image; enable it, since pasting
+    /// an image saves it next to the document and inserts a link.
+    override func validateUserInterfaceItem(_ item: any NSValidatedUserInterfaceItem) -> Bool {
+        if item.action == #selector(paste(_:)), isEditable, canPasteImages(from: .general) { return true }
+        return super.validateUserInterfaceItem(item)
+    }
+
+    private func canPasteImages(from pasteboard: NSPasteboard) -> Bool {
+        !imageURLs(from: pasteboard).isEmpty
+            || (pasteboard.string(forType: .string) == nil && NSImage.canInit(with: pasteboard))
+    }
+
     override func paste(_ sender: Any?) {
         let pasteboard = NSPasteboard.general
         let urls = imageURLs(from: pasteboard)

@@ -8,6 +8,7 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 ## [Unreleased]
 
 ### Fixed
+- Pasting an image (for example a screenshot) works: ⌘V was disabled when the clipboard held only an image.
 - Exported HTML can no longer run scripts from a document (event handlers, `javascript:` links and
   `<script>` are removed, and the file carries a strict Content Security Policy).
 - Styling no longer goes stale after some edits: math colors spreading into the next paragraph, a nested list
