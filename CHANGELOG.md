@@ -10,6 +10,8 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 ### Fixed
 - Exported HTML can no longer run scripts from a document (event handlers, `javascript:` links and
   `<script>` are removed, and the file carries a strict Content Security Policy).
+- Styling no longer goes stale after some edits: math colors spreading into the next paragraph, a nested list
+  item losing its indent, or a code fence line missing its code style.
 - A setext heading (a line underlined with `---` or `===`) no longer styles the line after it as a heading.
 - Pressing Return after a horizontal rule (`* * *`, `- - -`) no longer starts a list.
 - ⌘I on bold text makes it bold italic instead of replacing bold with italic, and ⌘B works the same way.

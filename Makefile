@@ -6,9 +6,9 @@ DERIVED   := build/DerivedData
 APP       := $(DERIVED)/Build/Products/Release/MacMD.app
 DEBUG_APP := $(DERIVED)/Build/Products/Debug/MacMD.app
 XCB       := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -derivedDataPath $(DERIVED) -destination 'platform=macOS,arch=arm64'
-SWIFT_SOURCES := App AppUITests Packages/MacMDKit/Sources Packages/MacMDKit/Tests Packages/MacMDKit/Package.swift
+SWIFT_SOURCES := App AppTests AppUITests Packages/MacMDKit/Sources Packages/MacMDKit/Tests Packages/MacMDKit/Package.swift
 
-.PHONY: help setup build release run test test-kit test-ui lint format dmg icon vendor prepare-release clean
+.PHONY: help setup build release run test test-kit test-app test-ui lint format dmg icon vendor prepare-release clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
@@ -26,10 +26,13 @@ release: setup ## Release build (arm64)
 run: build ## Build and launch the debug app
 	open $(DEBUG_APP)
 
-test: test-kit test-ui ## Run all tests
+test: test-kit test-app test-ui ## Run all tests
 
 test-kit: ## Run MacMDKit unit tests (fast, no Xcode project needed)
 	cd Packages/MacMDKit && swift test
+
+test-app: setup ## Run the app's unit tests (styling engine, inside the app)
+	$(XCB) test -only-testing:MacMDTests -quiet
 
 test-ui: setup ## Run the app's UI smoke tests
 	$(XCB) test -only-testing:MacMDUITests -quiet

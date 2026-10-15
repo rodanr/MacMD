@@ -8,9 +8,10 @@ TextKit 2 live-styled editor, WKWebView Read mode. Goal: light, fast, beautiful,
 ```sh
 make setup      # regenerate MacMD.xcodeproj from project.yml (needed after adding/removing files)
 make build      # debug build          make run   # build + launch
-make test-kit   # MacMDKit unit tests (seconds; run constantly)
-make test-ui    # UI smoke tests: launch, edit, Read mode, export; attach light/dark screenshots
-make test       # both
+make test-kit   # MacMDKit unit tests incl. fuzz suites (seconds; run constantly)
+make test-app   # app unit tests: incremental styling must equal a fresh restyle (random edits)
+make test-ui    # UI tests: smoke + features (AppUITests/); light/dark screenshots in the result bundle
+make test       # all three
 make lint       # swift format lint --strict  ·  make format to fix
 make dmg        # release build + build/MacMD-<version>.dmg
 make prepare-release VERSION=X.Y.Z   # version + changelog + commit + tag (never pushes; see release skill)
@@ -40,6 +41,8 @@ make prepare-release VERSION=X.Y.Z   # version + changelog + commit + tag (never
 - Swift 6 strict concurrency. UI types are `@MainActor`; parsing runs off-main via `Task.detached`.
 - **Never access `NSTextView.layoutManager`** — it silently drops the editor to TextKit 1. Use `textLayoutManager`.
 - Styling changes attributes only, never characters (undo and dirty state stay correct). Don't style while `hasMarkedText()` (IME).
+- A line's layout (paragraph style) comes from its first character. Incremental restyling must keep that in mind;
+  `make test-app` fuzzes it against a full restyle. Raise its seeds/steps when touching `MarkdownStyler` or `SpanCollector`.
 - Source positions from swift-markdown are 1-based UTF-8 columns: convert with `SourceRangeMapper`, never by hand.
 - Editor and reader must agree: new Markdown features touch `SpanCollector` *and* `HTMLRenderer` (see the `add-markdown-feature` skill).
 - No force unwraps outside tests and static literals; no new dependencies without discussion.

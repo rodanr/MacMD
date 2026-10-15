@@ -13,7 +13,7 @@ final class MarkdownStyler {
     private(set) var baseAttributes: [NSAttributedString.Key: Any]
 
     /// Signatures of blocks styled by the last pass (multiset), used to skip unchanged blocks.
-    private var appliedSignatures: [Int: Int] = [:]
+    private(set) var appliedSignatures: [Int: Int] = [:]
 
     init(theme: Theme) {
         self.theme = theme
@@ -30,20 +30,41 @@ final class MarkdownStyler {
         let length = storage.length
         var previous = full ? [:] : appliedSignatures
         var current: [Int: Int] = [:]
-        let dirtyParagraphs = dirty.map { (storage.string as NSString).paragraphRange(for: clamp($0, to: length)) }
+        // Edits change the layout of the lines touching them, including the line right after an inserted line
+        // break and the line before a deleted one, so those count as changed too.
+        let dirtyParagraphs = dirty.map { range -> NSRange in
+            let clamped = clamp(range, to: length)
+            let lower = max(clamped.location - 1, 0)
+            let upper = min(NSMaxRange(clamped) + 1, length)
+            return (storage.string as NSString).paragraphRange(for: NSRange(location: lower, length: upper - lower))
+        }
 
         storage.beginEditing()
+        let text = storage.string as NSString
         var cursor = 0
         var previousRestyled = full
         for block in result.blocks {
             let range = clamp(block.range, to: length)
+            // Text just before this block was rewritten (a gap reset, or the previous block restyled).
+            var touchedBefore = previousRestyled
             if range.location > cursor {
                 let gap = NSRange(location: cursor, length: range.location - cursor)
                 // Gaps (blank lines, terminators) only need a reset next to changed text.
-                if full || previousRestyled || intersects(gap, dirtyParagraphs) { resetGap(gap, in: storage) }
+                if full || previousRestyled || intersects(gap, dirtyParagraphs) {
+                    resetGap(gap, in: storage)
+                    touchedBefore = true
+                } else {
+                    touchedBefore = false
+                }
             }
+            // A line takes its layout (indents, spacing) from its first character. When that character sits
+            // before this block, as in an indented list item, rewriting it changed this block's line too.
+            let sharesRewrittenLine =
+                touchedBefore && range.location > 0 && !isLineBreak(text.character(at: range.location - 1))
             current[block.signature, default: 0] += 1
-            if let count = previous[block.signature], count > 0, !intersects(range, dirtyParagraphs) {
+            if !sharesRewrittenLine, let count = previous[block.signature], count > 0,
+                !intersects(range, dirtyParagraphs)
+            {
                 previous[block.signature] = count - 1
                 previousRestyled = false
             } else {
@@ -78,7 +99,8 @@ final class MarkdownStyler {
         storage.setAttributes(baseAttributes, range: range)
         let spans = block.spans.sorted { priority($0.kind) < priority($1.kind) }
         for span in spans {
-            let spanRange = clamp(span.range, to: storage.length)
+            // Stay inside the block: text beyond it belongs to other blocks, which restyle themselves.
+            let spanRange = NSIntersectionRange(clamp(span.range, to: storage.length), range)
             guard spanRange.length > 0 else { continue }
             apply(span.kind, to: spanRange, in: storage)
         }
@@ -215,6 +237,8 @@ final class MarkdownStyler {
         case .syntaxMarker: 5
         }
     }
+
+    private func isLineBreak(_ unit: unichar) -> Bool { unit == 0x0A || unit == 0x0D }
 
     private func intersects(_ range: NSRange, _ dirty: NSRange?) -> Bool {
         guard let dirty else { return false }

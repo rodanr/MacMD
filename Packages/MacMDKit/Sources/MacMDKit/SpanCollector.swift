@@ -25,18 +25,28 @@ public enum SpanCollector {
             ranges[index].length = max(ranges[index + 1].location - ranges[index].location, 0)
         }
         var buckets = Array(repeating: [StyleSpan](), count: ranges.count)
-        for span in spans {
-            // Spans are attached to the last block that starts at or before them.
+        for span in spans where span.range.length > 0 {
+            // A span belongs to every block it overlaps (display math can run across several), so a block's
+            // signature changes whenever any styling on its text changes, and the editor restyles it.
             var low = 0
-            var high = ranges.count - 1
+            var high = ranges.count
             while low < high {
-                let mid = (low + high + 1) / 2
-                if ranges[mid].location <= span.range.location { low = mid } else { high = mid - 1 }
+                let mid = (low + high) / 2
+                if NSMaxRange(ranges[mid]) <= span.range.location { low = mid + 1 } else { high = mid }
             }
-            buckets[low].append(span)
+            var index = low
+            while index < ranges.count, ranges[index].location < NSMaxRange(span.range) {
+                if NSIntersectionRange(ranges[index], span.range).length > 0 { buckets[index].append(span) }
+                index += 1
+            }
         }
         return zip(ranges, buckets).map { range, blockSpans in
             var hasher = Hasher()
+            // A line's layout comes from its first character. Include any text on the block's first line before
+            // the block (indentation, a quote marker), so adding or removing it counts as a change.
+            let lineStart = walker.text.lineRange(for: NSRange(location: range.location, length: 0)).location
+            hasher.combine(
+                walker.text.substring(with: NSRange(location: lineStart, length: range.location - lineStart)))
             hasher.combine(walker.text.substring(with: range))
             for span in blockSpans.sorted(by: {
                 ($0.range.location, $0.range.length) < ($1.range.location, $1.range.length)

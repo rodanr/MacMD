@@ -53,6 +53,14 @@ final class StyleEngine {
         }
     }
 
+    /// Waits for pending restyles to finish (tests only; the app never waits).
+    func settled() async {
+        while let pending = task {
+            await pending.value
+            if task == pending { break }
+        }
+    }
+
     func restyleAll() {
         needsFullPass = true
         schedule(immediately: true)
