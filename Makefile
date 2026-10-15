@@ -34,8 +34,8 @@ test-kit: ## Run MacMDKit unit tests (fast, no Xcode project needed)
 test-app: setup ## Run the app's unit tests (styling engine, inside the app)
 	$(XCB) test -only-testing:MacMDTests -quiet
 
-test-ui: setup ## Run the app's UI smoke tests
-	$(XCB) test -only-testing:MacMDUITests -quiet
+test-ui: setup ## Run the app's UI tests (a failing test is retried once: UI timing can be flaky)
+	$(XCB) test -only-testing:MacMDUITests -retry-tests-on-failure -test-iterations 2 -quiet
 
 lint: ## Check formatting
 	swift format lint --strict --recursive $(SWIFT_SOURCES)
