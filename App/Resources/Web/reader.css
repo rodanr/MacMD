@@ -183,9 +183,9 @@ li.task > :not(input) { grid-column: 2; }
 
 li.task input {
   appearance: none;
-  flex: none;
-  width: 1em;
-  height: 1em;
+  font: inherit;
+  width: 0.9em;
+  height: 0.9em;
   margin: 0;
   border: 1.5px solid var(--ink-muted);
   border-radius: 4px;
@@ -200,12 +200,12 @@ li.task input:checked::after {
   position: absolute;
   inset: 0;
   margin: auto;
-  width: 0.25em;
-  height: 0.5em;
+  width: 0.22em;
+  height: 0.44em;
   border: solid white;
-  border-width: 0 0.12em 0.12em 0;
-  /* Centred in the box, then lifted: the drawn L sits ~0.09em below the rotated box's centre. */
-  transform: translateY(-0.09em) rotate(45deg);
+  border-width: 0 0.1em 0.1em 0;
+  /* Centred in the box, then lifted: the drawn L sits ~0.08em below the rotated box's centre. */
+  transform: translateY(-0.08em) rotate(45deg);
 }
 
 li.task:has(input:checked) { color: var(--ink-muted); }
