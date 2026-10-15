@@ -3,11 +3,6 @@ import XCTest
 /// Smoke tests: the app launches, opens a document, styles it and switches to Read mode.
 /// Screenshots are attached to the result bundle for visual review.
 final class MacMDUITests: XCTestCase {
-    private var fixture: String {
-        URL(filePath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-            .appending(path: "Packages/MacMDKit/Tests/MacMDKitTests/Fixtures/kitchen-sink.md").path
-    }
-
     override func setUp() {
         continueAfterFailure = false
     }
@@ -307,55 +302,4 @@ final class MacMDUITests: XCTestCase {
     }
 
     /// Runs an export command and saves to `url` through the save panel.
-    private func export(_ app: XCUIApplication, _ item: String, to url: URL) {
-        app.menuBars.menuBarItems["File"].click()
-        app.menuBars.menuItems[item].click()
-        let sheet = app.sheets.firstMatch
-        XCTAssertTrue(sheet.waitForExistence(timeout: 5))
-        // Go to the target folder, then name the file.
-        sheet.typeKey("g", modifierFlags: [.command, .shift])
-        app.typeText(url.deletingLastPathComponent().path + "\n")
-        let nameField = sheet.textFields.firstMatch
-        nameField.doubleClick()
-        nameField.typeKey("a", modifierFlags: .command)
-        nameField.typeText(url.lastPathComponent + "\n")
-        let exists = expectation(
-            for: NSPredicate { _, _ in FileManager.default.fileExists(atPath: url.path) }, evaluatedWith: nil)
-        wait(for: [exists], timeout: 30)
-    }
-
-    /// Launches the app with known settings, so a test never depends on the preferences of the Mac it runs on.
-    /// `arguments` are files to open plus `-key value` overrides.
-    private func launch(_ arguments: [String]) -> XCUIApplication {
-        let pinned = [
-            "-ApplePersistenceIgnoreState": "YES", "-vimMode": "NO", "-openInReadMode": "NO", "-zoom": "1",
-            "-focusMode": "NO", "-typewriterMode": "NO", "-lineWidth": "medium", "-theme": "paper",
-            "-sidebarVisible": "NO", "-sidebarTab": "outline",
-        ]
-        var all = arguments
-        for (key, value) in pinned.sorted(by: { $0.key < $1.key }) where !arguments.contains(key) {
-            all += [key, value]
-        }
-        let app = XCUIApplication()
-        app.launchArguments = all
-        app.launch()
-        return app
-    }
-
-    private func waitForText(_ title: String, of element: XCUIElement) -> Bool {
-        // Xcode versions differ in whether a SwiftUI menu's text is exposed as its title or its label.
-        let predicate = NSPredicate(format: "title == %@ OR label == %@", title, title)
-        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
-        return XCTWaiter.wait(for: [expectation], timeout: 3) == .completed
-    }
-
-    /// Attaches a screenshot of `element` for visual review. Set `MACMD_SKIP_SCREENSHOTS=1` (pass it to
-    /// xcodebuild as `TEST_RUNNER_MACMD_SKIP_SCREENSHOTS=1`) when no display can be captured.
-    private func attach(_ element: XCUIElement, _ name: String) {
-        guard ProcessInfo.processInfo.environment["MACMD_SKIP_SCREENSHOTS"] != "1" else { return }
-        let attachment = XCTAttachment(screenshot: element.screenshot())
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
-    }
 }
