@@ -91,7 +91,7 @@ html {
 
 body { margin: 0; }
 
-::selection { background: color-mix(in srgb, var(--accent) 28%, transparent); }
+::selection { background: color-mix(in srgb, var(--accent) 22%, transparent); }
 
 .markdown-body {
   max-width: var(--measure);
@@ -109,25 +109,25 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.2;
   margin: 2em 0 0.6em;
   text-wrap: balance;
-  scroll-margin-top: 24px;
+  scroll-margin-top: 32px;
 }
 
 h1 {
-  font-size: 2.35em;
+  font-size: 2.15em;
   font-weight: 700;
   letter-spacing: -0.022em;
   line-height: 1.08;
   margin-bottom: 0.5em;
 }
 
-h2 { font-size: 1.5em; font-weight: 650; letter-spacing: -0.012em; }
+h2 { font-size: 1.5em; font-weight: 650; letter-spacing: -0.012em; margin-top: 2.2em; }
 h3 { font-size: 1.22em; font-weight: 650; }
 h4 { font-size: 1.05em; font-weight: 650; }
 h5, h6 { font-size: 1em; font-weight: 650; color: var(--ink-muted); }
 
 html[data-theme="mono"] h1 { font-size: 1.8em; letter-spacing: -0.01em; }
 
-p, ul, ol, blockquote, pre, table, figure, details, .math.display, .mermaid {
+p, ul, ol, blockquote, pre, figure, details, .math.display, .mermaid {
   margin: 0 0 1.05em;
 }
 
@@ -142,9 +142,10 @@ p { text-wrap: pretty; }
 a {
   color: var(--link);
   text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--link) 35%, transparent);
+  text-decoration-color: color-mix(in srgb, var(--link) 30%, transparent);
   text-underline-offset: 0.18em;
   text-decoration-thickness: 1px;
+  transition: text-decoration-color 150ms ease-out;
 }
 
 a:hover { text-decoration-color: var(--link); }
@@ -171,10 +172,14 @@ ol > li::marker { font-variant-numeric: tabular-nums; }
 li.task {
   list-style: none;
   margin-left: -1.4em;
-  display: flex;
-  gap: 0.6em;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.6em;
   align-items: baseline;
 }
+
+/* Text, paragraphs and nested lists stay in the text column, under the item rather than beside it. */
+li.task > :not(input) { grid-column: 2; }
 
 li.task input {
   appearance: none;
@@ -183,27 +188,37 @@ li.task input {
   height: 1em;
   margin: 0;
   border: 1.5px solid var(--ink-muted);
-  border-radius: 50%;
+  border-radius: 4px;
   position: relative;
   top: 0.14em;
 }
 
-li.task input:checked {
-  background: var(--accent);
-  border-color: var(--accent);
-  box-shadow: inset 0 0 0 2.5px var(--paper);
+li.task input:checked { background: var(--accent); border-color: var(--accent); }
+
+li.task input:checked::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 0.25em;
+  height: 0.5em;
+  border: solid white;
+  border-width: 0 0.12em 0.12em 0;
+  /* Centred in the box, then lifted: the drawn L sits ~0.09em below the rotated box's centre. */
+  transform: translateY(-0.09em) rotate(45deg);
 }
 
 li.task:has(input:checked) { color: var(--ink-muted); }
 
 blockquote {
   margin-left: 0;
-  padding: 0.1em 0 0.1em 1.1em;
-  border-left: 3px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  padding: 0.1em 0 0.1em 1em;
+  border-left: var(--quote-bar);
   color: var(--ink-muted);
   font-style: italic;
 }
 
+html[data-theme="clean"] blockquote,
 html[data-theme="mono"] blockquote { font-style: normal; }
 blockquote > :last-child { margin-bottom: 0; }
 
@@ -213,17 +228,22 @@ code, pre, kbd { font-family: var(--font-mono); font-size: 0.86em; }
 
 :not(pre) > code {
   background: var(--surface);
-  padding: 0.12em 0.36em;
-  border-radius: 5px;
+  padding: 0.1em 0.32em;
+  border-radius: var(--radius-inline);
 }
 
 pre {
   background: var(--surface);
-  border-radius: 10px;
-  padding: 1em 1.2em;
+  border-radius: var(--radius-block);
+  padding: 0.9em 1.1em;
   overflow-x: auto;
   line-height: 1.55;
   tab-size: 4;
+  scrollbar-width: thin;
+}
+
+@media (prefers-color-scheme: dark) {
+  pre { box-shadow: inset 0 0 0 1px var(--ink-faint); }
 }
 
 pre code { font-size: 1em; background: none; padding: 0; }
@@ -238,28 +258,42 @@ kbd {
 
 /* Tables */
 
-table {
-  border-collapse: collapse;
-  display: block;
-  max-width: 100%;
+/* Tables sit in a scrolling, hairline-framed wrapper (div.table). */
+
+.table {
+  margin: 0 0 1.05em;
   overflow-x: auto;
+  border: 1px solid var(--ink-faint);
+  border-radius: var(--radius-block);
+  scrollbar-width: thin;
+}
+
+.table table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0;
   font-size: 0.94em;
   font-variant-numeric: tabular-nums;
 }
 
+/* Column alignment from the renderer arrives as an inline style, which wins over this default. */
 th, td {
-  padding: 0.5em 0.9em;
+  padding: 0.55em 0.9em;
   border-bottom: 1px solid var(--ink-faint);
   text-align: left;
   vertical-align: top;
 }
 
-th { font-weight: 650; border-bottom-color: color-mix(in srgb, var(--ink) 35%, transparent); }
+th { font-weight: 650; background: var(--surface-2); }
 tr:last-child td { border-bottom: 0; }
 
 /* Media, math, diagrams */
 
-img { max-width: 100%; height: auto; border-radius: 6px; }
+img { max-width: 100%; height: auto; border-radius: var(--radius-inline); }
+
+@media (prefers-color-scheme: dark) {
+  img { outline: 1px solid var(--ink-faint); outline-offset: -1px; }
+}
 
 .missing.img {
   display: inline-block;
@@ -278,8 +312,12 @@ img { max-width: 100%; height: auto; border-radius: 6px; }
 .mermaid svg { max-width: 100%; height: auto; }
 .mermaid.error { display: block; white-space: pre-wrap; font-family: var(--font-mono); font-size: 0.85em; color: var(--ink-muted); }
 
-details { border: 1px solid var(--ink-faint); border-radius: 8px; padding: 0.6em 1em; }
+details { border: 1px solid var(--ink-faint); border-radius: var(--radius-block); padding: 0.6em 1em; }
 summary { cursor: pointer; font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; scroll-behavior: auto !important; }
+}
 
 @media (max-width: 620px) {
   .markdown-body { padding: 32px 20px 30vh; }
@@ -291,6 +329,9 @@ summary { cursor: pointer; font-weight: 600; }
   .markdown-body { max-width: none; padding: 0; }
   h1, h2, h3 { break-after: avoid; }
   pre, table, img, .mermaid, .math.display { break-inside: avoid; }
+  pre { white-space: pre-wrap; }
+  .table { overflow: visible; }
+  img { outline: none; }
   a { text-decoration: none; }
 }
 
