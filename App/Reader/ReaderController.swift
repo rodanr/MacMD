@@ -92,6 +92,7 @@ final class ReaderController: NSObject, WKNavigationDelegate, WKScriptMessageHan
             if let line = pendingLine { scroll(toLine: line) }
         case "topLine":
             lastTopLine = body["line"] as? Int
+            model?.readerTopLine = lastTopLine
         default:
             break
         }

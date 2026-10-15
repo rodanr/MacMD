@@ -57,6 +57,8 @@ final class DocumentModel {
     /// The Vim mode line ("NORMAL", "INSERT", …), or nil when Vim mode is off.
     var vimStatus: String?
     var caretLine = 1
+    /// The first source line visible in Read mode, as last reported by the reader.
+    var readerTopLine: Int?
     var caretColumn = 1
     /// Incremented on every character edit; lets views know their snapshot is stale.
     private(set) var revision = 0

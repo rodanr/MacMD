@@ -25,6 +25,7 @@ struct HUDView: View {
     @State private var hud = HUD.shared
     @Environment(\.controlActiveState) private var activeState
     @Environment(\.zoom) private var zoom
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
@@ -34,7 +35,7 @@ struct HUDView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 9)
                     .glassEffect(.regular, in: .capsule)
-                    .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                    .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.96)))
                     .accessibilityIdentifier("hud")
             }
         }

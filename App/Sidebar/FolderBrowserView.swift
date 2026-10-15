@@ -69,6 +69,7 @@ private struct FileNodeChildren: View {
     let node: FileNode
     let currentFile: URL?
     let browsedFolder: URL?
+    @Environment(\.zoom) private var zoom
 
     var body: some View {
         ForEach(node.children) { child in
@@ -76,22 +77,42 @@ private struct FileNodeChildren: View {
                 DisclosureGroup {
                     FileNodeChildren(node: child, currentFile: currentFile, browsedFolder: browsedFolder)
                 } label: {
-                    Label(child.name, systemImage: "folder")
+                    FileLabel(name: child.name, systemImage: "folder")
                 }
             } else {
                 Button {
                     LinkRouter.openFile(child.url, browsing: browsedFolder)
                 } label: {
-                    Label(child.name, systemImage: "doc.text")
-                        .foregroundStyle(
-                            child.url.standardizedFileURL == currentFile?.standardizedFileURL
-                                ? Color.accentColor : .primary
-                        )
+                    FileLabel(name: child.name, systemImage: "doc.text")
+                        .padding(.vertical, 2 * zoom)
+                        .padding(.horizontal, 6 * zoom)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(
+                            RoundedRectangle(cornerRadius: Theme.panelRadius / 2)
+                                .fill(
+                                    child.url.standardizedFileURL == currentFile?.standardizedFileURL
+                                        ? Color.accentColor.opacity(0.14) : .clear)
+                        )
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
+        }
+    }
+}
+
+/// A file or folder name in primary text, with a quieter icon.
+private struct FileLabel: View {
+    let name: String
+    let systemImage: String
+
+    var body: some View {
+        Label {
+            Text(name).foregroundStyle(.primary)
+        } icon: {
+            Image(systemName: systemImage)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(.secondary)
         }
     }
 }

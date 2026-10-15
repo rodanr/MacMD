@@ -6,8 +6,11 @@ struct OutlineView: View {
     let model: DocumentModel
     @Environment(\.zoom) private var zoom
 
+    /// The heading of the section being read or edited: it follows the caret in Edit mode and the
+    /// top of the page in Read mode.
     private var currentSlug: String? {
-        model.outline.last { $0.line <= model.caretLine }?.slug
+        let line = model.mode == .read ? (model.readerTopLine ?? 1) : model.caretLine
+        return model.outline.last { $0.line <= line }?.slug
     }
 
     var body: some View {
@@ -21,16 +24,34 @@ struct OutlineView: View {
                 Button {
                     model.reveal(item)
                 } label: {
-                    Text(item.title.isEmpty ? "Untitled" : item.title)
-                        .font(.system(size: 13 * zoom, weight: item.level == minLevel ? .semibold : .regular))
-                        .foregroundStyle(item.slug == currentSlug && model.mode == .edit ? Color.accentColor : .primary)
-                        .lineLimit(1)
-                        .padding(.leading, CGFloat(item.level - minLevel) * 12 * zoom)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .contentShape(Rectangle())
+                    HStack(spacing: 0) {
+                        // Hairline guides, one per nesting level; decorative only.
+                        ForEach(0..<(item.level - minLevel), id: \.self) { _ in
+                            Rectangle()
+                                .fill(.separator)
+                                .frame(width: 1)
+                                .padding(.leading, 6 * zoom)
+                                .padding(.trailing, 5 * zoom)
+                                .accessibilityHidden(true)
+                        }
+                        Text(item.title.isEmpty ? "Untitled" : item.title)
+                            .font(.system(size: 13 * zoom, weight: item.level == minLevel ? .semibold : .regular))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+                            .padding(.vertical, 3 * zoom)
+                    }
+                    .padding(.horizontal, 6 * zoom)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: Theme.panelRadius / 2)
+                            .fill(item.slug == currentSlug ? Color.accentColor.opacity(0.14) : .clear)
+                    )
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help(item.title)
+                // No gaps between rows, so the indent guides run on unbroken.
+                .listRowInsets(EdgeInsets(top: 0, leading: 8 * zoom, bottom: 0, trailing: 8 * zoom))
             }
             .listStyle(.sidebar)
         }

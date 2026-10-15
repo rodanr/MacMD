@@ -5,6 +5,7 @@ import SwiftUI
 struct DocumentView: View {
     @Bindable var model: DocumentModel
     @State private var settings = AppSettings.shared
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         NavigationSplitView(columnVisibility: $model.sidebarVisibility) {
@@ -46,14 +47,14 @@ struct DocumentView: View {
                 .accessibilityHidden(model.mode != .read)
             }
         }
-        .animation(.easeOut(duration: 0.15), value: model.mode)
+        .animation(reduceMotion ? nil : .easeOut(duration: Theme.motion), value: model.mode)
     }
 
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .navigation) {
             Button {
-                withAnimation { model.toggleSidebar() }
+                withAnimation(reduceMotion ? nil : .default) { model.toggleSidebar() }
             } label: {
                 Label(model.isSidebarVisible ? "Hide Sidebar" : "Show Sidebar", systemImage: "sidebar.left")
             }
@@ -108,7 +109,7 @@ private struct StatusBar: View {
     let settings: AppSettings
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 16 * settings.zoom) {
             if model.mode == .edit, let vimStatus = model.vimStatus {
                 Text(vimStatus)
                     .font(.system(size: 11 * settings.zoom, weight: .semibold, design: .monospaced))
@@ -150,9 +151,12 @@ private struct StatusBar: View {
         }
         .font(.system(size: 11 * settings.zoom))
         .foregroundStyle(.secondary)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 5)
+        .padding(.horizontal, 16 * settings.zoom)
+        .padding(.vertical, 6 * settings.zoom)
         .background(.bar)
+        .overlay(alignment: .top) {
+            Rectangle().fill(.separator).frame(height: 0.5).accessibilityHidden(true)
+        }
     }
 }
 
@@ -167,7 +171,7 @@ private struct ModeChip: View {
             Label(title, systemImage: systemImage)
                 .padding(.horizontal, 7)
                 .padding(.vertical, 1)
-                .background(Capsule().fill(Color.accentColor.opacity(0.14)))
+                .background(RoundedRectangle(cornerRadius: Theme.panelRadius / 2).fill(Color.accentColor.opacity(0.14)))
                 .foregroundStyle(Color.accentColor)
         }
         .buttonStyle(.plain)
