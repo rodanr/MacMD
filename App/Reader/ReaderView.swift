@@ -10,6 +10,8 @@ struct ReaderView: NSViewRepresentable {
     let zoom: Double
     /// The line width as a CSS length (`68ch`) or `none`.
     let measure: String
+    /// The document's location; a change (first save, rename, opening into Read mode) re-renders.
+    let fileURL: URL?
     let isVisible: Bool
 
     func makeNSView(context: Context) -> WKWebView {

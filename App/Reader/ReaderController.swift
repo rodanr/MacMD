@@ -10,6 +10,9 @@ final class ReaderController: NSObject, WKNavigationDelegate, WKScriptMessageHan
     private var renderedRevision = -1
     private var renderedTheme: Theme.ID?
     private var renderedMeasure: String?
+    /// The document's location at the last render: relative images and links resolve against it, and a
+    /// document opened straight into Read mode only learns it after the first render.
+    private var renderedFileURL: URL?
     private var isLoaded = false
     /// Set right before the app loads a page, so only that navigation is allowed.
     private var expectsOwnLoad = false
@@ -34,9 +37,11 @@ final class ReaderController: NSObject, WKNavigationDelegate, WKScriptMessageHan
         webView.navigationDelegate = self
     }
 
-    /// Re-renders when the text, theme or line width changed since the last render.
+    /// Re-renders when the text, theme, line width or the document's location changed since the last render.
     func refresh(theme: Theme.ID, measure: String) {
-        guard let model, model.revision != renderedRevision || theme != renderedTheme || measure != renderedMeasure
+        guard let model,
+            model.revision != renderedRevision || theme != renderedTheme || measure != renderedMeasure
+                || model.fileURL != renderedFileURL
         else {
             if let line = pendingLine, isLoaded { scroll(toLine: line) }
             return
@@ -44,16 +49,20 @@ final class ReaderController: NSObject, WKNavigationDelegate, WKScriptMessageHan
         renderedRevision = model.revision
         renderedTheme = theme
         renderedMeasure = measure
+        renderedFileURL = model.fileURL
         isLoaded = false
         if pendingLine == nil { pendingLine = lastTopLine }
         let markdown = model.text
         let title = model.fileURL?.lastPathComponent ?? "Untitled"
         let baseURL = ReaderPage.baseURL(for: model.fileURL?.deletingLastPathComponent())
         let revision = model.revision
+        let fileURL = model.fileURL
         Task {
             let rendered = await Task.detached(priority: .userInitiated) { HTMLRenderer.render(markdown) }.value
             // A newer render may have started meanwhile; never load stale output.
-            guard revision == renderedRevision, theme == renderedTheme, measure == renderedMeasure else { return }
+            guard revision == renderedRevision, theme == renderedTheme, measure == renderedMeasure,
+                fileURL == renderedFileURL
+            else { return }
             expectsOwnLoad = true
             webView.loadHTMLString(
                 ReaderPage.html(for: rendered, theme: theme, title: title, measure: measure), baseURL: baseURL)
