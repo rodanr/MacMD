@@ -92,7 +92,8 @@ final class ReaderController: NSObject, WKNavigationDelegate, WKScriptMessageHan
             if let line = pendingLine { scroll(toLine: line) }
         case "topLine":
             lastTopLine = body["line"] as? Int
-            model?.readerTopLine = lastTopLine
+            // Observation notifies on every assignment: only publish real changes, not every scroll frame.
+            if model?.readerTopLine != lastTopLine { model?.readerTopLine = lastTopLine }
         default:
             break
         }

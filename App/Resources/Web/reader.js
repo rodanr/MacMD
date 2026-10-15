@@ -153,13 +153,15 @@
     return 1;
   }
 
+  const reportTopLine = () => post({ type: "topLine", line: topLine() });
+
   let scrollScheduled = false;
   window.addEventListener("scroll", () => {
     if (scrollScheduled) return;
     scrollScheduled = true;
     requestAnimationFrame(() => {
       scrollScheduled = false;
-      post({ type: "topLine", line: topLine() });
+      reportTopLine();
     });
   }, { passive: true });
 
@@ -170,11 +172,14 @@
         if (Number(block.dataset.line) <= line) target = block;
         else break;
       }
-      if (line <= 1 || !target) return window.scrollTo(0, 0);
-      window.scrollTo(0, target.getBoundingClientRect().top + window.scrollY - 24);
+      if (line <= 1 || !target) window.scrollTo(0, 0);
+      else window.scrollTo(0, target.getBoundingClientRect().top + window.scrollY - 24);
+      // A jump to where the page already is fires no scroll event: report the line regardless.
+      reportTopLine();
     },
     scrollToAnchor(id) {
       document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      reportTopLine();
     },
     exportDocument() {
       const root = document.documentElement.cloneNode(true);
@@ -197,6 +202,7 @@
     highlightCode();
     renderMath();
     await drawDiagrams();
+    reportTopLine();
     post({ type: "rendered" });
   }
 
