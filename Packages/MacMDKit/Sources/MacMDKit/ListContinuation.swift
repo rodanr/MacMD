@@ -9,6 +9,8 @@ public enum ListContinuation: Hashable, Sendable {
     public static let indentUnit = "    "
 
     public static func forLine(_ line: String) -> ListContinuation {
+        // "* * *", "- - -" and "_ _ _" are horizontal rules, not list items.
+        if line.wholeMatch(of: /\s{0,3}([-*_])(?:[ \t]*\1){2,}[ \t]*/) != nil { return .notAList }
         if let match = line.prefixMatch(of: /^(\s*(?:>\s?)*)(?:([-+*])|(\d{1,9})([.)]))(\s+)(\[[ xX]\]\s)?/) {
             let (whole, leading, bullet, number, delimiter, spacing, checkbox) = match.output
             if line.count == whole.count { return .terminate(markerLength: whole.utf16.count) }

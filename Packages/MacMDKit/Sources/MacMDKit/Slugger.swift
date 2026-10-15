@@ -1,6 +1,7 @@
 /// Generates GitHub-compatible heading anchors, de-duplicating repeats (`intro`, `intro-1`, …).
 public struct Slugger: Sendable {
-    private var seen: [String: Int] = [:]
+    /// How many times each slug has been handed out, as in github-slugger.
+    private var occurrences: [String: Int] = [:]
 
     public init() {}
 
@@ -13,8 +14,13 @@ public struct Slugger: Sendable {
                 return properties.isAlphabetic || properties.numericType != nil ? Character(scalar) : nil
             })
         if base.isEmpty { base = "section" }
-        let count = seen[base, default: 0]
-        seen[base] = count + 1
-        return count == 0 ? base : "\(base)-\(count)"
+        var result = base
+        // Skip suffixes another heading already uses: "Intro", "Intro 1", "Intro" give intro, intro-1, intro-2.
+        while occurrences[result] != nil {
+            occurrences[base, default: 0] += 1
+            result = "\(base)-\(occurrences[base, default: 0])"
+        }
+        occurrences[result] = 0
+        return result
     }
 }

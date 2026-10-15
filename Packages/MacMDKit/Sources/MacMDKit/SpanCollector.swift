@@ -18,8 +18,12 @@ public enum SpanCollector {
     }
 
     private static func blocks(of document: Document, spans: [StyleSpan], walker: SpanWalker) -> [StyledBlock] {
-        let ranges = document.children.compactMap { walker.mapper.nsRange($0.range) }
+        var ranges = document.children.compactMap { walker.mapper.nsRange($0.range) }
         guard !ranges.isEmpty else { return [] }
+        // Blocks never overlap, even where the parser's ranges do (see `endingAtUnderline`).
+        for index in ranges.indices.dropLast() where NSMaxRange(ranges[index]) > ranges[index + 1].location {
+            ranges[index].length = max(ranges[index + 1].location - ranges[index].location, 0)
+        }
         var buckets = Array(repeating: [StyleSpan](), count: ranges.count)
         for span in spans {
             // Spans are attached to the last block that starts at or before them.
@@ -59,10 +63,25 @@ private struct SpanWalker: MarkupWalker {
     // MARK: Blocks
 
     mutating func visitHeading(_ heading: Heading) {
-        guard let range = mapper.nsRange(heading.range) else { return }
+        guard let range = mapper.nsRange(heading.range).map({ endingAtUnderline($0, heading) }) else { return }
         add(range, .heading(level: heading.level))
         markOuterDelimiters(of: heading, in: range)
         descendInto(heading)
+    }
+
+    /// cmark reports a setext heading (`Title` over `---`) as running into the next line when a paragraph
+    /// follows directly; end it at its underline instead.
+    func endingAtUnderline(_ range: NSRange, _ heading: Heading) -> NSRange {
+        let start = range.location
+        var first = start
+        while first < NSMaxRange(range), text.character(at: first) == 0x20 { first += 1 }
+        guard first < NSMaxRange(range), text.character(at: first) != 0x23,  // not an ATX "#" heading
+            let lastChild = heading.children.compactMap({ mapper.nsRange($0.range) }).last
+        else { return range }
+        let contentLine = text.lineRange(for: NSRange(location: max(NSMaxRange(lastChild) - 1, start), length: 0))
+        guard NSMaxRange(contentLine) < NSMaxRange(range) else { return range }
+        let underline = text.lineRange(for: NSRange(location: NSMaxRange(contentLine), length: 0))
+        return NSRange(start..<min(NSMaxRange(underline), NSMaxRange(range))).trimmingTrailingNewline(in: text)
     }
 
     mutating func visitCodeBlock(_ codeBlock: CodeBlock) {
