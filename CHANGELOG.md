@@ -8,6 +8,12 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 ## [Unreleased]
 
 ### Fixed
+- Exported HTML can no longer run scripts from a document (event handlers, `javascript:` links and
+  `<script>` are removed, and the file carries a strict Content Security Policy).
+- A setext heading (a line underlined with `---` or `===`) no longer styles the line after it as a heading.
+- Pressing Return after a horizontal rule (`* * *`, `- - -`) no longer starts a list.
+- ⌘I on bold text makes it bold italic instead of replacing bold with italic, and ⌘B works the same way.
+- Headings that differ only by a number suffix ("Intro", "Intro 1", "Intro") get unique anchors.
 - Opening a file from the Files sidebar no longer closes the sidebar: the file opens in a new tab with the
   same folder listed.
 - New windows and tabs open with the sidebar the way you last left it (shown or hidden, Outline or Files).

@@ -238,24 +238,8 @@ final class MacMDUITests: XCTestCase {
         let app = launch([fixture])
         XCTAssertTrue(app.windows.firstMatch.textViews["editor"].waitForExistence(timeout: 10))
 
-        for (item, name) in [("Export as PDF…", "out.pdf"), ("Export as HTML…", "out.html")] {
-            app.menuBars.menuBarItems["File"].click()
-            app.menuBars.menuItems[item].click()
-            let sheet = app.sheets.firstMatch
-            XCTAssertTrue(sheet.waitForExistence(timeout: 5))
-            // Go to the target folder, then name the file.
-            sheet.typeKey("g", modifierFlags: [.command, .shift])
-            app.typeText(directory.path + "\n")
-            let nameField = sheet.textFields.firstMatch
-            nameField.doubleClick()
-            nameField.typeKey("a", modifierFlags: .command)
-            nameField.typeText(name + "\n")
-
-            let output = directory.appending(path: name)
-            let exists = expectation(
-                for: NSPredicate { _, _ in FileManager.default.fileExists(atPath: output.path) }, evaluatedWith: nil)
-            wait(for: [exists], timeout: 30)
-        }
+        export(app, "Export as PDF…", to: directory.appending(path: "out.pdf"))
+        export(app, "Export as HTML…", to: directory.appending(path: "out.html"))
 
         let pdf = try Data(contentsOf: directory.appending(path: "out.pdf"))
         XCTAssertTrue(pdf.starts(with: Data("%PDF".utf8)))
@@ -265,6 +249,35 @@ final class MacMDUITests: XCTestCase {
         XCTAssertTrue(html.contains("<svg"), "Mermaid diagram should be pre-rendered")
         XCTAssertTrue(html.contains("class=\"katex"), "Math should be pre-rendered")
         XCTAssertFalse(html.contains("<script"))
+        app.terminate()
+    }
+
+    /// Exported HTML opens in browsers, outside MacMD: a hostile document must not export working script.
+    @MainActor
+    func testExportedHTMLCannotRunScripts() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: "macmd-hostile-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let file = directory.appending(path: "hostile.md")
+        try """
+        # Hostile
+
+        <img src="x" onerror="alert('img')">
+        <a href="javascript:alert('link')">click</a>
+        <div onclick="alert('div')">text</div>
+        <script>alert('script')</script>
+        """.write(to: file, atomically: true, encoding: .utf8)
+
+        let app = launch([file.path])
+        XCTAssertTrue(app.windows.firstMatch.textViews["editor"].waitForExistence(timeout: 10))
+        export(app, "Export as HTML…", to: directory.appending(path: "out.html"))
+
+        let html = try String(contentsOf: directory.appending(path: "out.html"), encoding: .utf8).lowercased()
+        XCTAssertTrue(html.contains("hostile"))
+        XCTAssertTrue(html.contains("content-security-policy"), "exports carry a no-script policy")
+        for forbidden in ["<script", "onerror", "onclick", "javascript:"] {
+            XCTAssertFalse(html.contains(forbidden), "exported HTML still contains \(forbidden)")
+        }
         app.terminate()
     }
 
@@ -291,6 +304,24 @@ final class MacMDUITests: XCTestCase {
         XCTAssertFalse(reader.staticTexts["HACKED"].waitForExistence(timeout: 3))
         XCTAssertTrue(reader.staticTexts["Safe heading"].exists)
         app.terminate()
+    }
+
+    /// Runs an export command and saves to `url` through the save panel.
+    private func export(_ app: XCUIApplication, _ item: String, to url: URL) {
+        app.menuBars.menuBarItems["File"].click()
+        app.menuBars.menuItems[item].click()
+        let sheet = app.sheets.firstMatch
+        XCTAssertTrue(sheet.waitForExistence(timeout: 5))
+        // Go to the target folder, then name the file.
+        sheet.typeKey("g", modifierFlags: [.command, .shift])
+        app.typeText(url.deletingLastPathComponent().path + "\n")
+        let nameField = sheet.textFields.firstMatch
+        nameField.doubleClick()
+        nameField.typeKey("a", modifierFlags: .command)
+        nameField.typeText(url.lastPathComponent + "\n")
+        let exists = expectation(
+            for: NSPredicate { _, _ in FileManager.default.fileExists(atPath: url.path) }, evaluatedWith: nil)
+        wait(for: [exists], timeout: 30)
     }
 
     /// Launches the app with known settings, so a test never depends on the preferences of the Mac it runs on.

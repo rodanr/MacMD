@@ -90,6 +90,15 @@
     exportDocument() {
       const root = document.documentElement.cloneNode(true);
       root.querySelectorAll("script").forEach((script) => script.remove());
+      // Exported files open outside MacMD: drop event handlers and script links from the document.
+      root.querySelectorAll("*").forEach((element) => {
+        for (const attribute of [...element.attributes]) {
+          const value = attribute.value.trim().toLowerCase();
+          if (attribute.name.toLowerCase().startsWith("on") || value.startsWith("javascript:")) {
+            element.removeAttribute(attribute.name);
+          }
+        }
+      });
       return "<!doctype html>\n" + root.outerHTML;
     },
   };

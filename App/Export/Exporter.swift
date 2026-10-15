@@ -115,7 +115,7 @@ private final class OffscreenPage: NSObject, WKScriptMessageHandler {
     func standaloneHTML() async throws -> String {
         defer { finish() }
         let html = try await webView.evaluateJavaScript("macmd.exportDocument()") as? String ?? ""
-        return Self.inlineStylesheets(in: html)
+        return Self.standalone(html)
     }
 
     func print(printInfo: NSPrintInfo, showPanels: Bool, window: NSWindow) async {
@@ -140,19 +140,16 @@ private final class OffscreenPage: NSObject, WKScriptMessageHandler {
         Self.active.remove(self)
     }
 
-    private static func inlineStylesheets(in html: String) -> String {
+    private static func standalone(_ html: String) -> String {
         let webRoot = Bundle.main.resourceURL?.appending(path: "Web")
-        return html.replacing(/<link rel="stylesheet" href="macmd:\/\/app\/([^"]+)"( media="[^"]*")?>/) { match in
-            guard let webRoot,
-                var css = try? String(contentsOf: webRoot.appending(path: String(match.output.1)), encoding: .utf8)
-            else { return "" }
+        return StandaloneHTML.make(from: html) { path in
+            guard let webRoot, var css = try? String(contentsOf: webRoot.appending(path: path), encoding: .utf8)
+            else { return nil }
             // KaTeX fonts are not inlined; load them from the matching CDN release.
             css = css.replacingOccurrences(
                 of: "url(fonts/", with: "url(https://cdn.jsdelivr.net/npm/katex@\(WebAssets.katexVersion)/dist/fonts/")
-            return "<style\(match.output.2 ?? "")>\n\(css)\n</style>"
+            return css
         }
-        .replacing(/<script[^>]*><\/script>\n?/, with: "")
-        .replacing(/<meta http-equiv="Content-Security-Policy"[^>]*>\n?/, with: "")
     }
 }
 
