@@ -1,0 +1,28 @@
+name: Changelog
+
+# Every user-facing change gets a line under "## [Unreleased]" in CHANGELOG.md.
+# Label a pull request "skip-changelog" for changes users won't notice (docs, CI, refactors).
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+jobs:
+  changelog:
+    name: Changelog entry
+    if: >-
+      github.actor != 'dependabot[bot]' &&
+      !contains(github.event.pull_request.labels.*.name, 'skip-changelog')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Require a CHANGELOG entry
+        run: |
+          if git diff --quiet "origin/${{ github.base_ref }}...HEAD" -- CHANGELOG.md; then
+            echo "::error::Add a line under '## [Unreleased]' in CHANGELOG.md, or label this pull request 'skip-changelog'."
+            exit 1
+          fi

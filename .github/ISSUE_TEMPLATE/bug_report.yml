@@ -1,0 +1,24 @@
+name: Bug report
+description: Something doesn't work as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: markdown
+    attributes:
+      label: Markdown that reproduces it
+      description: The smallest snippet that shows the problem, if it's about a document.
+      render: markdown
+  - type: input
+    id: version
+    attributes:
+      label: MacMD and macOS version
+      placeholder: MacMD 0.1.0, macOS 26.1
+    validations:
+      required: true
