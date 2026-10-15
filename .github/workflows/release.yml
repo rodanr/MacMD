@@ -24,7 +24,7 @@ jobs:
       VERSION: ${{ github.event.inputs.version || github.ref_name }}
       HAS_SIGNING: ${{ secrets.MACOS_CERT_P12 != '' }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Normalize version
         run: |
