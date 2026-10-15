@@ -26,7 +26,8 @@ extension XCTestCase {
     /// networks". The prompt stays up and covers menus in later tests; answer it with Don't Allow.
     func dismissLocalNetworkPrompt(wait timeout: TimeInterval) {
         let prompts = XCUIApplication(bundleIdentifier: "com.apple.UserNotificationCenter")
-        let dontAllow = prompts.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Don'")).firstMatch
+        // The prompt's buttons carry their text as a title, not a label.
+        let dontAllow = prompts.buttons.matching(NSPredicate(format: "title BEGINSWITH 'Don'")).firstMatch
         if dontAllow.waitForExistence(timeout: timeout) { dontAllow.click() }
     }
 
