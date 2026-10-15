@@ -25,8 +25,29 @@ final class DocumentModel {
     @ObservationIgnored private var derivedUpdate: Task<Void, Never>?
 
     var mode: Mode
-    var sidebarTab: SidebarTab = .outline
-    var sidebarVisibility: NavigationSplitViewVisibility = .detailOnly
+    // Remembered for new windows. Settings are written only on a real change: SwiftUI re-sets these
+    // bindings on every update, and an unconditional write would redraw every window in a loop.
+    var sidebarTab: SidebarTab {
+        didSet {
+            if settings.sidebarTab != sidebarTab.rawValue { settings.sidebarTab = sidebarTab.rawValue }
+        }
+    }
+    var sidebarVisibility: NavigationSplitViewVisibility {
+        didSet {
+            let visible = sidebarVisibility != .detailOnly
+            if settings.sidebarVisible != visible { settings.sidebarVisible = visible }
+        }
+    }
+    /// The folder shown in the Files sidebar. Kept here, not in the view, so it survives hiding the sidebar
+    /// and can be handed to files opened from it.
+    var browsedFolder: URL? {
+        didSet {
+            guard browsedFolder?.standardizedFileURL != oldValue?.standardizedFileURL else { return }
+            fileTree = browsedFolder.map { FileNode(url: $0, isDirectory: true) }
+        }
+    }
+    private(set) var fileTree: FileNode?
+    @ObservationIgnored private let settings: AppSettings
     var isFocusMode: Bool
     var isTypewriterMode: Bool
     var fileURL: URL?
@@ -54,7 +75,10 @@ final class DocumentModel {
     }
 
     init(settings: AppSettings = .shared) {
+        self.settings = settings
         mode = settings.openInReadMode ? .read : .edit
+        sidebarTab = SidebarTab(rawValue: settings.sidebarTab) ?? .outline
+        sidebarVisibility = settings.sidebarVisible ? .all : .detailOnly
         isFocusMode = settings.focusModeByDefault
         isTypewriterMode = settings.typewriterModeByDefault
         storageObserver = StorageObserver { [weak self] in self?.textDidChange() }

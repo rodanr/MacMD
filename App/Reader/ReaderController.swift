@@ -149,9 +149,16 @@ enum LinkRouter {
         }
     }
 
-    static func openFile(_ fileURL: URL) {
+    /// `browsing` is the folder of the Files sidebar the file was opened from; the new document keeps
+    /// browsing it, so moving between files doesn't lose your place.
+    static func openFile(_ fileURL: URL, browsing folder: URL? = nil) {
         if markdownExtensions.contains(fileURL.pathExtension.lowercased()) {
-            NSDocumentController.shared.openDocument(withContentsOf: fileURL, display: true) { _, _, _ in }
+            NSDocumentController.shared.openDocument(withContentsOf: fileURL, display: true) { document, _, _ in
+                guard let folder, let document = document as? MarkdownDocument,
+                    fileURL.standardizedFileURL.path.hasPrefix(folder.standardizedFileURL.path + "/")
+                else { return }
+                document.model.browsedFolder = folder
+            }
         } else {
             NSWorkspace.shared.activateFileViewerSelecting([fileURL])
         }

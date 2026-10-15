@@ -43,6 +43,9 @@ final class AppSettings {
     var spellChecking: Bool { didSet { store(spellChecking, for: .spellChecking) } }
     var openInReadMode: Bool { didSet { store(openInReadMode, for: .openInReadMode) } }
     var vimMode: Bool { didSet { store(vimMode, for: .vimMode) } }
+    /// The sidebar as last left, so new windows and tabs open the same way.
+    var sidebarVisible: Bool { didSet { store(sidebarVisible, for: .sidebarVisible) } }
+    var sidebarTab: String { didSet { store(sidebarTab, for: .sidebarTab) } }
 
     var theme: Theme { Theme(id: themeID, fontSize: Self.baseFontSize * zoom) }
 
@@ -53,7 +56,7 @@ final class AppSettings {
 
     private enum Key: String {
         case theme, appearance, zoom, lineWidth, focusMode, typewriterMode, spellChecking, openInReadMode
-        case vimMode
+        case vimMode, sidebarVisible, sidebarTab
     }
 
     init(defaults: UserDefaults = .standard) {
@@ -67,6 +70,8 @@ final class AppSettings {
         spellChecking = defaults.object(forKey: Key.spellChecking.rawValue) as? Bool ?? true
         openInReadMode = defaults.bool(forKey: Key.openInReadMode.rawValue)
         vimMode = defaults.bool(forKey: Key.vimMode.rawValue)
+        sidebarVisible = defaults.bool(forKey: Key.sidebarVisible.rawValue)
+        sidebarTab = defaults.string(forKey: Key.sidebarTab.rawValue) ?? "outline"
     }
 
     func applyAppearance() {

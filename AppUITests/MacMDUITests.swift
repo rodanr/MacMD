@@ -102,6 +102,36 @@ final class MacMDUITests: XCTestCase {
     }
 
     @MainActor
+    func testOpeningAFileFromTheFilesSidebarKeepsTheSidebar() throws {
+        let folder = FileManager.default.temporaryDirectory.appending(path: "files-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        for name in ["alpha.md", "beta.md"] {
+            try "# \(name)\n".write(to: folder.appending(path: name), atomically: true, encoding: .utf8)
+        }
+
+        let app = launch([folder.appending(path: "alpha.md").path])
+        let first = app.windows["alpha.md"]
+        XCTAssertTrue(first.waitForExistence(timeout: 10))
+        app.typeKey("2", modifierFlags: [.command, .control])
+        XCTAssertTrue(first.buttons["beta.md"].waitForExistence(timeout: 5), "the Files sidebar lists the folder")
+
+        first.buttons["beta.md"].click()
+        let second = app.windows["beta.md"]
+        XCTAssertTrue(second.waitForExistence(timeout: 10))
+        XCTAssertTrue(
+            second.buttons["alpha.md"].waitForExistence(timeout: 5),
+            "the opened file keeps the Files sidebar open on the same folder")
+        attach(second, "files-sidebar-after-open")
+
+        // Hiding and showing the sidebar again still shows the files.
+        app.typeKey("s", modifierFlags: [.command, .control])
+        app.typeKey("s", modifierFlags: [.command, .control])
+        XCTAssertTrue(second.buttons["alpha.md"].waitForExistence(timeout: 5), "files come back after reopening")
+        app.terminate()
+    }
+
+    @MainActor
     func testVimMode() throws {
         // A scratch copy: the app autosaves in place, and the fixture must stay untouched.
         let file = FileManager.default.temporaryDirectory.appending(path: "vim-\(UUID().uuidString).md")
@@ -269,6 +299,7 @@ final class MacMDUITests: XCTestCase {
         let pinned = [
             "-ApplePersistenceIgnoreState": "YES", "-vimMode": "NO", "-openInReadMode": "NO", "-zoom": "1",
             "-focusMode": "NO", "-typewriterMode": "NO", "-lineWidth": "medium", "-theme": "paper",
+            "-sidebarVisible": "NO", "-sidebarTab": "outline",
         ]
         var all = arguments
         for (key, value) in pinned.sorted(by: { $0.key < $1.key }) where !arguments.contains(key) {

@@ -4,14 +4,13 @@ import SwiftUI
 /// A lazily loaded tree of Markdown files around the current document.
 struct FolderBrowserView: View {
     let model: DocumentModel
-    @State private var root: FileNode?
     @Environment(\.zoom) private var zoom
 
     var body: some View {
         Group {
-            if let root {
+            if let root = model.fileTree {
                 List {
-                    FileNodeChildren(node: root, currentFile: model.fileURL)
+                    FileNodeChildren(node: root, currentFile: model.fileURL, browsedFolder: model.browsedFolder)
                 }
                 .listStyle(.sidebar)
                 .font(.system(size: 13 * zoom))
@@ -28,10 +27,14 @@ struct FolderBrowserView: View {
                 }
             }
         }
-        .onAppear {
-            if root == nil, let directory = model.fileURL?.deletingLastPathComponent() {
-                root = FileNode(url: directory, isDirectory: true)
-            }
+        .onAppear(perform: browseDocumentFolderIfNeeded)
+        .onChange(of: model.fileURL) { browseDocumentFolderIfNeeded() }
+    }
+
+    /// Without a chosen folder, browse the one the document is in (once it has been saved).
+    private func browseDocumentFolderIfNeeded() {
+        if model.browsedFolder == nil, let directory = model.fileURL?.deletingLastPathComponent() {
+            model.browsedFolder = directory
         }
     }
 
@@ -57,7 +60,7 @@ struct FolderBrowserView: View {
         panel.canChooseFiles = false
         panel.prompt = "Browse"
         if panel.runModal() == .OK, let url = panel.url {
-            root = FileNode(url: url, isDirectory: true)
+            model.browsedFolder = url
         }
     }
 }
@@ -65,18 +68,19 @@ struct FolderBrowserView: View {
 private struct FileNodeChildren: View {
     let node: FileNode
     let currentFile: URL?
+    let browsedFolder: URL?
 
     var body: some View {
         ForEach(node.children) { child in
             if child.isDirectory {
                 DisclosureGroup {
-                    FileNodeChildren(node: child, currentFile: currentFile)
+                    FileNodeChildren(node: child, currentFile: currentFile, browsedFolder: browsedFolder)
                 } label: {
                     Label(child.name, systemImage: "folder")
                 }
             } else {
                 Button {
-                    LinkRouter.openFile(child.url)
+                    LinkRouter.openFile(child.url, browsing: browsedFolder)
                 } label: {
                     Label(child.name, systemImage: "doc.text")
                         .foregroundStyle(

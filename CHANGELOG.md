@@ -7,6 +7,11 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+### Fixed
+- Opening a file from the Files sidebar no longer closes the sidebar: the file opens in a new tab with the
+  same folder listed.
+- New windows and tabs open with the sidebar the way you last left it (shown or hidden, Outline or Files).
+
 ## [0.1.0] - 2026-10-15
 
 First public release.
