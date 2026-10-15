@@ -63,8 +63,9 @@ struct DocumentView: View {
         ToolbarItem(placement: .primaryAction) {
             Picker("Mode", selection: Binding(get: { model.mode }, set: { if $0 != model.mode { model.toggleMode() } }))
             {
-                Label("Edit", systemImage: "pencil").tag(DocumentModel.Mode.edit)
-                Label("Read", systemImage: "book").tag(DocumentModel.Mode.read)
+                // Explicit labels: otherwise VoiceOver reads the icons' names ("Bookmark").
+                Label("Edit", systemImage: "pencil").accessibilityLabel("Edit").tag(DocumentModel.Mode.edit)
+                Label("Read", systemImage: "book").accessibilityLabel("Read").tag(DocumentModel.Mode.read)
             }
             .pickerStyle(.segmented)
             .help("Switch between editing and reading (⌘E)")
