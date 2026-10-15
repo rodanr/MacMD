@@ -11,7 +11,7 @@ final class DesignReviewUITests: XCTestCase {
                     fixture, "-theme", theme, "-appearance", appearance, "-sidebarVisible", "YES",
                     "-sidebarTab", "outline",
                     // Fits the 1024×768 screens of CI runners.
-                    "-NSWindow Frame MarkdownDocumentWindow", "40 60 980 680 0 0 1024 768",
+                    "-NSWindow Frame MarkdownDocumentWindow", "20 100 980 620 0 0 1024 768",
                 ])
                 let window = app.windows.firstMatch
                 XCTAssertTrue(window.waitForExistence(timeout: 10))
