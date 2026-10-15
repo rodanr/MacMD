@@ -44,6 +44,7 @@ extension XCTestCase {
     func launch(_ arguments: [String]) -> XCUIApplication {
         let pinned = [
             "-ApplePersistenceIgnoreState": "YES", "-vimMode": "NO", "-openInReadMode": "NO", "-zoom": "1",
+            "-fontSize": "16",
             "-focusMode": "NO", "-typewriterMode": "NO", "-lineWidth": "medium", "-theme": "paper",
             "-sidebarVisible": "NO", "-sidebarTab": "outline",
         ]

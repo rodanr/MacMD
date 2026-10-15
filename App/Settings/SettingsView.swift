@@ -4,6 +4,11 @@ import SwiftUI
 struct SettingsView: View {
     @State private var settings = AppSettings.shared
 
+    /// Typed values are kept within the allowed range.
+    private var fontSize: Binding<Double> {
+        Binding(get: { settings.fontSize }, set: { settings.fontSize = FontSize.sanitized($0) })
+    }
+
     var body: some View {
         Form {
             Section {
@@ -38,6 +43,21 @@ struct SettingsView: View {
                 .pickerStyle(.segmented)
             }
             Section {
+                LabeledContent("Font size") {
+                    HStack(spacing: 6) {
+                        TextField("Font size", value: fontSize, format: .number)
+                            .labelsHidden()
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 44)
+                            .accessibilityIdentifier("fontSizeField")
+                        Text("pt").foregroundStyle(.secondary)
+                        Stepper("Font size", value: fontSize, in: FontSize.range, step: 1)
+                            .labelsHidden()
+                            .accessibilityIdentifier("fontSizeStepper")
+                        Button("Reset") { settings.resetFontSize() }
+                            .disabled(settings.fontSize == FontSize.standard)
+                    }
+                }
                 LabeledContent("Zoom") {
                     HStack {
                         Picker("Zoom", selection: $settings.zoom) {
@@ -55,8 +75,11 @@ struct SettingsView: View {
             } header: {
                 Text("Size")
             } footer: {
-                Text("Zoom scales the editor, Read mode, sidebar and status bar. ⌘+ and ⌘− zoom; ⌘0 returns to 100%.")
-                    .foregroundStyle(.secondary)
+                Text(
+                    "Font size sets the text in the editor and Read mode (⌥⌘+ / ⌥⌘−). Zoom scales the whole window, "
+                        + "sidebar and status bar included (⌘+ / ⌘−; ⌘0 returns to 100%)."
+                )
+                .foregroundStyle(.secondary)
             }
             Section {
                 Toggle("Check spelling while typing", isOn: $settings.spellChecking)

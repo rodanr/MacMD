@@ -158,6 +158,9 @@ enum MainMenu {
         menu.addItem(zoomInPlus)
         menu.addItem(withTitle: "Zoom Out", action: #selector(AppDelegate.zoomOut(_:)), keyEquivalent: "-")
         menu.addItem(withTitle: "Actual Size", action: #selector(AppDelegate.resetZoom(_:)), keyEquivalent: "0")
+        // Font size only (the editor and Read mode text), as Safari's Make Text Bigger / Smaller.
+        menu.addItem(item("Bigger Font", #selector(AppDelegate.increaseFontSize(_:)), "=", [.command, .option]))
+        menu.addItem(item("Smaller Font", #selector(AppDelegate.decreaseFontSize(_:)), "-", [.command, .option]))
         menu.addItem(.separator())
         menu.addItem(item("Enter Full Screen", #selector(NSWindow.toggleFullScreen(_:)), "f", [.command, .control]))
         return menu

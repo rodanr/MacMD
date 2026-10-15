@@ -37,6 +37,8 @@ final class AppSettings {
     var appearance: Appearance { didSet { store(appearance.rawValue, for: .appearance); applyAppearance() } }
     /// Scales everything in the window: editor, Read mode, sidebar and status bar (see `Zoom`).
     var zoom: Double { didSet { store(zoom, for: .zoom) } }
+    /// The editor and Read mode text size in points, before zoom (see `FontSize`).
+    var fontSize: Double { didSet { store(fontSize, for: .fontSize) } }
     var lineWidth: LineWidth { didSet { store(lineWidth.rawValue, for: .lineWidth) } }
     var focusModeByDefault: Bool { didSet { store(focusModeByDefault, for: .focusMode) } }
     var typewriterModeByDefault: Bool { didSet { store(typewriterModeByDefault, for: .typewriterMode) } }
@@ -47,16 +49,16 @@ final class AppSettings {
     var sidebarVisible: Bool { didSet { store(sidebarVisible, for: .sidebarVisible) } }
     var sidebarTab: String { didSet { store(sidebarTab, for: .sidebarTab) } }
 
-    var theme: Theme { Theme(id: themeID, fontSize: Self.baseFontSize * zoom) }
+    var theme: Theme { Theme(id: themeID, fontSize: fontSize * zoom) }
 
-    /// The editor's body size at 100% zoom.
-    static let baseFontSize: Double = 16
+    /// How much Read mode scales: zoom times the font size relative to the default.
+    var readerScale: Double { zoom * fontSize / FontSize.standard }
 
     private let defaults: UserDefaults
 
     private enum Key: String {
         case theme, appearance, zoom, lineWidth, focusMode, typewriterMode, spellChecking, openInReadMode
-        case vimMode, sidebarVisible, sidebarTab
+        case vimMode, sidebarVisible, sidebarTab, fontSize
     }
 
     init(defaults: UserDefaults = .standard) {
@@ -64,6 +66,7 @@ final class AppSettings {
         themeID = defaults.string(forKey: Key.theme.rawValue).flatMap(Theme.ID.init) ?? .paper
         appearance = defaults.string(forKey: Key.appearance.rawValue).flatMap(Appearance.init) ?? .system
         zoom = Zoom.sanitized(defaults.object(forKey: Key.zoom.rawValue) as? Double ?? Zoom.actualSize)
+        fontSize = FontSize.sanitized(defaults.object(forKey: Key.fontSize.rawValue) as? Double ?? FontSize.standard)
         lineWidth = defaults.string(forKey: Key.lineWidth.rawValue).flatMap(LineWidth.init) ?? .medium
         focusModeByDefault = defaults.bool(forKey: Key.focusMode.rawValue)
         typewriterModeByDefault = defaults.bool(forKey: Key.typewriterMode.rawValue)
@@ -86,6 +89,9 @@ final class AppSettings {
     func zoomIn() { zoom = Zoom.zoomedIn(from: zoom) }
     func zoomOut() { zoom = Zoom.zoomedOut(from: zoom) }
     func resetZoom() { zoom = Zoom.actualSize }
+    func increaseFontSize() { fontSize = FontSize.bigger(than: fontSize) }
+    func decreaseFontSize() { fontSize = FontSize.smaller(than: fontSize) }
+    func resetFontSize() { fontSize = FontSize.standard }
 
     private func store(_ value: Any, for key: Key) {
         defaults.set(value, forKey: key.rawValue)

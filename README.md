@@ -48,7 +48,7 @@ Write in plain Markdown that styles itself as you type, then press ⌘E to read 
 | **Smart editing** | Lists, quotes and tasks continue on Return; Tab indents; typing `*`, `` ` `` or `[` around a selection wraps it |
 | **Vim mode** | For people who think in motions. Optional, and off until you turn it on in Settings |
 | **Images** | Drop or paste images; MacMD inserts a relative link and saves pasted images next to your document |
-| **Themes & zoom** | Paper, Clean and Mono, each in light and dark; zoom scales the whole window, not just the text |
+| **Themes & sizes** | Paper, Clean and Mono, each in light and dark; set the font size, or zoom the whole window |
 | **Export** | HTML, PDF, Print, and Copy as HTML |
 | **Stays in sync** | Reloads automatically when another app changes the file |
 
@@ -122,6 +122,7 @@ You can also open files from a terminal:
 | Focus mode | F8 | | Inline code | ⇧⌘K |
 | Typewriter mode | F9 | | Strikethrough | ⇧⌘X |
 | Zoom in / out / actual size | ⌘+ / ⌘- / ⌘0 | | Heading 1–6 / Paragraph | ⌘1–⌘6 / ⌥⌘0 |
+| Bigger / smaller font | ⌥⌘+ / ⌥⌘- | | | |
 | Export HTML / PDF | ⇧⌘E / ⌥⌘E | | Indent / Outdent list | Tab / ⇧Tab |
 | Find / Replace | ⌘F / ⌥⌘F | | Settings | ⌘, |
 

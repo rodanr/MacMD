@@ -7,6 +7,10 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+### Added
+- Settings → Size → Font size: set the editor and Read mode text size in points (type it or use the
+  stepper), or change it with ⌥⌘+ / ⌥⌘−. Zoom still scales the whole window on top of it.
+
 ### Fixed
 - Vim mode now matches Vim: a file's final line break no longer counts as an extra line, and `dw`, `cw`, `dG`,
   `2dd`, `J`, `{` / `}`, `v$`, `aw`, `a"`, `i(` and paste follow Vim's rules at line ends, empty lines and the

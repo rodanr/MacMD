@@ -38,7 +38,7 @@ struct DocumentView: View {
             if model.mode == .read || model.reader != nil {
                 ReaderView(
                     controller: model.makeReaderIfNeeded(), theme: settings.themeID, revision: model.revision,
-                    zoom: settings.zoom, measure: settings.lineWidth.cssMeasure, fileURL: model.fileURL,
+                    zoom: settings.readerScale, measure: settings.lineWidth.cssMeasure, fileURL: model.fileURL,
                     isVisible: model.mode == .read
                 )
                 .opacity(model.mode == .read ? 1 : 0)

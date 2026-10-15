@@ -75,6 +75,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     @objc func zoomOut(_ sender: Any?) { changeZoom { $0.zoomOut() } }
     @objc func resetZoom(_ sender: Any?) { changeZoom { $0.resetZoom() } }
 
+    @objc func increaseFontSize(_ sender: Any?) { changeFontSize { $0.increaseFontSize() } }
+    @objc func decreaseFontSize(_ sender: Any?) { changeFontSize { $0.decreaseFontSize() } }
+
+    private func changeFontSize(_ change: (AppSettings) -> Void) {
+        change(settings)
+        HUD.shared.show("Font Size \(FontSize.describe(settings.fontSize))")
+    }
+
     private func changeZoom(_ change: (AppSettings) -> Void) {
         change(settings)
         HUD.shared.show("Zoom \(Zoom.describe(settings.zoom))")
