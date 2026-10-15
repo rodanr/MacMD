@@ -165,6 +165,9 @@
     });
   }, { passive: true });
 
+  const scrollBehavior = () =>
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+
   window.macmd = {
     scrollToLine(line) {
       let target = null;
@@ -178,7 +181,7 @@
       reportTopLine();
     },
     scrollToAnchor(id) {
-      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.getElementById(id)?.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
       reportTopLine();
     },
     exportDocument() {
