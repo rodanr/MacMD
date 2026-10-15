@@ -9,8 +9,8 @@
 Write in plain Markdown that styles itself as you type, then press ⌘E to read it as a beautifully set page.
 
 [![CI](https://github.com/rodanr/MacMD/actions/workflows/ci.yml/badge.svg)](https://github.com/rodanr/MacMD/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/rodanr/MacMD?sort=semver)](https://github.com/rodanr/MacMD/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/rodanr/MacMD/total?label=downloads)](https://github.com/rodanr/MacMD/releases)
+[![Release](https://img.shields.io/github/v/release/rodanr/MacMD?sort=semver&cacheSeconds=3600)](https://github.com/rodanr/MacMD/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/rodanr/MacMD/total?label=downloads&cacheSeconds=3600)](https://github.com/rodanr/MacMD/releases)
 ![macOS 26+](https://img.shields.io/badge/macOS-26%2B-black?logo=apple)
 ![Apple silicon](https://img.shields.io/badge/Apple%20silicon-native-black)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
