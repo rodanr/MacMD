@@ -7,6 +7,18 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+### Changed
+- A calmer, more consistent look. Code blocks and quotes match between Edit and Read mode; tables sit in
+  rounded frames with a tinted header; task boxes are rounded squares sized to the text; diagrams use the
+  page's colors and a clean sans font; secondary text and Markdown markers are easier to read.
+- The outline shows indent guides and highlights the current heading in Read mode too; the status bar and
+  Files list are tidier, and an empty document shows a quiet "Start writing…" hint.
+- Animations respect Reduce Motion.
+
+### Fixed
+- Diagrams switch colors when macOS switches between light and dark.
+- Nested task lists in Read mode sit under their parent item instead of beside it.
+
 ## [0.2.0] - 2026-10-16
 
 ### Added
