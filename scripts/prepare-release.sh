@@ -13,7 +13,7 @@ if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta|rc)\.[0-9]+)?$ ]]; th
   exit 64
 fi
 CORE="${VERSION%%-*}"   # CFBundleShortVersionString must be plain X.Y.Z
-REPO_URL="https://github.com/rodanr/macmd"
+REPO_URL="https://github.com/rodanr/MacMD"
 cd "$(dirname "$0")/.."
 
 fail() { echo "error: $*" >&2; exit 1; }

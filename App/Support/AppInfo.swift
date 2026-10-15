@@ -9,11 +9,11 @@ enum AppInfo {
     static var build: String { info("CFBundleVersion") ?? "0" }
     static var copyright: String { info("NSHumanReadableCopyright") ?? "© \(author)" }
 
-    static let repository = URL(string: "https://github.com/rodanr/macmd")!
-    static let help = URL(string: "https://github.com/rodanr/macmd#readme")!
-    static let issues = URL(string: "https://github.com/rodanr/macmd/issues/new/choose")!
-    static let releases = URL(string: "https://github.com/rodanr/macmd/releases")!
-    static let latestReleaseAPI = URL(string: "https://api.github.com/repos/rodanr/macmd/releases/latest")!
+    static let repository = URL(string: "https://github.com/rodanr/MacMD")!
+    static let help = URL(string: "https://github.com/rodanr/MacMD#readme")!
+    static let issues = URL(string: "https://github.com/rodanr/MacMD/issues/new/choose")!
+    static let releases = URL(string: "https://github.com/rodanr/MacMD/releases")!
+    static let latestReleaseAPI = URL(string: "https://api.github.com/repos/rodanr/MacMD/releases/latest")!
     static let markdownGuide = URL(string: "https://www.markdownguide.org/basic-syntax/")!
 
     private static func info(_ key: String) -> String? {

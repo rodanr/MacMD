@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security vulnerability
-    url: https://github.com/rodanr/macmd/security/advisories/new
+    url: https://github.com/rodanr/MacMD/security/advisories/new
     about: Please report security issues privately.

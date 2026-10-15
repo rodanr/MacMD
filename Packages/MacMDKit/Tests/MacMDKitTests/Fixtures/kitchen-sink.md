@@ -1,6 +1,6 @@
 # Welcome to MacMD
 
-A **native**, *fast* and ~~heavy~~ light Markdown editor for macOS — with `inline code`, [links](https://github.com/rodanr/macmd) and a calm reading mode.
+A **native**, *fast* and ~~heavy~~ light Markdown editor for macOS — with `inline code`, [links](https://github.com/rodanr/MacMD) and a calm reading mode.
 
 > Simplicity is the ultimate sophistication.
 > — Leonardo da Vinci

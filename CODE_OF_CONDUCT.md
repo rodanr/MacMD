@@ -6,5 +6,5 @@ In short: be welcoming, be respectful of differing viewpoints, give and accept c
 and focus on what is best for the community. Harassment of any kind is not tolerated.
 
 Report unacceptable behavior privately to the maintainer through a
-[GitHub security advisory](https://github.com/rodanr/macmd/security/advisories/new) or by contacting
+[GitHub security advisory](https://github.com/rodanr/MacMD/security/advisories/new) or by contacting
 [@rodanr](https://github.com/rodanr). All reports are reviewed and kept confidential.

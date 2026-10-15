@@ -33,5 +33,5 @@ First public release.
 - About window with license, terms and privacy, and acknowledgements; manual Check for Updates… (the only time
   MacMD contacts GitHub). No analytics or telemetry; see [TERMS.md](TERMS.md).
 
-[Unreleased]: https://github.com/rodanr/macmd/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/rodanr/macmd/releases/tag/v0.1.0
+[Unreleased]: https://github.com/rodanr/MacMD/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/rodanr/MacMD/releases/tag/v0.1.0

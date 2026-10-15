@@ -59,7 +59,7 @@ Without signing secrets, the app is ad-hoc signed and Gatekeeper blocks the firs
 the build; the release notes link to it. Keep those steps in sync with the current macOS dialogs.
 
 Every release also gets a SHA-256 file and a [build provenance attestation](https://docs.github.com/actions/security-for-github-actions/using-artifact-attestations),
-which users check with `gh attestation verify MacMD-X.Y.Z.dmg --repo rodanr/macmd`.
+which users check with `gh attestation verify MacMD-X.Y.Z.dmg --repo rodanr/MacMD`.
 
 ## Enabling Developer ID signing and notarization
 

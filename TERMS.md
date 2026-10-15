@@ -51,5 +51,5 @@ affiliated with, sponsored by or endorsed by Apple Inc.
 ## Changes and contact
 
 Changes to these terms are published in this repository and noted in the [changelog](CHANGELOG.md). Questions
-and bug reports go to [GitHub Issues](https://github.com/rodanr/macmd/issues); security reports follow
+and bug reports go to [GitHub Issues](https://github.com/rodanr/MacMD/issues); security reports follow
 [SECURITY.md](SECURITY.md).

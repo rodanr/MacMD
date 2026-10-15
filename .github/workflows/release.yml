@@ -117,7 +117,7 @@ jobs:
           **First launch:** MacMD isn't notarized by Apple yet, so macOS asks you to confirm it once:
           open MacMD, click **Done**, then **System Settings → Privacy & Security → Open Anyway**.
           Step-by-step guide, and why you can trust this build:
-          https://github.com/rodanr/macmd#install
+          https://github.com/rodanr/MacMD#install
           NOTE
           fi
 

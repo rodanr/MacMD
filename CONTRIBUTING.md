@@ -7,8 +7,8 @@ Thanks for helping make MacMD better. Bug reports, ideas and pull requests are a
 Requirements: macOS 26+, Xcode 26+, [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
 
 ```sh
-git clone https://github.com/rodanr/macmd.git
-cd macmd
+git clone https://github.com/rodanr/MacMD.git
+cd MacMD
 make run        # generates the project, builds and launches
 make test       # unit + UI tests
 ```

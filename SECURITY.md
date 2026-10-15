@@ -7,7 +7,7 @@ Security fixes go into the latest release.
 ## Reporting a vulnerability
 
 Please **don't open a public issue**. Report it privately through
-[GitHub security advisories](https://github.com/rodanr/macmd/security/advisories/new) with steps to
+[GitHub security advisories](https://github.com/rodanr/MacMD/security/advisories/new) with steps to
 reproduce. You'll get a reply within a week.
 
 ## Scope notes
