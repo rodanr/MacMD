@@ -19,7 +19,9 @@ import cmark_gfm_extensions
         cmark_parser_feed(parser, markdown, markdown.utf8.count)
         guard let document = cmark_parser_finish(parser) else { return "" }
         defer { cmark_node_free(document) }
-        guard let html = cmark_render_html(document, CMARK_OPT_UNSAFE | CMARK_OPT_SMART, cmark_parser_get_syntax_extensions(parser))
+        guard
+            let html = cmark_render_html(
+                document, CMARK_OPT_UNSAFE | CMARK_OPT_SMART, cmark_parser_get_syntax_extensions(parser))
         else { return "" }
         defer { free(html) }
         return String(cString: html)

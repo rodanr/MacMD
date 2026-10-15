@@ -100,6 +100,24 @@ final class RobustnessUITests: XCTestCase {
     }
 
     @MainActor
+    func testUnsavedEditsSurviveAChangeFromAnotherApp() throws {
+        let (app, editor, file) = try open("original")
+        editor.click()
+        editor.typeKey(.downArrow, modifierFlags: .command)
+        editor.typeText(" plus my edit")
+        let autosaved = (try? String(contentsOf: file, encoding: .utf8)) == "original plus my edit"
+        try "changed by another app".write(to: file, atomically: true, encoding: .utf8)
+        sleep(3)
+        if autosaved {
+            // The edit was already saved, so the other app's newer version wins, as in TextEdit.
+            XCTAssertEqual(value(editor), "changed by another app")
+        } else {
+            XCTAssertEqual(value(editor), "original plus my edit", "unsaved edits are never replaced by a reload")
+        }
+        app.terminate()
+    }
+
+    @MainActor
     func testRenamingTheOpenFileFollowsIt() throws {
         let (app, editor, file) = try open("# Renamed", name: "before.md")
         let renamed = file.deletingLastPathComponent().appending(path: "after.md")
