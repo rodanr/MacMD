@@ -1,0 +1,32 @@
+{
+  "fill": {
+    "linear-gradient": [
+      "display-p3:0.25000,0.26000,0.30000,1.00000",
+      "display-p3:0.06000,0.06500,0.08000,1.00000"
+    ]
+  },
+  "groups": [
+    {
+      "layers": [
+        {
+          "glass": true,
+          "image-name": "Glyph.png",
+          "name": "md"
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.4
+      }
+    }
+  ],
+  "supported-platforms": {
+    "squares": [
+      "macOS"
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(make:*)",
+      "Bash(xcodegen generate:*)",
+      "Bash(swift test:*)",
+      "Bash(swift build:*)",
+      "Bash(swift format:*)",
+      "Bash(xcodebuild:*)",
+      "Bash(xcrun xcresulttool:*)"
+    ]
+  }
+}

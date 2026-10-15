@@ -1,0 +1,291 @@
+/* MacMD reader — typography follows the active theme (html[data-theme]) and the system appearance. */
+
+:root {
+  color-scheme: light dark;
+  --font-body: ui-serif, "New York", Georgia, serif;
+  --font-heading: var(--font-body);
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --size: 17px;
+  --leading: 1.65;
+  --measure: 68ch;
+
+  --paper: #fafaf8;
+  --ink: #24262b;
+  --ink-muted: rgb(36 38 43 / 0.62);
+  --ink-faint: rgb(36 38 43 / 0.12);
+  --surface: rgb(36 38 43 / 0.045);
+  --accent: AccentColor;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #1a1b1e;
+    --ink: #e4e2dd;
+    --ink-muted: rgb(228 226 221 / 0.62);
+    --ink-faint: rgb(228 226 221 / 0.13);
+    --surface: rgb(228 226 221 / 0.06);
+  }
+}
+
+html[data-theme="clean"] {
+  --font-body: system-ui, -apple-system, "SF Pro Text", sans-serif;
+  --size: 16px;
+  --leading: 1.6;
+  --paper: #ffffff;
+  --ink: #1d1d1f;
+  --ink-muted: rgb(29 29 31 / 0.6);
+  --ink-faint: rgb(29 29 31 / 0.11);
+  --surface: rgb(29 29 31 / 0.045);
+}
+
+html[data-theme="mono"] {
+  --font-body: var(--font-mono);
+  --font-heading: var(--font-mono);
+  --size: 15px;
+  --leading: 1.7;
+  --measure: 72ch;
+  --paper: #f6f6f4;
+  --ink: #222326;
+  --ink-muted: rgb(34 35 38 / 0.6);
+  --ink-faint: rgb(34 35 38 / 0.12);
+  --surface: rgb(34 35 38 / 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-theme="clean"] {
+    --paper: #1e1e20;
+    --ink: #e5e5e7;
+    --ink-muted: rgb(229 229 231 / 0.6);
+    --ink-faint: rgb(229 229 231 / 0.12);
+    --surface: rgb(229 229 231 / 0.06);
+  }
+  html[data-theme="mono"] {
+    --paper: #18191b;
+    --ink: #dcdcd8;
+    --ink-muted: rgb(220 220 216 / 0.6);
+    --ink-faint: rgb(220 220 216 / 0.12);
+    --surface: rgb(220 220 216 / 0.06);
+  }
+}
+
+* { box-sizing: border-box; }
+
+html {
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--size) / var(--leading) var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-kerning: normal;
+  font-variant-ligatures: common-ligatures;
+  hanging-punctuation: first;
+}
+
+body { margin: 0; }
+
+::selection { background: color-mix(in srgb, var(--accent) 28%, transparent); }
+
+.markdown-body {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 56px 40px 30vh;
+  overflow-wrap: break-word;
+}
+
+.markdown-body > :first-child { margin-top: 0; }
+
+/* Headings: the single bold gesture — a large, tightly set display title. */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  line-height: 1.2;
+  margin: 2em 0 0.6em;
+  text-wrap: balance;
+  scroll-margin-top: 24px;
+}
+
+h1 {
+  font-size: 2.35em;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  line-height: 1.08;
+  margin-bottom: 0.5em;
+}
+
+h2 { font-size: 1.5em; font-weight: 650; letter-spacing: -0.012em; }
+h3 { font-size: 1.22em; font-weight: 650; }
+h4 { font-size: 1.05em; font-weight: 650; }
+h5, h6 { font-size: 1em; font-weight: 650; color: var(--ink-muted); }
+
+html[data-theme="mono"] h1 { font-size: 1.8em; letter-spacing: -0.01em; }
+
+p, ul, ol, blockquote, pre, table, figure, details, .math.display, .mermaid {
+  margin: 0 0 1.05em;
+}
+
+p { text-wrap: pretty; }
+
+/* Links: the system accent, softened toward the ink in dark mode where pure accents glare. */
+:root { --link: var(--accent); }
+@media (prefers-color-scheme: dark) {
+  :root { --link: color-mix(in srgb, var(--accent) 65%, var(--ink)); }
+}
+
+a {
+  color: var(--link);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--link) 35%, transparent);
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+}
+
+a:hover { text-decoration-color: var(--link); }
+
+strong { font-weight: 650; }
+
+del { color: var(--ink-muted); }
+
+hr {
+  border: 0;
+  height: 1px;
+  background: var(--ink-faint);
+  margin: 2.4em 0;
+}
+
+/* Lists: bullets hang into the margin so text keeps a clean left edge. */
+
+ul, ol { padding-left: 1.4em; }
+li { margin: 0.25em 0; }
+li > ul, li > ol { margin: 0.25em 0 0; }
+li::marker { color: var(--ink-muted); }
+ol > li::marker { font-variant-numeric: tabular-nums; }
+
+li.task {
+  list-style: none;
+  margin-left: -1.4em;
+  display: flex;
+  gap: 0.6em;
+  align-items: baseline;
+}
+
+li.task input {
+  appearance: none;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  margin: 0;
+  border: 1.5px solid var(--ink-muted);
+  border-radius: 50%;
+  position: relative;
+  top: 0.14em;
+}
+
+li.task input:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2.5px var(--paper);
+}
+
+li.task:has(input:checked) { color: var(--ink-muted); }
+
+blockquote {
+  margin-left: 0;
+  padding: 0.1em 0 0.1em 1.1em;
+  border-left: 3px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
+html[data-theme="mono"] blockquote { font-style: normal; }
+blockquote > :last-child { margin-bottom: 0; }
+
+/* Code */
+
+code, pre, kbd { font-family: var(--font-mono); font-size: 0.86em; }
+
+:not(pre) > code {
+  background: var(--surface);
+  padding: 0.12em 0.36em;
+  border-radius: 5px;
+}
+
+pre {
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 1em 1.2em;
+  overflow-x: auto;
+  line-height: 1.55;
+  tab-size: 4;
+}
+
+pre code { font-size: 1em; background: none; padding: 0; }
+pre code.hljs { background: none; padding: 0; }
+
+kbd {
+  border: 1px solid var(--ink-faint);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  padding: 0.05em 0.4em;
+}
+
+/* Tables */
+
+table {
+  border-collapse: collapse;
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  font-size: 0.94em;
+  font-variant-numeric: tabular-nums;
+}
+
+th, td {
+  padding: 0.5em 0.9em;
+  border-bottom: 1px solid var(--ink-faint);
+  text-align: left;
+  vertical-align: top;
+}
+
+th { font-weight: 650; border-bottom-color: color-mix(in srgb, var(--ink) 35%, transparent); }
+tr:last-child td { border-bottom: 0; }
+
+/* Media, math, diagrams */
+
+img { max-width: 100%; height: auto; border-radius: 6px; }
+
+.missing.img {
+  display: inline-block;
+  min-width: 12em;
+  padding: 1.5em;
+  border: 1px dashed var(--ink-faint);
+  color: var(--ink-muted);
+  font-size: 0.85em;
+  text-align: center;
+}
+
+.math.display { display: block; overflow-x: auto; overflow-y: hidden; text-align: center; }
+.math .katex-error { color: #d0453a; font-family: var(--font-mono); font-size: 0.85em; }
+
+.mermaid { display: flex; justify-content: center; }
+.mermaid svg { max-width: 100%; height: auto; }
+.mermaid.error { display: block; white-space: pre-wrap; font-family: var(--font-mono); font-size: 0.85em; color: var(--ink-muted); }
+
+details { border: 1px solid var(--ink-faint); border-radius: 8px; padding: 0.6em 1em; }
+summary { cursor: pointer; font-weight: 600; }
+
+@media (max-width: 620px) {
+  .markdown-body { padding: 32px 20px 30vh; }
+}
+
+@media print {
+  :root { --paper: #ffffff; }
+  html { font-size: 11.5pt; }
+  .markdown-body { max-width: none; padding: 0; }
+  h1, h2, h3 { break-after: avoid; }
+  pre, table, img, .mermaid, .math.display { break-inside: avoid; }
+  a { text-decoration: none; }
+}
+
+/* Mermaid edge labels sit on the page instead of grey boxes. */
+.mermaid .edgeLabel, .mermaid .edgeLabel p { background: var(--paper) !important; color: var(--ink-muted) !important; }
+.mermaid .edgeLabel rect { fill: var(--paper) !important; opacity: 1 !important; }

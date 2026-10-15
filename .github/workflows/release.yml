@@ -1,0 +1,143 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build (e.g. 0.2.0) — creates a draft release"
+        required: true
+
+permissions:
+  contents: write
+  # Build provenance: lets anyone verify a DMG came from this workflow (gh attestation verify).
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    name: Build, package & publish
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      VERSION: ${{ github.event.inputs.version || github.ref_name }}
+      HAS_SIGNING: ${{ secrets.MACOS_CERT_P12 != '' }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Normalize version
+        run: |
+          VERSION="${VERSION#v}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          # The app's version string is plain X.Y.Z; pre-release suffixes live only in the tag and DMG name.
+          echo "CORE_VERSION=${VERSION%%-*}" >> "$GITHUB_ENV"
+
+      - name: Check that tag, project and changelog agree
+        if: github.event_name == 'push'
+        run: |
+          PROJECT_VERSION="$(awk '/MARKETING_VERSION:/ { print $2; exit }' project.yml)"
+          if [ "$PROJECT_VERSION" != "$CORE_VERSION" ]; then
+            echo "::error::Tag v$VERSION, but project.yml has MARKETING_VERSION $PROJECT_VERSION. Use scripts/prepare-release.sh."
+            exit 1
+          fi
+          if ! grep -qF "## [$VERSION]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no '## [$VERSION]' section. Use scripts/prepare-release.sh."
+            exit 1
+          fi
+
+      - name: Select newest Xcode
+        run: |
+          XCODE="$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)"
+          sudo xcode-select --switch "$XCODE"
+          xcodebuild -version
+
+      - name: Generate project
+        run: brew install xcodegen && xcodegen generate
+
+      - name: Archive
+        run: |
+          xcodebuild archive \
+            -project MacMD.xcodeproj -scheme MacMD -configuration Release \
+            -destination 'generic/platform=macOS' -archivePath build/MacMD.xcarchive \
+            MARKETING_VERSION="$CORE_VERSION" CURRENT_PROJECT_VERSION="${{ github.run_number }}" -quiet
+          ditto build/MacMD.xcarchive/Products/Applications/MacMD.app build/MacMD.app
+
+      # Runs only when Developer ID secrets are configured (see docs/RELEASING.md).
+      - name: Sign with Developer ID
+        if: env.HAS_SIGNING == 'true'
+        env:
+          MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          echo "$MACOS_CERT_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/cert.p12" -P "$MACOS_CERT_PASSWORD" -f pkcs12 -k "$KEYCHAIN" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" >/dev/null
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          IDENTITY="$(security find-identity -v -p codesigning "$KEYCHAIN" | grep 'Developer ID Application' | head -1 | awk -F'"' '{print $2}')"
+          codesign --force --options runtime --timestamp --sign "$IDENTITY" build/MacMD.app
+          codesign --verify --strict --verbose=2 build/MacMD.app
+          echo "SIGNING_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+
+      - name: Create DMG
+        run: scripts/make-dmg.sh build/MacMD.app build/release
+
+      - name: Notarize DMG
+        if: env.HAS_SIGNING == 'true'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          DMG="build/release/MacMD-$VERSION.dmg"
+          codesign --force --timestamp --sign "$SIGNING_IDENTITY" "$DMG"
+          xcrun notarytool submit "$DMG" --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_PASSWORD" --wait
+          xcrun stapler staple "$DMG"
+          shasum -a 256 "$DMG" | sed 's|build/release/||' > "$DMG.sha256"
+
+      - name: Release notes
+        run: |
+          # Literal match on "## [X.Y.Z]" (no regex, so dots in the version are not wildcards).
+          awk -v heading="## [$VERSION]" '
+            index($0, heading) == 1 { found = 1; next }
+            found && (/^## / || /^\[[^]]+\]: /) { exit }
+            found { print }
+          ' CHANGELOG.md > build/release-notes.md
+          if [ ! -s build/release-notes.md ]; then echo "See [CHANGELOG.md](CHANGELOG.md)." > build/release-notes.md; fi
+          if [ "$HAS_SIGNING" != "true" ]; then
+            cat >> build/release-notes.md <<'NOTE'
+
+          ---
+          **First launch:** MacMD isn't notarized by Apple yet, so macOS asks you to confirm it once:
+          open MacMD, click **Done**, then **System Settings → Privacy & Security → Open Anyway**.
+          Step-by-step guide, and why you can trust this build:
+          https://github.com/rodanr/macmd#install
+          NOTE
+          fi
+
+      # Free for public repositories only; private releases skip it until the repository goes public.
+      - name: Attest build provenance
+        if: ${{ !github.event.repository.private }}
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: build/release/MacMD-${{ env.VERSION }}.dmg
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          FLAGS=""
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then FLAGS="--draft"; fi
+          # Tags like v0.2.0-beta.1 are published as pre-releases and never marked "latest".
+          case "$VERSION" in *-*) FLAGS="$FLAGS --prerelease --latest=false" ;; esac
+          gh release create "v$VERSION" $FLAGS \
+            --title "MacMD $VERSION" \
+            --notes-file build/release-notes.md \
+            "build/release/MacMD-$VERSION.dmg" \
+            "build/release/MacMD-$VERSION.dmg.sha256"
