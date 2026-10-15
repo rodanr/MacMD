@@ -80,8 +80,9 @@ struct Theme: Equatable, Sendable {
         }
     }
 
-    var secondaryText: NSColor { text.withAlphaComponent(0.62) }
-    var syntaxMarker: NSColor { text.withAlphaComponent(0.28) }
+    var secondaryText: NSColor { text.withAlphaComponent(0.66) }
+    /// Markdown punctuation: visible but quiet (decorative, ≥ 2:1).
+    var syntaxMarker: NSColor { text.withAlphaComponent(0.38) }
     var accent: NSColor { .controlAccentColor }
     /// Bullets, numbers and task boxes: quiet like the text, so lists read as content, not chrome.
     var listMarker: NSColor { text.withAlphaComponent(0.5) }
@@ -100,9 +101,18 @@ struct Theme: Equatable, Sendable {
         }
     }
     var codeBackground: NSColor { .dynamic(light: 0x000000, dark: 0xFFFFFF, alpha: 0.045) }
-    var quoteBar: NSColor { .controlAccentColor.withAlphaComponent(0.55) }
+    var quoteBar: NSColor { .controlAccentColor.withAlphaComponent(Self.quoteBarAlpha) }
     var rule: NSColor { text.withAlphaComponent(0.14) }
     var mathColor: NSColor { .dynamic(light: 0x7A4BC2, dark: 0xC3A6F2) }
+
+    // MARK: Design tokens (docs/DESIGN.md; mirrored in reader.css)
+
+    static let blockRadius: CGFloat = 10
+    static let panelRadius: CGFloat = 14
+    static let quoteBarWidth: CGFloat = 2.5
+    static let quoteBarAlpha: CGFloat = 0.45
+    static let codeInset: CGFloat = 12
+    static let motion = 0.15
 }
 
 extension NSColor {
