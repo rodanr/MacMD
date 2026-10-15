@@ -28,20 +28,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     }
 
     func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool {
-        !CommandLine.arguments.dropFirst().contains { Self.markdownFile(at: $0) != nil }
+        Self.filesFromCommandLine.isEmpty
     }
 
     /// `MacMD notes.md` opens the file, which makes the binary usable from a terminal.
     private func openFilesFromCommandLine() {
-        for url in CommandLine.arguments.dropFirst().compactMap(Self.markdownFile(at:)) {
+        for url in Self.filesFromCommandLine {
             NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { _, _, _ in }
         }
     }
 
-    private static func markdownFile(at argument: String) -> URL? {
-        guard !argument.hasPrefix("-") else { return nil }
-        let url = URL(filePath: argument).standardizedFileURL
-        return FileManager.default.fileExists(atPath: url.path) ? url : nil
+    /// Existing files named on the command line; `-key value` settings and folders are not documents.
+    private static var filesFromCommandLine: [URL] {
+        LaunchArguments.filePaths(in: CommandLine.arguments.dropFirst()).compactMap { path in
+            let url = URL(filePath: path).standardizedFileURL
+            var isDirectory: ObjCBool = false
+            guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory), !isDirectory.boolValue
+            else { return nil }
+            return url
+        }
     }
 
     // MARK: Actions

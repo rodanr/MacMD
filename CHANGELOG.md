@@ -18,6 +18,8 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 ### Fixed
 - Diagrams switch colors when macOS switches between light and dark.
 - Nested task lists in Read mode sit under their parent item instead of beside it.
+- Settings passed at launch (`-theme mono`) are no longer mistaken for files to open, and only apply to that
+  launch instead of overwriting your saved preferences.
 
 ## [0.2.0] - 2026-10-16
 
