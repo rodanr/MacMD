@@ -7,6 +7,8 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-16
+
 ### Added
 - Settings → Size → Font size: set the editor and Read mode text size in points (type it or use the
   stepper), or change it with ⌥⌘+ / ⌥⌘−. Zoom still scales the whole window on top of it.
@@ -58,5 +60,6 @@ First public release.
 - About window with license, terms and privacy, and acknowledgements; manual Check for Updates… (the only time
   MacMD contacts GitHub). No analytics or telemetry; see [TERMS.md](TERMS.md).
 
-[Unreleased]: https://github.com/rodanr/MacMD/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/rodanr/MacMD/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/rodanr/MacMD/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/rodanr/MacMD/releases/tag/v0.1.0
