@@ -12,6 +12,7 @@ A **native**, *fast* and ~~heavy~~ light Markdown editor for macOS — with `inl
   - Nested items work too
 - [x] Dark & light mode
 - [ ] Your next great idea
+- [ ] Try **bold**, `code` and [links](https://github.com/rodanr/MacMD) in a task
 
 1. Open a file
 2. Press **⌘E** to read

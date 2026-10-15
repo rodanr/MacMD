@@ -169,19 +169,16 @@ li > ul, li > ol { margin: 0.25em 0 0; }
 li::marker { color: var(--ink-muted); }
 ol > li::marker { font-variant-numeric: tabular-nums; }
 
+/* Task items hang their checkbox in the bullet's place: text, inline formatting, paragraphs and nested
+   lists flow normally in the indented column; the box sits in the gutter, centred on the first line. */
 li.task {
   list-style: none;
+  position: relative;
   margin-left: -1.4em;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 0.6em;
-  align-items: baseline;
+  padding-left: 1.5em;
 }
 
-/* Text, paragraphs and nested lists stay in the text column, under the item rather than beside it. */
-li.task > :not(input) { grid-column: 2; }
-
-li.task input {
+li.task > input {
   appearance: none;
   font: inherit;
   width: 0.9em;
@@ -189,8 +186,9 @@ li.task input {
   margin: 0;
   border: 1.5px solid var(--ink-muted);
   border-radius: 4px;
-  position: relative;
-  top: 0.14em;
+  position: absolute;
+  left: 0;
+  top: calc((var(--leading) * 1em - 0.9em) / 2 + 0.04em);
 }
 
 li.task input:checked { background: var(--accent); border-color: var(--accent); }
@@ -208,7 +206,7 @@ li.task input:checked::after {
   transform: translateY(-0.08em) rotate(45deg);
 }
 
-li.task:has(input:checked) { color: var(--ink-muted); }
+li.task:has(> input:checked) { color: var(--ink-muted); }
 
 blockquote {
   margin-left: 0;
