@@ -124,7 +124,7 @@ jobs:
       # Free for public repositories only; private releases skip it until the repository goes public.
       - name: Attest build provenance
         if: ${{ !github.event.repository.private }}
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: build/release/MacMD-${{ env.VERSION }}.dmg
 
