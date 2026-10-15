@@ -140,15 +140,21 @@ private struct HTMLVisitor: MarkupWalker {
     mutating func visitTable(_ table: Table) {
         tableAlignments = table.columnAlignments
         output += "<table\(lineAttribute(table))>\n"
-        descendInto(table)
-        output += "</tbody>\n</table>\n"
+        visit(table.head)
+        // A table with only a header has no body (as cmark-gfm renders it).
+        if !table.body.isEmpty {
+            output += "<tbody>\n"
+            visit(table.body)
+            output += "</tbody>\n"
+        }
+        output += "</table>\n"
     }
 
     mutating func visitTableHead(_ head: Table.Head) {
         inTableHead = true
         output += "<thead>\n<tr>"
         descendInto(head)
-        output += "</tr>\n</thead>\n<tbody>\n"
+        output += "</tr>\n</thead>\n"
         inTableHead = false
     }
 
