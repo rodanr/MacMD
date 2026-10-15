@@ -56,8 +56,8 @@ final class DecoratedLayoutFragment: NSTextLayoutFragment {
     override var renderingSurfaceBounds: CGRect {
         super.renderingSurfaceBounds.union(
             CGRect(
-                x: -layoutFragmentFrame.minX, y: 0, width: containerWidth,
-                height: layoutFragmentFrame.height + paragraphSpacing))
+                x: -layoutFragmentFrame.minX, y: -1, width: containerWidth,
+                height: layoutFragmentFrame.height + paragraphSpacing + 2))
     }
 
     override func draw(at point: CGPoint, in context: CGContext) {
@@ -69,13 +69,14 @@ final class DecoratedLayoutFragment: NSTextLayoutFragment {
         case .codeFirst, .codeMiddle, .codeLast, .codeSingle:
             drawCodeBackground(in: frame, context: context)
         case .quote:
-            // Span the paragraph spacing too, so consecutive quote lines form one continuous bar.
-            let bar = CGRect(
-                x: frame.minX + 1, y: frame.minY, width: Theme.quoteBarWidth, height: frame.height + paragraphSpacing)
-            let corner = Theme.quoteBarWidth / 2
+            // The fragment frame already includes the paragraph spacing, so consecutive quote lines tile
+            // exactly. Square segments with edges snapped to whole points abut without overlapping, which
+            // would otherwise show as a darker seam through the translucent bar.
+            let top = layoutFragmentFrame.minY.rounded() - layoutFragmentFrame.minY
+            let bottom = layoutFragmentFrame.maxY.rounded() - layoutFragmentFrame.minY
+            let bar = CGRect(x: frame.minX + 1, y: frame.minY + top, width: Theme.quoteBarWidth, height: bottom - top)
             context.setFillColor(palette.quoteBar.cgColor)
-            context.addPath(CGPath(roundedRect: bar, cornerWidth: corner, cornerHeight: corner, transform: nil))
-            context.fillPath()
+            context.fill(bar)
         case .rule:
             let y = (frame.midY).rounded() + 0.5
             context.setStrokeColor(palette.rule.cgColor)
