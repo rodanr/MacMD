@@ -64,7 +64,6 @@ html[data-theme="mono"] {
     --ink-muted: rgb(229 229 231 / 0.66);
     --ink-faint: rgb(229 229 231 / 0.12);
     --surface: rgb(229 229 231 / 0.06);
-    --surface-2: color-mix(in srgb, var(--ink) 3.5%, transparent);
   }
   html[data-theme="mono"] {
     --paper: #18191b;
@@ -72,7 +71,6 @@ html[data-theme="mono"] {
     --ink-muted: rgb(220 220 216 / 0.66);
     --ink-faint: rgb(220 220 216 / 0.12);
     --surface: rgb(220 220 216 / 0.06);
-    --surface-2: color-mix(in srgb, var(--ink) 3.5%, transparent);
   }
 }
 

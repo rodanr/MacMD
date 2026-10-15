@@ -201,12 +201,16 @@
   };
 
   async function render() {
-    markMissingImages();
-    highlightCode();
-    renderMath();
-    await drawDiagrams();
-    reportTopLine();
-    post({ type: "rendered" });
+    // The app keeps the page hidden until "rendered": post it even if a renderer throws.
+    try {
+      markMissingImages();
+      highlightCode();
+      renderMath();
+      await drawDiagrams();
+    } finally {
+      reportTopLine();
+      post({ type: "rendered" });
+    }
   }
 
   if (document.readyState === "loading") {

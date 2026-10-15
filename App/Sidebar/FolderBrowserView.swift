@@ -77,9 +77,13 @@ private struct FileNodeChildren: View {
                 DisclosureGroup {
                     FileNodeChildren(node: child, currentFile: currentFile, browsedFolder: browsedFolder)
                 } label: {
+                    // The same insets as a file row's pill, so folder and file icons line up.
                     FileLabel(name: child.name, systemImage: "folder")
+                        .padding(.vertical, 2 * zoom)
+                        .padding(.horizontal, 6 * zoom)
                 }
             } else {
+                let isCurrent = child.url.standardizedFileURL == currentFile?.standardizedFileURL
                 Button {
                     LinkRouter.openFile(child.url, browsing: browsedFolder)
                 } label: {
@@ -89,13 +93,12 @@ private struct FileNodeChildren: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(
                             RoundedRectangle(cornerRadius: Theme.panelRadius / 2)
-                                .fill(
-                                    child.url.standardizedFileURL == currentFile?.standardizedFileURL
-                                        ? Color.accentColor.opacity(0.14) : .clear)
+                                .fill(isCurrent ? Color.accentColor.opacity(0.14) : .clear)
                         )
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityAddTraits(isCurrent ? .isSelected : [])
             }
         }
     }

@@ -20,6 +20,7 @@ struct OutlineView: View {
                 description: Text("Add a `#` heading to build an outline."))
         } else {
             let minLevel = model.outline.map(\.level).min() ?? 1
+            let current = currentSlug
             List(model.outline) { item in
                 Button {
                     model.reveal(item)
@@ -44,11 +45,12 @@ struct OutlineView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(
                         RoundedRectangle(cornerRadius: Theme.panelRadius / 2)
-                            .fill(item.slug == currentSlug ? Color.accentColor.opacity(0.14) : .clear)
+                            .fill(item.slug == current ? Color.accentColor.opacity(0.14) : .clear)
                     )
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityAddTraits(item.slug == current ? .isSelected : [])
                 .help(item.title)
                 // No gaps between rows, so the indent guides run on unbroken.
                 .listRowInsets(EdgeInsets(top: 0, leading: 8 * zoom, bottom: 0, trailing: 8 * zoom))

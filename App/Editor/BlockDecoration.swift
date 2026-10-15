@@ -41,23 +41,15 @@ final class DecoratedLayoutFragment: NSTextLayoutFragment {
         self.palette = palette
     }
 
-    private var paragraphSpacing: CGFloat {
-        guard let paragraph = textElement as? NSTextParagraph, paragraph.attributedString.length > 0,
-            let style = paragraph.attributedString.attribute(.paragraphStyle, at: 0, effectiveRange: nil)
-                as? NSParagraphStyle
-        else { return 0 }
-        return style.paragraphSpacing
-    }
-
     private var containerWidth: CGFloat {
         textLayoutManager?.textContainer?.size.width ?? layoutFragmentFrame.width
     }
 
+    // TextKit 2's fragment frame already includes the paragraph's spacing after it (the last paragraph has
+    // none), so decorations cover the frame; 1 pt either side leaves room for edges snapped to whole points.
     override var renderingSurfaceBounds: CGRect {
         super.renderingSurfaceBounds.union(
-            CGRect(
-                x: -layoutFragmentFrame.minX, y: -1, width: containerWidth,
-                height: layoutFragmentFrame.height + paragraphSpacing + 2))
+            CGRect(x: -layoutFragmentFrame.minX, y: -1, width: containerWidth, height: layoutFragmentFrame.height + 2))
     }
 
     override func draw(at point: CGPoint, in context: CGContext) {
@@ -69,9 +61,9 @@ final class DecoratedLayoutFragment: NSTextLayoutFragment {
         case .codeFirst, .codeMiddle, .codeLast, .codeSingle:
             drawCodeBackground(in: frame, context: context)
         case .quote:
-            // The fragment frame already includes the paragraph spacing, so consecutive quote lines tile
-            // exactly. Square segments with edges snapped to whole points abut without overlapping, which
-            // would otherwise show as a darker seam through the translucent bar.
+            // The fragment frame includes the paragraph spacing, so consecutive quote lines tile exactly.
+            // Square segments with edges snapped to whole points abut without overlapping, which would
+            // otherwise show as a darker seam through the translucent bar.
             let top = layoutFragmentFrame.minY.rounded() - layoutFragmentFrame.minY
             let bottom = layoutFragmentFrame.maxY.rounded() - layoutFragmentFrame.minY
             let bar = CGRect(x: frame.minX + 1, y: frame.minY + top, width: Theme.quoteBarWidth, height: bottom - top)
