@@ -151,6 +151,7 @@ final class DocumentModel {
 
     private func textDidChange() {
         revision += 1
+        editor?.textStorageDidChangeCharacters()
         isLargeDocument = textStorage.length > Self.largeDocumentThreshold
         derivedUpdate?.cancel()
         let text = textStorage.string

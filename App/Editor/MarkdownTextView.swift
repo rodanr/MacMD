@@ -76,10 +76,20 @@ final class MarkdownTextView: NSTextView {
         (placeholder as NSString).draw(in: rect, withAttributes: attributes)
     }
 
+    private var wasEmpty = true
+
+    /// Shows or hides the placeholder when the text becomes empty or stops being empty. Called for every
+    /// character edit, including ones that bypass the text view (revert, external reload).
+    func textStorageDidChangeCharacters() {
+        let isEmpty = textStorage?.length == 0
+        guard isEmpty != wasEmpty else { return }
+        wasEmpty = isEmpty
+        needsDisplay = true
+    }
+
     override func didChangeText() {
         super.didChangeText()
-        // Show or hide the placeholder when the text becomes empty or stops being empty.
-        if (string as NSString).length <= 1 { needsDisplay = true }
+        textStorageDidChangeCharacters()
     }
 
     private func updateInsets() {
