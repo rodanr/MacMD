@@ -8,7 +8,9 @@ let package = Package(
         .library(name: "MacMDKit", targets: ["MacMDKit"])
     ],
     dependencies: [
-        .package(url: "https://github.com/swiftlang/swift-markdown.git", from: "0.9.0")
+        .package(url: "https://github.com/swiftlang/swift-markdown.git", from: "0.9.0"),
+        // Already used by swift-markdown; the tests use its reference HTML renderer to check ours.
+        .package(url: "https://github.com/swiftlang/swift-cmark.git", from: "0.9.0"),
     ],
     targets: [
         .target(
@@ -17,7 +19,11 @@ let package = Package(
         ),
         .testTarget(
             name: "MacMDKitTests",
-            dependencies: ["MacMDKit"],
+            dependencies: [
+                "MacMDKit",
+                .product(name: "cmark-gfm", package: "swift-cmark"),
+                .product(name: "cmark-gfm-extensions", package: "swift-cmark"),
+            ],
             resources: [.copy("Fixtures")]
         ),
     ]
