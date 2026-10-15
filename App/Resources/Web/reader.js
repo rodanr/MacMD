@@ -104,6 +104,7 @@
   async function renderDiagrams() {
     const nodes = [...document.querySelectorAll(".mermaid")];
     if (!window.mermaid || nodes.length === 0) return;
+    const scheme = prefersDark() ? "dark" : "light";
     mermaid.initialize({
       startOnLoad: false,
       securityLevel: "strict",
@@ -124,6 +125,8 @@
         node.classList.add("error");
         node.textContent = `Diagram error: ${error?.message ?? error}`;
       }
+      // The appearance this diagram was last drawn for (light or dark).
+      node.dataset.scheme = scheme;
     }
   }
 

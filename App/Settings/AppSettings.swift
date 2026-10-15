@@ -94,6 +94,9 @@ final class AppSettings {
     func resetFontSize() { fontSize = FontSize.standard }
 
     private func store(_ value: Any, for key: Key) {
+        // A setting given on the command line (`-theme mono`, as the UI tests pin every setting) applies to this
+        // run only: changing it must not overwrite the preference saved for normal launches.
+        if defaults.volatileDomain(forName: UserDefaults.argumentDomain)[key.rawValue] != nil { return }
         defaults.set(value, forKey: key.rawValue)
     }
 }

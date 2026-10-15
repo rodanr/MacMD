@@ -70,13 +70,14 @@ extension XCTestCase {
     }
 
     /// Launches the app with known settings, so a test never depends on the preferences of the Mac it runs on.
-    /// `arguments` are files to open plus `-key value` overrides.
+    /// `arguments` are files to open plus `-key value` overrides. Settings given this way are never saved, so a
+    /// test that changes them in Settings leaves the Mac's own preferences alone.
     func launch(_ arguments: [String]) -> XCUIApplication {
         let pinned = [
             "-ApplePersistenceIgnoreState": "YES", "-vimMode": "NO", "-openInReadMode": "NO", "-zoom": "1",
             "-fontSize": "16",
             "-focusMode": "NO", "-typewriterMode": "NO", "-lineWidth": "medium", "-theme": "paper",
-            "-sidebarVisible": "NO", "-sidebarTab": "outline",
+            "-sidebarVisible": "NO", "-sidebarTab": "outline", "-appearance": "system",
         ]
         var all = arguments
         for (key, value) in pinned.sorted(by: { $0.key < $1.key }) where !arguments.contains(key) {

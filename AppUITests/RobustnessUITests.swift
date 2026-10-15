@@ -49,16 +49,28 @@ final class RobustnessUITests: XCTestCase {
 
     // MARK: Appearance
 
-    /// Diagrams bake their colors in, so Read mode redraws them when the appearance flips.
-    /// Compare the two screenshots: the second diagram uses the dark palette.
+    /// Diagrams bake their colors in, so Read mode redraws them when the appearance flips. The check samples the
+    /// screen (reader.js also tags each diagram with `data-scheme`, but web content attributes don't reach XCUITest).
     @MainActor
     func testDiagramRedrawsOnAppearanceChange() throws {
+        // `-appearance` comes from the command line, so flipping it in Settings is never saved.
         let app = launch([fixture, "-openInReadMode", "YES", "-appearance", "light"])
         let window = app.windows["kitchen-sink.md"]
         let reader = window.webViews.firstMatch
         let diagramLabel = reader.staticTexts["Write"].firstMatch
         XCTAssertTrue(diagramLabel.waitForExistence(timeout: 15), "the diagram is drawn")
         reader.scroll(byDeltaX: 0, deltaY: -5000)  // the diagram is near the end of the page
+        // Inside the "Write" node, just left of its label: the node's fill, which Mermaid bakes in when drawing.
+        func nodeFill() -> Double? {
+            guard diagramLabel.exists else { return nil }
+            let label = diagramLabel.frame
+            return brightness(at: CGPoint(x: label.minX - 4, y: label.midY), in: window)
+        }
+        // Without a display to capture (MACMD_SKIP_SCREENSHOTS), only check that the diagram is drawn again.
+        let canSample = ProcessInfo.processInfo.environment["MACMD_SKIP_SCREENSHOTS"] != "1"
+        if canSample {
+            XCTAssertTrue(waitUntil(timeout: 5) { (nodeFill() ?? 0) > 0.5 }, "the diagram is drawn for light mode")
+        }
         attach(window, "diagram-light")
 
         app.typeKey(",", modifierFlags: .command)
@@ -66,14 +78,37 @@ final class RobustnessUITests: XCTestCase {
         XCTAssertTrue(settings.waitForExistence(timeout: 5))
         settings.radioButtons["Dark"].firstMatch.click()
         settings.typeKey("w", modifierFlags: .command)  // keep Settings out of the screenshot
-        sleep(2)
+        XCTAssertTrue(
+            waitUntil(timeout: 10) { canSample ? (nodeFill() ?? 1) < 0.5 : diagramLabel.exists },
+            "the diagram is drawn again in dark colors, not left as source, an error or light colors")
         attach(window, "diagram-dark")
-        XCTAssertTrue(diagramLabel.exists, "the diagram is drawn again, not left as source or an error")
-
-        app.typeKey(",", modifierFlags: .command)
-        XCTAssertTrue(settings.waitForExistence(timeout: 5))
-        settings.radioButtons["System"].firstMatch.click()
         app.terminate()
+    }
+
+    /// Brightness (0–1) of the pixel at `point` (screen coordinates) in a screenshot of `window`.
+    private func brightness(at point: CGPoint, in window: XCUIElement) -> Double? {
+        let frame = window.frame
+        guard frame.width > 0,
+            let image = window.screenshot().image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        else { return nil }
+        let scale = CGFloat(image.width) / frame.width
+        let x = Int((point.x - frame.minX) * scale)
+        let y = Int((point.y - frame.minY) * scale)
+        guard (0..<image.width).contains(x), (0..<image.height).contains(y) else { return nil }
+        var pixel = [UInt8](repeating: 0, count: 4)
+        let drawn = pixel.withUnsafeMutableBytes { buffer -> Bool in
+            guard
+                let context = CGContext(
+                    data: buffer.baseAddress, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
+                    space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+            else { return false }
+            // Core Graphics counts rows from the bottom: shift the image so the wanted pixel lands on (0, 0).
+            context.draw(
+                image, in: CGRect(x: -x, y: -(image.height - 1 - y), width: image.width, height: image.height))
+            return true
+        }
+        guard drawn else { return nil }
+        return Double(Int(pixel[0]) + Int(pixel[1]) + Int(pixel[2])) / 765
     }
 
     // MARK: Odd files
