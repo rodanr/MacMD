@@ -100,7 +100,17 @@ struct Theme: Equatable, Sendable {
             return resolved
         }
     }
-    var codeBackground: NSColor { .dynamic(light: 0x000000, dark: 0xFFFFFF, alpha: 0.045) }
+    /// Code surface: the theme's ink at low alpha, like reader.css `--surface` (4.5 %, Mono 5 %; 6 % in dark).
+    var codeBackground: NSColor {
+        let text = self.text
+        let lightAlpha: CGFloat = id == .mono ? 0.05 : 0.045
+        return NSColor(name: nil) { appearance in
+            let isDark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            var ink = NSColor.black
+            appearance.performAsCurrentDrawingAppearance { ink = text.usingColorSpace(.sRGB) ?? ink }
+            return ink.withAlphaComponent(isDark ? 0.06 : lightAlpha)
+        }
+    }
     var quoteBar: NSColor { .controlAccentColor.withAlphaComponent(Self.quoteBarAlpha) }
     var rule: NSColor { text.withAlphaComponent(0.14) }
     var mathColor: NSColor { .dynamic(light: 0x7A4BC2, dark: 0xC3A6F2) }

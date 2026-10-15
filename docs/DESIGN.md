@@ -20,7 +20,7 @@ MacMD should feel like a quiet sheet of paper that happens to understand Markdow
 | Text `--ink` | `#24262B` / `#E4E2DD` | `#1D1D1F` / `#E5E5E7` | `#222326` / `#DCDCD8` |
 | Muted text `--ink-muted` | ink @ 66 % | ink @ 66 % | ink @ 66 % |
 | Hairlines `--ink-faint` | ink @ 12 % | ink @ 11 % | ink @ 12 % |
-| Code surface `--surface` | ink @ 4.5 % | ink @ 4.5 % | ink @ 5 % |
+| Code surface `--surface` | ink @ 4.5 % / 6 % | ink @ 4.5 % / 6 % | ink @ 5 % / 6 % |
 | Body face | New York | SF Pro | SF Mono |
 | Reader size / leading | 17 px / 1.65 | 16 px / 1.6 | 15 px / 1.7 |
 
@@ -38,7 +38,7 @@ Shared by the editor (`Theme` constants) and the reader (CSS custom properties).
 |---|---|
 | Spacing | 4 · 8 · 12 · 16 · 24 · 32 · 48 |
 | Radii | 6 inline (`--radius-inline`) · 10 block (`--radius-block`, `Theme.blockRadius`) · 14 panel (`--radius-panel`, `Theme.panelRadius`); task box 4 |
-| Surface `--surface` | ink @ 4.5 % light, 6 % dark |
+| Surface `--surface` | ink @ 4.5 % light (Mono 5 %), 6 % dark; `Theme.codeBackground` |
 | Surface 2 `--surface-2` | ink @ 2.5 % light, 3.5 % dark |
 | Quote bar `--quote-bar` | 2.5 pt, accent @ 45 % (`Theme.quoteBarWidth`, `quoteBarAlpha`) |
 | Motion | 150 ms ease-out (`Theme.motion`); none under Reduce Motion |
@@ -60,7 +60,8 @@ The measure is about 68 characters (Medium: 720 pt in the editor), configurable 
 
 ## Editor details
 
-- Code blocks: rounded 8 pt surface spanning the column; fences stay visible but faint.
+- Code blocks: rounded 10 pt surface (`--surface`) spanning the column; fences stay visible but faint. Read mode
+  adds an inset `--ink-faint` hairline around blocks in dark mode; the editor does not.
 - Quotes: a 2.5 pt accent bar (45 %), muted text, 16 pt indent.
 - Lists: markers and task boxes in `listMarker` (text at 50%), matching the reader's muted `::marker`;
   wrapped lines hang under the item text.
