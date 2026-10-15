@@ -171,7 +171,7 @@ final class MarkdownStyler {
         text.enumerateSubstrings(in: range, options: [.byLines, .substringNotRequired]) { _, _, enclosing, _ in
             lines.append(NSIntersectionRange(enclosing, range))
         }
-        let style = paragraphStyle(indent: 14, tailIndent: -14, spacing: 0)
+        let style = paragraphStyle(indent: Theme.codeInset, tailIndent: -Theme.codeInset, spacing: 0)
         storage.addAttributes([.font: theme.codeFont, .paragraphStyle: style], range: range)
         for (index, line) in lines.enumerated() {
             // Include the line terminator so the decoration covers the whole paragraph.

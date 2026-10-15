@@ -46,6 +46,7 @@ struct EditorView: NSViewRepresentable {
         textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         textView.documentDirectory = model.fileURL?.deletingLastPathComponent()
         textView.setAccessibilityIdentifier("editor")
+        textView.setAccessibilityPlaceholderValue(textView.placeholder)
 
         let scrollView = NSScrollView()
         scrollView.documentView = textView

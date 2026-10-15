@@ -70,9 +70,11 @@ final class DecoratedLayoutFragment: NSTextLayoutFragment {
             drawCodeBackground(in: frame, context: context)
         case .quote:
             // Span the paragraph spacing too, so consecutive quote lines form one continuous bar.
-            let bar = CGRect(x: frame.minX + 1, y: frame.minY, width: 3, height: frame.height + paragraphSpacing)
+            let bar = CGRect(
+                x: frame.minX + 1, y: frame.minY, width: Theme.quoteBarWidth, height: frame.height + paragraphSpacing)
+            let corner = Theme.quoteBarWidth / 2
             context.setFillColor(palette.quoteBar.cgColor)
-            context.addPath(CGPath(roundedRect: bar, cornerWidth: 1.5, cornerHeight: 1.5, transform: nil))
+            context.addPath(CGPath(roundedRect: bar, cornerWidth: corner, cornerHeight: corner, transform: nil))
             context.fillPath()
         case .rule:
             let y = (frame.midY).rounded() + 0.5
@@ -87,7 +89,7 @@ final class DecoratedLayoutFragment: NSTextLayoutFragment {
     }
 
     private func drawCodeBackground(in frame: CGRect, context: CGContext) {
-        let radius: CGFloat = 8
+        let radius = Theme.blockRadius
         let roundTop = decoration == .codeFirst || decoration == .codeSingle
         let roundBottom = decoration == .codeLast || decoration == .codeSingle
         // Extend square edges past the frame so adjacent lines join seamlessly.

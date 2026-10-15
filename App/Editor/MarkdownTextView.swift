@@ -48,6 +48,38 @@ final class MarkdownTextView: NSTextView {
     func styleDidChange() {
         updateBlockCursor()
         updateFocusDimming()
+        // A theme, zoom or font-size change restyles; the placeholder follows the new body font.
+        if string.isEmpty { needsDisplay = true }
+    }
+
+    // MARK: Placeholder
+
+    /// Shown in an empty document. Drawn only, never part of the text, so saving, undo and counts ignore it.
+    var placeholder = "Start writing…" {
+        didSet {
+            setAccessibilityPlaceholderValue(placeholder)
+            needsDisplay = true
+        }
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        guard string.isEmpty, isEditable, !hasMarkedText() else { return }
+        var attributes = styleEngine?.styler.baseAttributes ?? typingAttributes
+        let color = attributes[.foregroundColor] as? NSColor ?? textColor ?? .labelColor
+        attributes[.foregroundColor] = color.withAlphaComponent(0.35)
+        let padding = textContainer?.lineFragmentPadding ?? 0
+        let origin = textContainerOrigin
+        let rect = NSRect(
+            x: origin.x + padding, y: origin.y,
+            width: max(bounds.width - origin.x * 2 - padding * 2, 0), height: bounds.height - origin.y)
+        (placeholder as NSString).draw(in: rect, withAttributes: attributes)
+    }
+
+    override func didChangeText() {
+        super.didChangeText()
+        // Show or hide the placeholder when the text becomes empty or stops being empty.
+        if (string as NSString).length <= 1 { needsDisplay = true }
     }
 
     private func updateInsets() {
@@ -398,7 +430,7 @@ final class FocusShadeView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
     override func draw(_ dirtyRect: NSRect) {
-        color.withAlphaComponent(0.68).setFill()
+        color.withAlphaComponent(0.65).setFill()
         dirtyRect.fill()
     }
 }
