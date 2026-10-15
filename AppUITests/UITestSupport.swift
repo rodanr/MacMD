@@ -22,6 +22,14 @@ extension XCTestCase {
         return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
     }
 
+    /// The print panel looks for network printers, so macOS may ask whether MacMD can "find devices on local
+    /// networks". The prompt stays up and covers menus in later tests; answer it with Don't Allow.
+    func dismissLocalNetworkPrompt(wait timeout: TimeInterval) {
+        let prompts = XCUIApplication(bundleIdentifier: "com.apple.UserNotificationCenter")
+        let dontAllow = prompts.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Don'")).firstMatch
+        if dontAllow.waitForExistence(timeout: timeout) { dontAllow.click() }
+    }
+
     /// Scrolls `window`'s scroll view down until `element` can be clicked (small screens shorten Settings).
     func reveal(_ element: XCUIElement, in window: XCUIElement) {
         for _ in 0..<5 where !element.isHittable {
@@ -76,6 +84,7 @@ extension XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = all
         app.launch()
+        dismissLocalNetworkPrompt(wait: 0)
         return app
     }
 

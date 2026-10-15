@@ -248,6 +248,7 @@ final class FeatureUITests: XCTestCase {
         sheet.buttons["Cancel"].click()
         XCTAssertTrue(waitUntil { !sheet.exists })
         XCTAssertTrue(editor.exists, "the document is still open and usable")
+        dismissLocalNetworkPrompt(wait: 5)
         app.terminate()
     }
 
