@@ -81,7 +81,9 @@ private struct HTMLVisitor: MarkupWalker {
     }
 
     mutating func visitCodeBlock(_ codeBlock: CodeBlock) {
-        let code = Placeholder.restoringTeX(in: codeBlock.code, math: math)
+        // cmark keeps the line break before the closing fence; it would render as a blank last line.
+        var code = Placeholder.restoringTeX(in: codeBlock.code, math: math)
+        if code.hasSuffix("\n") { code.removeLast() }
         let language = codeBlock.language?.split(separator: " ").first.map(String.init)?.lowercased()
         if language == "mermaid" {
             features.insert(.mermaid)
@@ -139,7 +141,7 @@ private struct HTMLVisitor: MarkupWalker {
 
     mutating func visitTable(_ table: Table) {
         tableAlignments = table.columnAlignments
-        output += "<table\(lineAttribute(table))>\n"
+        output += "<div class=\"table\"\(lineAttribute(table))>\n<table>\n"
         visit(table.head)
         // A table with only a header has no body (as cmark-gfm renders it).
         if !table.body.isEmpty {
@@ -147,7 +149,7 @@ private struct HTMLVisitor: MarkupWalker {
             visit(table.body)
             output += "</tbody>\n"
         }
-        output += "</table>\n"
+        output += "</table>\n</div>\n"
     }
 
     mutating func visitTableHead(_ head: Table.Head) {

@@ -22,7 +22,7 @@ import Testing
     @Test func codeBlockWithLanguage() {
         #expect(
             html("```swift\nlet a = \"<\"\n```")
-                == #"<pre data-line="1"><code class="language-swift">let a = &quot;&lt;&quot;"# + "\n</code></pre>")
+                == #"<pre data-line="1"><code class="language-swift">let a = &quot;&lt;&quot;</code></pre>"#)
     }
 
     @Test func mermaidBlockBecomesDiagram() {
@@ -73,5 +73,19 @@ import Testing
         #expect(html("> q") == "<blockquote data-line=\"1\">\n<p data-line=\"1\">q</p>\n</blockquote>")
         #expect(html("---") == #"<hr data-line="1">"#)
         #expect(html("a  \nb") == "<p data-line=\"1\">a<br>\nb</p>")
+    }
+
+    @Test func codeBlocksHaveNoTrailingBlankLine() {
+        #expect(html("```swift\nlet a = 1\n```").contains(#"<code class="language-swift">let a = 1</code></pre>"#))
+    }
+
+    @Test func emptyCodeBlocksStayEmpty() {
+        #expect(html("```\n```").contains("<code></code>"))
+    }
+
+    @Test func tablesAreWrappedForRoundedCorners() {
+        let out = html("| a |\n|---|\n| 1 |")
+        #expect(out.hasPrefix(#"<div class="table" data-line="1">"#))
+        #expect(out.contains("</table>\n</div>"))
     }
 }
