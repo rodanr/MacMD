@@ -228,8 +228,9 @@ final class ReaderAndSettingsUITests: XCTestCase {
             },
             "font size leaves zoom alone")
         attach(window, "font-size-35")
-        // The document window may now cover Settings; bring Settings back to the front by its title bar.
-        settings.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.01)).click()
+        // The document window may now cover Settings completely (small screens); ⌘, brings it back.
+        app.typeKey(",", modifierFlags: .command)
+        XCTAssertTrue(waitUntil { field.isHittable }, "Settings is in front again")
         field.doubleClick()
         field.typeKey("a", modifierFlags: .command)
         field.typeText("16\n")

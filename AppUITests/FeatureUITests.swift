@@ -253,19 +253,21 @@ final class FeatureUITests: XCTestCase {
 
     @MainActor
     func testCheckForUpdatesAnswers() throws {
-        let app = launch([])
-        app.menuBars.menuBarItems["MacMD"].click()
-        app.menuBars.menuItems["Check for Updates…"].click()
-        // Either answer is fine (CI may be rate limited by GitHub); a hang or crash is not.
-        let alert = app.dialogs.firstMatch.exists ? app.dialogs.firstMatch : app.alerts.firstMatch
-        XCTAssertTrue(
-            waitUntil(timeout: 20) {
-                app.staticTexts["You’re up to date"].exists || app.staticTexts["Couldn’t check for updates"].exists
-                    || app.staticTexts.matching(NSPredicate(format: "value ENDSWITH 'is available'")).count > 0
-            }, "an answer appears")
-        _ = alert
-        app.buttons["OK"].firstMatch.click()
-        app.terminate()
+        // A local feed instead of GitHub: deterministic, and UI tests never touch the network.
+        let folder = try temporaryFolder()
+        for (tag, answer, button) in [
+            ("v0.0.1", "You’re up to date", "OK"), ("v999.0.0", "MacMD 999.0.0 is available", "Later"),
+        ] {
+            let feed = folder.appending(path: "\(tag).json")
+            try #"{"tag_name": "\#(tag)", "html_url": "https://github.com/rodanr/MacMD/releases"}"#.write(
+                to: feed, atomically: true, encoding: .utf8)
+            let app = launch(["-updateFeedURL", feed.absoluteString])
+            app.menuBars.menuBarItems["MacMD"].click()
+            app.menuBars.menuItems["Check for Updates…"].click()
+            XCTAssertTrue(app.staticTexts[answer].waitForExistence(timeout: 10), "\(tag): \(answer)")
+            app.buttons[button].firstMatch.click()
+            app.terminate()
+        }
     }
 
     private func lineNumber(of line: String, in path: String) throws -> Int {

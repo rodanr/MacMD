@@ -38,13 +38,25 @@ enum UpdateChecker {
         }
     }
 
+    /// GitHub's latest-release API. UI tests pass `-updateFeedURL file:///…json` so they never use the network;
+    /// only local files are accepted, so the setting can't point the app at another server.
+    private static var feedURL: URL {
+        if let value = UserDefaults.standard.string(forKey: "updateFeedURL"), let url = URL(string: value),
+            url.isFileURL
+        {
+            return url
+        }
+        return AppInfo.latestReleaseAPI
+    }
+
     /// The latest published release, or `nil` when none has been published yet.
     private static func latestRelease() async throws -> Release? {
-        var request = URLRequest(url: AppInfo.latestReleaseAPI, timeoutInterval: 15)
+        var request = URLRequest(url: feedURL, timeoutInterval: 15)
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         request.setValue("\(AppInfo.name)/\(AppInfo.version)", forHTTPHeaderField: "User-Agent")
         let (data, response) = try await URLSession.shared.data(for: request)
-        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        // A local feed has no HTTP status; reading it succeeded.
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 200
         if status == 404 { return nil }
         guard status == 200 else { throw URLError(.badServerResponse) }
         return try JSONDecoder().decode(Release.self, from: data)
