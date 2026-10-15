@@ -25,16 +25,99 @@
     }
   }
 
+  /// A page color token as an opaque `rgb()` composited over the paper, so Mermaid gets a color it can shade.
+  /// WebKit serializes computed colors as `rgb(…)` or `color(srgb …)`; painting them onto a canvas
+  /// resolves either form (and any alpha) without parsing.
+  function opaque(variable, canvas) {
+    const resolve = (value) => {
+      const probe = document.createElement("span");
+      probe.style.color = value;
+      document.body.append(probe);
+      const color = getComputedStyle(probe).color;
+      probe.remove();
+      return color;
+    };
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    context.globalCompositeOperation = "copy";
+    context.fillStyle = resolve("var(--paper)");
+    context.fillRect(0, 0, 1, 1);
+    context.globalCompositeOperation = "source-over";
+    context.fillStyle = resolve(`var(${variable})`);
+    context.fillRect(0, 0, 1, 1);
+    const [r, g, b] = context.getImageData(0, 0, 1, 1).data;
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+
+  /// Mermaid's `base` theme, fed from the page's tokens so diagrams read as part of the page.
+  function diagramTheme() {
+    const canvas = Object.assign(document.createElement("canvas"), { width: 1, height: 1 });
+    const color = (variable) => opaque(variable, canvas);
+    const paper = color("--paper");
+    const ink = color("--ink");
+    const muted = color("--ink-muted");
+    const faint = color("--ink-faint");
+    const surface = color("--surface");
+    const surface2 = color("--surface-2");
+    return {
+      darkMode: prefersDark(),
+      background: paper,
+      fontFamily: "system-ui, -apple-system, sans-serif",
+      fontSize: "14px",
+      textColor: ink,
+      primaryColor: surface,
+      primaryTextColor: ink,
+      primaryBorderColor: faint,
+      secondaryColor: surface2,
+      secondaryTextColor: ink,
+      secondaryBorderColor: faint,
+      tertiaryColor: paper,
+      tertiaryTextColor: ink,
+      tertiaryBorderColor: faint,
+      mainBkg: surface,
+      nodeBorder: faint,
+      nodeTextColor: ink,
+      clusterBkg: surface2,
+      clusterBorder: faint,
+      titleColor: ink,
+      lineColor: muted,
+      edgeLabelBackground: paper,
+      actorBkg: surface,
+      actorBorder: faint,
+      actorTextColor: ink,
+      actorLineColor: faint,
+      signalColor: muted,
+      signalTextColor: ink,
+      labelBoxBkgColor: surface,
+      labelBoxBorderColor: faint,
+      labelTextColor: ink,
+      loopTextColor: ink,
+      noteBkgColor: surface2,
+      noteBorderColor: faint,
+      noteTextColor: ink,
+      activationBkgColor: surface2,
+      activationBorderColor: faint,
+      useGradient: false,
+      dropShadow: "none",
+    };
+  }
+
   async function renderDiagrams() {
     const nodes = [...document.querySelectorAll(".mermaid")];
     if (!window.mermaid || nodes.length === 0) return;
     mermaid.initialize({
       startOnLoad: false,
       securityLevel: "strict",
-      theme: prefersDark() ? "dark" : "neutral",
-      fontFamily: getComputedStyle(document.documentElement).getPropertyValue("--font-body"),
+      theme: "base",
+      fontFamily: "system-ui, -apple-system, sans-serif",
+      themeVariables: diagramTheme(),
+      sequence: { actorFontSize: 14, messageFontSize: 14, noteFontSize: 14 },
     });
     for (const node of nodes) {
+      // Keep the source so the diagram can be drawn again with other colors.
+      node.dataset.source ??= node.textContent;
+      node.removeAttribute("data-processed");
+      node.classList.remove("error");
+      node.textContent = node.dataset.source;
       try {
         await mermaid.run({ nodes: [node] });
       } catch (error) {
@@ -43,6 +126,12 @@
       }
     }
   }
+
+  // Diagrams bake their colors in: redraw them when the system switches between light and dark.
+  // Redraws queue behind the one in progress so two never interleave.
+  let diagrams = Promise.resolve();
+  const drawDiagrams = () => (diagrams = diagrams.then(renderDiagrams, renderDiagrams));
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawDiagrams());
 
   function markMissingImages() {
     for (const image of document.images) {
@@ -107,7 +196,7 @@
     markMissingImages();
     highlightCode();
     renderMath();
-    await renderDiagrams();
+    await drawDiagrams();
     post({ type: "rendered" });
   }
 

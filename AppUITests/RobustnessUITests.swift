@@ -47,6 +47,35 @@ final class RobustnessUITests: XCTestCase {
         app.terminate()
     }
 
+    // MARK: Appearance
+
+    /// Diagrams bake their colors in, so Read mode redraws them when the appearance flips.
+    /// Compare the two screenshots: the second diagram uses the dark palette.
+    @MainActor
+    func testDiagramRedrawsOnAppearanceChange() throws {
+        let app = launch([fixture, "-openInReadMode", "YES", "-appearance", "light"])
+        let window = app.windows["kitchen-sink.md"]
+        let reader = window.webViews.firstMatch
+        let diagramLabel = reader.staticTexts["Write"].firstMatch
+        XCTAssertTrue(diagramLabel.waitForExistence(timeout: 15), "the diagram is drawn")
+        reader.scroll(byDeltaX: 0, deltaY: -5000)  // the diagram is near the end of the page
+        attach(window, "diagram-light")
+
+        app.typeKey(",", modifierFlags: .command)
+        let settings = app.windows["Settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 5))
+        settings.radioButtons["Dark"].firstMatch.click()
+        settings.typeKey("w", modifierFlags: .command)  // keep Settings out of the screenshot
+        sleep(2)
+        attach(window, "diagram-dark")
+        XCTAssertTrue(diagramLabel.exists, "the diagram is drawn again, not left as source or an error")
+
+        app.typeKey(",", modifierFlags: .command)
+        XCTAssertTrue(settings.waitForExistence(timeout: 5))
+        settings.radioButtons["System"].firstMatch.click()
+        app.terminate()
+    }
+
     // MARK: Odd files
 
     @MainActor

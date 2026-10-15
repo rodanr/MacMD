@@ -335,6 +335,13 @@ summary { cursor: pointer; font-weight: 600; }
   a { text-decoration: none; }
 }
 
+/* Mermaid draws with the page's tokens (reader.js); here only shape: soft corners, hairlines, no shadows.
+   `rx` doesn't round polygons (decision diamonds), only rects. */
+.mermaid .node rect, .mermaid .cluster rect { rx: 8px; ry: 8px; }
+.mermaid .node rect, .mermaid .node polygon, .mermaid .node circle, .mermaid .node path { stroke-width: 1px !important; }
+.mermaid .edgeLabel p { padding: 0 4px; }
+.mermaid svg [filter] { filter: none !important; }
+
 /* Mermaid edge labels sit on the page instead of grey boxes. */
 .mermaid .edgeLabel, .mermaid .edgeLabel p { background: var(--paper) !important; color: var(--ink-muted) !important; }
 .mermaid .edgeLabel rect { fill: var(--paper) !important; opacity: 1 !important; }
