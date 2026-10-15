@@ -52,6 +52,15 @@ for users, not for developers:
 Fixes go to `main` and ship as the next patch; there are no release branches while MacMD is 0.x. A bad
 release is fixed forward with a new patch version rather than by moving or deleting its tag.
 
+## Download counts
+
+The README badge shows downloads of all release files, counted by GitHub (it needs a public repository).
+For DMG downloads only, per release:
+
+```sh
+gh api repos/rodanr/MacMD/releases --jq '.[] | "\(.tag_name): \([.assets[] | select(.name | endswith(".dmg")) | .download_count] | add)"'
+```
+
 ## Unsigned builds (default)
 
 Without signing secrets, the app is ad-hoc signed and Gatekeeper blocks the first launch. The README's
