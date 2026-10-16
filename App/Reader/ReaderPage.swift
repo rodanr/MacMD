@@ -14,7 +14,10 @@ enum ReaderPage {
         var components = URLComponents()
         components.scheme = scheme
         components.host = "file"
-        components.path = directory.standardizedFileURL.path(percentEncoded: false) + "/"
+        // A folder URL's path may already end in "/"; a doubled one would resolve `../` a level too deep.
+        var path = directory.standardizedFileURL.path(percentEncoded: false)
+        while path.hasSuffix("/") { path.removeLast() }
+        components.path = path + "/"
         return components.url ?? URL(string: "macmd://file/")!
     }
 
