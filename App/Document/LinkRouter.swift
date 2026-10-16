@@ -29,17 +29,13 @@ enum LinkRouter {
             source.reveal(anchor: anchor)
             return
         }
-        openFile(
-            file, browsing: source?.browsedFolder ?? source?.fileURL?.deletingLastPathComponent(),
-            expanding: source?.expandedFolders ?? [], anchor: anchor)
+        openFile(file, browsing: source?.browsedFolder ?? source?.fileURL?.deletingLastPathComponent(), anchor: anchor)
     }
 
     /// `browsing` is the folder the file was opened from (the Files sidebar's, or the linking document's).
     /// A newly opened document keeps browsing it when the file is inside it, so moving between files doesn't
-    /// lose your place, with the folders in `expanding` still open. `anchor` is a section to show.
-    static func openFile(
-        _ fileURL: URL, browsing folder: URL? = nil, expanding: Set<String> = [], anchor: String? = nil
-    ) {
+    /// lose your place. `anchor` is a section to show.
+    static func openFile(_ fileURL: URL, browsing folder: URL? = nil, anchor: String? = nil) {
         guard MarkdownFile.isMarkdown(fileURL) else {
             NSWorkspace.shared.activateFileViewerSelecting([fileURL])
             return
@@ -55,9 +51,7 @@ enum LinkRouter {
             guard let document else { return }
             if let document = document as? MarkdownDocument {
                 if !wasAlreadyOpen {
-                    let browsed = FileNavigation.folderToBrowse(opening: fileURL, from: folder)
-                    document.model.browsedFolder = browsed
-                    if browsed == folder { document.model.expandedFolders.formUnion(expanding) }
+                    document.model.browsedFolder = FileNavigation.folderToBrowse(opening: fileURL, from: folder)
                 }
                 if let anchor { document.model.reveal(anchor: anchor) }
             }

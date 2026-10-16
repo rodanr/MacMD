@@ -273,6 +273,25 @@ final class FileNavigationUITests: XCTestCase {
     }
 
     @MainActor
+    func testTheFolderYouWereInStaysOpenWhenYouOpenAFileOutsideIt() throws {
+        let folder = try makeFolder([
+            "index.md": "# Index",
+            "guide/setup.md": "# Setup\n\nBack to the [index](../index.md).",
+        ])
+        // Opened directly, so the Files sidebar browses guide/.
+        let (app, window) = open(folder.appending(path: "guide/setup.md"), readMode: true)
+        let link = window.webViews.firstMatch.links["index"]
+        XCTAssertTrue(link.waitForExistence(timeout: 10))
+        link.click()
+
+        let opened = app.windows["index.md"]
+        XCTAssertTrue(opened.waitForExistence(timeout: 10))
+        XCTAssertTrue(opened.buttons["guide"].waitForExistence(timeout: 5))
+        XCTAssertTrue(opened.buttons["setup.md"].exists, "guide, where you were, stays open")
+        app.terminate()
+    }
+
+    @MainActor
     func testNewFileGoesIntoTheCurrentFilesFolder() throws {
         let folder = try makeFolder(["index.md": "# Index", "guide/setup.md": "# Setup"])
         let (app, window) = open(folder.appending(path: "index.md"))

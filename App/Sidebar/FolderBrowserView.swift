@@ -119,7 +119,7 @@ private struct FileNodeChildren: View {
                 let isCurrent = child.path == currentPath
                 Button {
                     model.selectedFolder = nil
-                    LinkRouter.openFile(child.url, browsing: model.browsedFolder, expanding: model.expandedFolders)
+                    LinkRouter.openFile(child.url, browsing: model.browsedFolder)
                 } label: {
                     FileLabel(name: child.name, systemImage: "doc.text")
                         .padding(.vertical, 2 * zoom)
@@ -282,7 +282,7 @@ private struct FilterResults: View {
                     let folder = (entry.relativePath as NSString).deletingLastPathComponent
                     Button {
                         model.selectedFolder = nil
-                        LinkRouter.openFile(entry.url, browsing: model.browsedFolder, expanding: model.expandedFolders)
+                        LinkRouter.openFile(entry.url, browsing: model.browsedFolder)
                     } label: {
                         VStack(alignment: .leading, spacing: 1) {
                             FileLabel(name: entry.url.lastPathComponent, systemImage: "doc.text")

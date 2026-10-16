@@ -44,7 +44,8 @@ final class DocumentModel {
         didSet {
             guard browsedFolder?.standardizedFileURL != oldValue?.standardizedFileURL else { return }
             fileTree = browsedFolder.map { FileNode(url: $0, isDirectory: true) }
-            expandedFolders = []
+            // The root stays open too, so it shows open if a later root is its parent.
+            if let browsedFolder { expandedFolders.insert(FileNavigation.realPath(browsedFolder)) }
             selectedFolder = nil
             markdownIndex = nil
             rescanMarkdown()
@@ -64,8 +65,11 @@ final class DocumentModel {
     /// until the first scan finishes.
     private(set) var markdownIndex: MarkdownIndex?
     @ObservationIgnored private var indexScan: Task<Void, Never>?
-    /// Folders open in the Files sidebar, as `FileNavigation.realPath`s.
-    var expandedFolders: Set<String> = []
+    /// Folders open in the Files sidebar, as `FileNavigation.realPath`s; shared by every document.
+    var expandedFolders: Set<String> {
+        get { FolderMemory.shared.expanded }
+        set { FolderMemory.shared.expanded = newValue }
+    }
     /// The folder last clicked in the Files sidebar: New File creates there.
     var selectedFolder: URL?
     /// The file the Files sidebar scrolls to (the current one, once revealed).

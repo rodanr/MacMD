@@ -7,6 +7,10 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+### Fixed
+- Folders you open in the Files sidebar stay open when you open a file from another folder, in every tab and
+  window, including the folder you were browsing when a link takes you to its parent.
+
 ## [0.5.0] - 2026-10-16
 
 ### Added

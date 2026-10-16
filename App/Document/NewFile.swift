@@ -5,10 +5,10 @@ import MacMDKit
 @MainActor
 enum NewFile {
     /// Asks for a name, creates the empty file in `folder` and opens it. The new document browses `browsing`
-    /// when it's inside it (so the Files sidebar keeps its place), otherwise `folder`, with `expanding` open.
-    static func create(in folder: URL, browsing: URL? = nil, expanding: Set<String> = []) {
+    /// when it's inside it (so the Files sidebar keeps its place), otherwise `folder`.
+    static func create(in folder: URL, browsing: URL? = nil) {
         guard let url = askAndCreate(in: folder) else { return }
-        LinkRouter.openFile(url, browsing: browsing ?? folder, expanding: expanding)
+        LinkRouter.openFile(url, browsing: browsing ?? folder)
     }
 
     /// Asks for a name and creates the empty file. Nil when cancelled or refused (with the reason shown).

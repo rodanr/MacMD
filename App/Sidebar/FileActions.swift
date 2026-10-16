@@ -6,7 +6,7 @@ import MacMDKit
 @MainActor
 enum FileActions {
     static func newFile(in folder: URL, model: DocumentModel) {
-        NewFile.create(in: folder, browsing: model.browsedFolder, expanding: model.expandedFolders)
+        NewFile.create(in: folder, browsing: model.browsedFolder)
     }
 
     /// Creates a folder and selects it, so the next New File goes into it.

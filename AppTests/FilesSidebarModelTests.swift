@@ -4,12 +4,14 @@ import Testing
 
 @testable import MacMD
 
-/// Which folders the Files sidebar opens, and where New File creates.
-@MainActor
+/// Which folders the Files sidebar opens, and where New File creates. Serialized: open folders are one
+/// memory shared by every document.
+@MainActor @Suite(.serialized)
 struct FilesSidebarModelTests {
     private let root: URL
 
     init() throws {
+        FolderMemory.shared.expanded = []
         root = FileManager.default.temporaryDirectory.appending(path: "files-\(UUID().uuidString)")
         for path in ["guide/deep/setup.md", "index.md", "docs/a.md"] {
             let url = root.appending(path: path)
@@ -26,7 +28,8 @@ struct FilesSidebarModelTests {
         let model = DocumentModel()
         model.browsedFolder = root
         model.fileURL = root.appending(path: "guide/deep/setup.md")
-        #expect(model.expandedFolders == [path("guide"), path("guide/deep")])
+        #expect(model.expandedFolders.isSuperset(of: [path("guide"), path("guide/deep")]))
+        #expect(!model.expandedFolders.contains(path("docs")))
         #expect(model.filesScrollTarget == model.fileURL)
     }
 
@@ -47,7 +50,42 @@ struct FilesSidebarModelTests {
         model.browsedFolder = root.appending(path: "docs")
         model.fileURL = root.appending(path: "index.md")
         #expect(model.currentFolder == root.appending(path: "docs"))
-        #expect(model.expandedFolders.isEmpty)
+        #expect(!model.expandedFolders.contains(path("guide")), "nothing outside the folder is opened")
+    }
+
+    @Test func openFoldersAreSharedByEveryDocument() {
+        defer { try? FileManager.default.removeItem(at: root) }
+        let first = DocumentModel()
+        first.browsedFolder = root
+        first.fileURL = root.appending(path: "guide/deep/setup.md")
+        let second = DocumentModel()
+        second.browsedFolder = root
+        second.fileURL = root.appending(path: "index.md")
+        #expect(second.expandedFolders.contains(path("guide/deep")), "another tab shows the same open folders")
+        second.expandedFolders.remove(path("guide/deep"))
+        #expect(!first.expandedFolders.contains(path("guide/deep")), "and closing one closes it everywhere")
+    }
+
+    @Test func aFormerRootStaysOpenUnderItsParent() {
+        defer { try? FileManager.default.removeItem(at: root) }
+        let inGuide = DocumentModel()
+        inGuide.browsedFolder = root.appending(path: "guide/deep")
+        inGuide.fileURL = root.appending(path: "guide/deep/setup.md")
+        // A link to a file further up browses the parent: the folder you were in stays open.
+        let atTop = DocumentModel()
+        atTop.browsedFolder = root
+        atTop.fileURL = root.appending(path: "index.md")
+        #expect(atTop.expandedFolders.contains(path("guide/deep")))
+    }
+
+    @Test func changingTheRootKeepsOpenFolders() {
+        defer { try? FileManager.default.removeItem(at: root) }
+        let model = DocumentModel()
+        model.browsedFolder = root
+        model.fileURL = root.appending(path: "guide/deep/setup.md")
+        model.browsedFolder = root.appending(path: "docs")
+        model.browsedFolder = root
+        #expect(model.expandedFolders.isSuperset(of: [path("guide"), path("guide/deep")]))
     }
 
     @Test func renamingAFolderKeepsItOpenAndSelected() throws {
@@ -60,7 +98,8 @@ struct FilesSidebarModelTests {
         let oldPath = path("guide")
         try FileManager.default.moveItem(at: root.appending(path: "guide"), to: renamed)
         model.folderDidMove(from: oldPath, to: renamed)
-        #expect(model.expandedFolders == [path("manual"), path("manual/deep")])
+        #expect(model.expandedFolders.isSuperset(of: [path("manual"), path("manual/deep")]))
+        #expect(!model.expandedFolders.contains(oldPath))
         #expect(model.selectedFolder == renamed)
     }
 
