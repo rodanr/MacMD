@@ -34,6 +34,21 @@ public enum FileNavigation {
         return (components.url ?? url, fragment)
     }
 
+    /// The folders to expand so `file` shows in a tree rooted at `root`: each folder below the root down to the
+    /// file's own, top first, as `realPath`s. Empty when the file is directly in the root or outside it.
+    public static func folderPaths(from root: URL, to file: URL) -> [String] {
+        let rootPath = realPath(root)
+        let parent = realPath(file.deletingLastPathComponent())
+        guard parent.hasPrefix(rootPath + "/") else { return [] }
+        var paths: [String] = []
+        var current = rootPath
+        for component in parent.dropFirst(rootPath.count + 1).split(separator: "/") {
+            current += "/" + component
+            paths.append(current)
+        }
+        return paths
+    }
+
     /// The path as the file system reports it (FSEvents, for one): symlinks resolved, `/private/var` kept
     /// (Foundation's `resolvingSymlinksInPath()` turns it into `/var`), no trailing slash. A path that doesn't
     /// exist is only standardized.
@@ -60,6 +75,13 @@ public enum NewFileName {
         while name.hasSuffix(".") { name.removeLast() }  // "notes." means notes.md, not notes..md
         guard !name.isEmpty, !name.hasPrefix("."), !name.contains("/"), !name.contains(":") else { return nil }
         return MarkdownFile.isMarkdown(URL(filePath: name)) ? name : name + ".md"
+    }
+
+    /// A folder name: trimmed, never given an extension. Nil for empty, hidden, `/` or `:` names.
+    public static func normalizedFolder(_ input: String) -> String? {
+        let name = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, !name.hasPrefix("."), !name.contains("/"), !name.contains(":") else { return nil }
+        return name
     }
 
     /// `name`, or `name 2`, `name 3`… when it's taken. APFS ignores case by default, so this does too.

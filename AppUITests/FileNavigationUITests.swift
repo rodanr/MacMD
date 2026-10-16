@@ -29,11 +29,11 @@ final class FileNavigationUITests: XCTestCase {
         return (app, window)
     }
 
-    /// Answers the "New File" name prompt.
+    /// Answers the name prompt (New File, New Folder, Rename).
     private func answerNamePrompt(_ app: XCUIApplication, with name: String) {
-        let prompt = app.dialogs["new-file"]
+        let prompt = app.dialogs["name-prompt"]
         XCTAssertTrue(prompt.waitForExistence(timeout: 5), "the name prompt opens")
-        let field = prompt.textFields["new-file-name"]
+        let field = prompt.textFields["name-field"]
         field.typeKey("a", modifierFlags: .command)
         field.typeText(name + "\n")
     }
@@ -245,6 +245,128 @@ final class FileNavigationUITests: XCTestCase {
         XCTAssertTrue(window.buttons["later.md"].waitForExistence(timeout: 5), "a new file appears")
         try FileManager.default.removeItem(at: later)
         XCTAssertTrue(waitUntil { !window.buttons["later.md"].exists }, "a deleted file disappears")
+        app.terminate()
+    }
+
+    // MARK: Revealing the current file and acting on rows
+
+    @MainActor
+    func testLinkedFileIsRevealedInTheFilesSidebar() throws {
+        let folder = try makeFolder([
+            "index.md": "# Index\n\nRead the [setup guide](guide/deep/setup.md).",
+            "guide/deep/setup.md": "# Setup",
+            "guide/other.md": "# Other",
+        ])
+        let (app, window) = open(folder.appending(path: "index.md"), readMode: true)
+        let link = window.webViews.firstMatch.links["setup guide"]
+        XCTAssertTrue(link.waitForExistence(timeout: 10))
+        link.click()
+
+        let opened = app.windows["setup.md"]
+        XCTAssertTrue(opened.waitForExistence(timeout: 10))
+        let row = opened.buttons["setup.md"]
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "the folders down to the file are expanded")
+        XCTAssertTrue(row.isSelected, "and the file is highlighted")
+        XCTAssertTrue(opened.buttons["index.md"].exists, "the root stays the same")
+        attach(opened, "files-revealed")
+        app.terminate()
+    }
+
+    @MainActor
+    func testNewFileGoesIntoTheCurrentFilesFolder() throws {
+        let folder = try makeFolder(["index.md": "# Index", "guide/setup.md": "# Setup"])
+        let (app, window) = open(folder.appending(path: "index.md"))
+        let folderRow = window.buttons["guide"]
+        XCTAssertTrue(folderRow.waitForExistence(timeout: 5))
+        folderRow.click()
+        XCTAssertTrue(window.buttons["setup.md"].waitForExistence(timeout: 5), "clicking a folder opens it")
+        window.buttons["setup.md"].click()
+
+        let opened = app.windows["setup.md"]
+        XCTAssertTrue(opened.waitForExistence(timeout: 10))
+        opened.buttons["New File"].click()
+        answerNamePrompt(app, with: "next")
+        let created = folder.appending(path: "guide/next.md")
+        XCTAssertTrue(
+            waitUntil { FileManager.default.fileExists(atPath: created.path) },
+            "New File creates next to the file you're in, not in the root")
+        XCTAssertTrue(app.windows["next.md"].waitForExistence(timeout: 10))
+        app.terminate()
+    }
+
+    @MainActor
+    func testNewFileGoesIntoTheSelectedFolder() throws {
+        let folder = try makeFolder(["index.md": "# Index", "docs/a.md": "# A"])
+        let (app, window) = open(folder.appending(path: "index.md"))
+        let folderRow = window.buttons["docs"]
+        XCTAssertTrue(folderRow.waitForExistence(timeout: 5))
+        folderRow.click()
+        window.buttons["New File"].click()
+        answerNamePrompt(app, with: "chosen")
+        XCTAssertTrue(
+            waitUntil { FileManager.default.fileExists(atPath: folder.appending(path: "docs/chosen.md").path) },
+            "New File creates in the folder you clicked")
+        app.terminate()
+    }
+
+    @MainActor
+    func testNewFolderThenNewFileInside() throws {
+        let folder = try makeFolder(["index.md": "# Index", "docs/a.md": "# A"])
+        let (app, window) = open(folder.appending(path: "index.md"))
+        let docs = window.buttons["docs"]
+        XCTAssertTrue(docs.waitForExistence(timeout: 5))
+        docs.rightClick()
+        window.menuItems["New Folder…"].click()
+        answerNamePrompt(app, with: "drafts")
+        let drafts = folder.appending(path: "docs/drafts")
+        XCTAssertTrue(waitUntil { FileManager.default.fileExists(atPath: drafts.path) }, "the folder is created")
+        XCTAssertTrue(window.buttons["drafts"].waitForExistence(timeout: 5), "and shown, opened")
+
+        window.buttons["New File"].click()
+        answerNamePrompt(app, with: "idea")
+        XCTAssertTrue(
+            waitUntil { FileManager.default.fileExists(atPath: drafts.appending(path: "idea.md").path) },
+            "the new folder is selected, so New File goes into it")
+        app.terminate()
+    }
+
+    @MainActor
+    func testRenameFromTheSidebarFollowsTheOpenDocument() throws {
+        let folder = try makeFolder(["a.md": "# A", "other.md": "# Other"])
+        let (app, window) = open(folder.appending(path: "a.md"))
+        let row = window.buttons["a.md"]
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        row.rightClick()
+        window.menuItems["Rename…"].click()
+        answerNamePrompt(app, with: "b")
+        let renamed = folder.appending(path: "b.md")
+        XCTAssertTrue(waitUntil { FileManager.default.fileExists(atPath: renamed.path) }, "b.md exists")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: folder.appending(path: "a.md").path))
+        XCTAssertTrue(app.windows["b.md"].waitForExistence(timeout: 10), "the open document follows the rename")
+        app.terminate()
+    }
+
+    @MainActor
+    func testMoveToTrashAsksFirst() throws {
+        let folder = try makeFolder(["a.md": "# A", "old.md": "# Old"])
+        let (app, window) = open(folder.appending(path: "a.md"))
+        let old = folder.appending(path: "old.md")
+        let row = window.buttons["old.md"]
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+
+        row.rightClick()
+        window.menuItems["Move to Trash"].click()
+        let confirm = app.dialogs.firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "it asks first")
+        confirm.buttons["Cancel"].click()
+        XCTAssertTrue(FileManager.default.fileExists(atPath: old.path), "Cancel keeps the file")
+
+        row.rightClick()
+        window.menuItems["Move to Trash"].click()
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.buttons["Move to Trash"].click()
+        XCTAssertTrue(waitUntil { !FileManager.default.fileExists(atPath: old.path) }, "the file goes to the Trash")
+        XCTAssertTrue(waitUntil { !window.buttons["old.md"].exists }, "and leaves the list")
         app.terminate()
     }
 }

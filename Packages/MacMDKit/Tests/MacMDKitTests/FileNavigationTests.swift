@@ -55,6 +55,30 @@ import Testing
             FileNavigation.realPath(URL(filePath: "/no/such/place/")) == "/no/such/place", "missing paths still work")
     }
 
+    @Test func foldersToExpandForANestedFile() throws {
+        let root = try temporaryTree(["guide/deep/setup.md", "top.md"])
+        defer { try? FileManager.default.removeItem(at: root) }
+        let real = FileNavigation.realPath(root)
+        #expect(
+            FileNavigation.folderPaths(from: root, to: root.appending(path: "guide/deep/setup.md"))
+                == [real + "/guide", real + "/guide/deep"])
+        #expect(FileNavigation.folderPaths(from: root, to: root.appending(path: "top.md")).isEmpty)
+        #expect(
+            FileNavigation.folderPaths(from: root.appending(path: "guide"), to: root.appending(path: "top.md")).isEmpty)
+        #expect(FileNavigation.folderPaths(from: root, to: root).isEmpty)
+    }
+
+    private func temporaryTree(_ files: [String]) throws -> URL {
+        let root = FileManager.default.temporaryDirectory.appending(path: "tree-\(UUID().uuidString)")
+        for file in files {
+            let url = root.appending(path: file)
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try Data().write(to: url)
+        }
+        return root
+    }
+
     @Test func splitsTheSectionFromALink() throws {
         let link = try #require(URL(string: "file:///Users/a/docs/my%20notes.md#getting-started"))
         let (file, fragment) = FileNavigation.splitFragment(link)
@@ -95,6 +119,14 @@ import Testing
     @Test func rejectsNamesThatAreNotAFileInThisFolder() {
         for bad in ["", "   ", ".md", ".hidden", "a/b", "../up", "a:b", "."] {
             #expect(NewFileName.normalized(bad) == nil, "\(bad) is rejected")
+        }
+    }
+
+    @Test func folderNamesGetNoExtension() {
+        #expect(NewFileName.normalizedFolder(" drafts ") == "drafts")
+        #expect(NewFileName.normalizedFolder("v1.2") == "v1.2")
+        for bad in ["", " ", ".git", "a/b", "a:b", ".", ".."] {
+            #expect(NewFileName.normalizedFolder(bad) == nil, "\(bad) is rejected")
         }
     }
 

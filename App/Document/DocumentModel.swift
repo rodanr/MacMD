@@ -44,6 +44,9 @@ final class DocumentModel {
         didSet {
             guard browsedFolder?.standardizedFileURL != oldValue?.standardizedFileURL else { return }
             fileTree = browsedFolder.map { FileNode(url: $0, isDirectory: true) }
+            expandedFolders = []
+            selectedFolder = nil
+            revealInFiles()
             // Files created, renamed or deleted anywhere (here, Finder, git) show up in the list.
             folderWatcher = browsedFolder.map { folder in
                 FolderWatcher(folder: folder) { [weak self] changed in self?.fileTree?.refreshLoaded(changed) }
@@ -52,6 +55,12 @@ final class DocumentModel {
     }
     private(set) var fileTree: FileNode?
     @ObservationIgnored private var folderWatcher: FolderWatcher?
+    /// Folders open in the Files sidebar, as `FileNavigation.realPath`s.
+    var expandedFolders: Set<String> = []
+    /// The folder last clicked in the Files sidebar: New File creates there.
+    var selectedFolder: URL?
+    /// The file the Files sidebar scrolls to (the current one, once revealed).
+    private(set) var filesScrollTarget: URL?
     /// A section to show once the document can show it (a link to `file.md#section` opened the file). Only for
     /// the text as loaded: the first edit drops it, so the caret never jumps while you type.
     @ObservationIgnored var pendingAnchor: String?
@@ -60,7 +69,12 @@ final class DocumentModel {
     @ObservationIgnored private let settings: AppSettings
     var isFocusMode: Bool
     var isTypewriterMode: Bool
-    var fileURL: URL?
+    var fileURL: URL? {
+        didSet {
+            guard fileURL != oldValue else { return }
+            revealInFiles()
+        }
+    }
     private(set) var outline: [OutlineItem] = []
     private(set) var stats = DocumentStats(text: "")
     /// 1-based caret position.
@@ -143,6 +157,40 @@ final class DocumentModel {
         switch mode {
         case .edit: editor?.scroll(toLine: item.line, select: true)
         case .read: reader?.scroll(toAnchor: item.slug)
+        }
+    }
+
+    /// Opens the Files sidebar's folders down to the current file and scrolls to it, so a file opened from a
+    /// link or another folder is always in view.
+    func revealInFiles() {
+        guard let root = browsedFolder, let file = fileURL else { return }
+        expandedFolders.formUnion(FileNavigation.folderPaths(from: root, to: file))
+        filesScrollTarget = file
+    }
+
+    /// Where New File creates: the folder clicked in the Files sidebar, otherwise the current file's folder,
+    /// otherwise the browsed folder.
+    var currentFolder: URL? {
+        if let selectedFolder { return selectedFolder }
+        if let file = fileURL, browsedFolder.map({ FileNavigation.isInside(file, folder: $0) }) ?? true {
+            return file.deletingLastPathComponent()
+        }
+        return browsedFolder
+    }
+
+    /// Keeps the sidebar's open and selected folders after a folder moved. `oldPath` is its `realPath` from
+    /// before the move (a path that no longer exists can't be resolved).
+    func folderDidMove(from oldPath: String, to new: URL) {
+        let newPath = FileNavigation.realPath(new)
+        expandedFolders = Set(
+            expandedFolders.map { path in
+                path == oldPath || path.hasPrefix(oldPath + "/") ? newPath + path.dropFirst(oldPath.count) : path
+            })
+        // The selected folder may be the one that moved: resolve its parent, which still exists.
+        if let selected = selectedFolder,
+            FileNavigation.realPath(selected.deletingLastPathComponent()) + "/" + selected.lastPathComponent == oldPath
+        {
+            selectedFolder = new
         }
     }
 

@@ -80,8 +80,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     /// File → New File in Folder…: next to the current document, or in a folder you pick.
     @objc func newFileInFolder(_ sender: Any?) {
         let model = (NSDocumentController.shared.currentDocument as? MarkdownDocument)?.model
-        if let folder = model?.fileURL?.deletingLastPathComponent() ?? model?.browsedFolder {
-            NewFile.create(in: folder, browsing: model?.browsedFolder)
+        if let model, let folder = model.currentFolder {
+            FileActions.newFile(in: folder, model: model)
             return
         }
         let panel = NSOpenPanel()

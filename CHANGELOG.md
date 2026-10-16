@@ -7,6 +7,16 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+### Added
+- Right-click a file or folder in the Files sidebar to create a file or folder there, rename it, move it to
+  the Trash (after asking) or show it in Finder.
+- Click a folder in the Files sidebar to choose where New File creates; the sidebar's footer shows the folder.
+
+### Fixed
+- A file opened from a link or another folder is shown in the Files sidebar: its folders open, and the list
+  scrolls to it and highlights it. Open folders stay open when you move to another file.
+- New File creates in the folder of the file you're in instead of always at the top.
+
 ## [0.4.0] - 2026-10-16
 
 ### Added

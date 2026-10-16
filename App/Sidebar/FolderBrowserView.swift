@@ -10,13 +10,18 @@ struct FolderBrowserView: View {
     var body: some View {
         Group {
             if let root = model.fileTree {
-                List {
-                    FileNodeChildren(node: root, currentFile: model.fileURL, browsedFolder: model.browsedFolder)
-                }
-                .listStyle(.sidebar)
-                .font(.system(size: 13 * zoom))
-                .safeAreaInset(edge: .bottom) {
-                    footer(for: root)
+                ScrollViewReader { proxy in
+                    List {
+                        FileNodeChildren(
+                            node: root, model: model, currentPath: model.fileURL.map(FileNavigation.realPath))
+                    }
+                    .listStyle(.sidebar)
+                    .font(.system(size: 13 * zoom))
+                    .safeAreaInset(edge: .bottom) {
+                        footer(for: root)
+                    }
+                    .onAppear { scroll(proxy) }
+                    .onChange(of: model.filesScrollTarget) { scroll(proxy) }
                 }
             } else {
                 ContentUnavailableView {
@@ -32,6 +37,13 @@ struct FolderBrowserView: View {
         .onChange(of: model.fileURL) { browseDocumentFolderIfNeeded() }
     }
 
+    /// Keeps the current file in view once its folders are open (rows only exist once their folder is).
+    private func scroll(_ proxy: ScrollViewProxy) {
+        guard let target = model.filesScrollTarget else { return }
+        let id = FileNavigation.realPath(target)
+        Task { @MainActor in proxy.scrollTo(id, anchor: .center) }
+    }
+
     /// Without a chosen folder, browse the one the document is in (once it has been saved).
     private func browseDocumentFolderIfNeeded() {
         if model.browsedFolder == nil, let directory = model.fileURL?.deletingLastPathComponent() {
@@ -40,18 +52,20 @@ struct FolderBrowserView: View {
     }
 
     private func footer(for root: FileNode) -> some View {
-        HStack {
-            Label(root.name, systemImage: "folder")
+        let target = model.currentFolder ?? root.url
+        let isRoot = FileNavigation.realPath(target) == root.path
+        return HStack {
+            Label(isRoot ? root.name : "\(root.name) › \(target.lastPathComponent)", systemImage: "folder")
                 .lineLimit(1)
                 .truncationMode(.middle)
             Spacer()
             Button {
-                NewFile.create(in: root.url, browsing: root.url)
+                FileActions.newFile(in: target, model: model)
             } label: {
                 Image(systemName: "doc.badge.plus")
             }
             .buttonStyle(.borderless)
-            .help("New File…")
+            .help("New File in “\(target.lastPathComponent)”…")
             .accessibilityLabel("New File")
             Button(action: chooseFolder) { Image(systemName: "folder.badge.plus") }
                 .buttonStyle(.borderless)
@@ -76,54 +90,101 @@ struct FolderBrowserView: View {
 
 private struct FileNodeChildren: View {
     let node: FileNode
-    let currentFile: URL?
-    let browsedFolder: URL?
+    let model: DocumentModel
+    /// The current file's `realPath`, highlighted in the list.
+    let currentPath: String?
     @Environment(\.zoom) private var zoom
 
     var body: some View {
         ForEach(node.children) { child in
             if child.isDirectory {
-                DisclosureGroup {
-                    FileNodeChildren(node: child, currentFile: currentFile, browsedFolder: browsedFolder)
+                DisclosureGroup(isExpanded: expansion(of: child)) {
+                    FileNodeChildren(node: child, model: model, currentPath: currentPath)
                 } label: {
-                    // The same insets as a file row's pill, so folder and file icons line up.
-                    FileLabel(name: child.name, systemImage: "folder")
-                        .padding(.vertical, 2 * zoom)
-                        .padding(.horizontal, 6 * zoom)
-                        .contextMenu {
-                            Button("New File…") { NewFile.create(in: child.url, browsing: browsedFolder) }
-                            showInFinder(child.url)
-                        }
+                    FolderRow(node: child, model: model, isExpanded: expansion(of: child))
                 }
             } else {
-                let isCurrent = child.url.standardizedFileURL == currentFile?.standardizedFileURL
+                let isCurrent = child.path == currentPath
                 Button {
-                    LinkRouter.openFile(child.url, browsing: browsedFolder)
+                    model.selectedFolder = nil
+                    LinkRouter.openFile(child.url, browsing: model.browsedFolder, expanding: model.expandedFolders)
                 } label: {
                     FileLabel(name: child.name, systemImage: "doc.text")
                         .padding(.vertical, 2 * zoom)
                         .padding(.horizontal, 6 * zoom)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(
-                            RoundedRectangle(cornerRadius: Theme.panelRadius / 2)
-                                .fill(isCurrent ? Color.accentColor.opacity(0.14) : .clear)
-                        )
+                        .background(SelectionPill(isSelected: isCurrent))
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(isCurrent ? .isSelected : [])
-                .contextMenu {
-                    Button("New File…") {
-                        NewFile.create(in: child.url.deletingLastPathComponent(), browsing: browsedFolder)
-                    }
-                    showInFinder(child.url)
-                }
+                .contextMenu { RowMenu(url: child.url, isDirectory: false, model: model) }
             }
         }
     }
 
-    private func showInFinder(_ url: URL) -> some View {
-        Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([url]) }
+    private func expansion(of folder: FileNode) -> Binding<Bool> {
+        Binding(
+            get: { model.expandedFolders.contains(folder.path) },
+            set: { open in
+                if open { model.expandedFolders.insert(folder.path) } else { model.expandedFolders.remove(folder.path) }
+            })
+    }
+}
+
+/// A folder's name: clicking selects it (New File creates there) and opens it.
+private struct FolderRow: View {
+    let node: FileNode
+    let model: DocumentModel
+    @Binding var isExpanded: Bool
+    @Environment(\.zoom) private var zoom
+
+    var body: some View {
+        let isSelected = model.selectedFolder.map(FileNavigation.realPath) == node.path
+        Button {
+            // The first click opens a closed folder; clicking the selected folder again closes it.
+            if isSelected || !isExpanded { isExpanded.toggle() }
+            model.selectedFolder = node.url
+        } label: {
+            // The same insets as a file row's pill, so folder and file icons line up.
+            FileLabel(name: node.name, systemImage: "folder")
+                .padding(.vertical, 2 * zoom)
+                .padding(.horizontal, 6 * zoom)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(SelectionPill(isSelected: isSelected))
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .contextMenu { RowMenu(url: node.url, isDirectory: true, model: model) }
+    }
+}
+
+/// The right-click menu of a file or folder row. New items go into the folder, or next to the file.
+private struct RowMenu: View {
+    let url: URL
+    let isDirectory: Bool
+    let model: DocumentModel
+
+    var body: some View {
+        let folder = isDirectory ? url : url.deletingLastPathComponent()
+        Button("New File…") { FileActions.newFile(in: folder, model: model) }
+        Button("New Folder…") { FileActions.newFolder(in: folder, model: model) }
+        Divider()
+        Button("Rename…") { FileActions.rename(url, isDirectory: isDirectory, model: model) }
+        Button("Move to Trash") { FileActions.moveToTrash(url, isDirectory: isDirectory) }
+        Divider()
+        Button("Show in Finder") { FileActions.showInFinder(url) }
+    }
+}
+
+/// The soft accent pill behind the current file or the selected folder.
+private struct SelectionPill: View {
+    let isSelected: Bool
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: Theme.panelRadius / 2)
+            .fill(isSelected ? Color.accentColor.opacity(0.14) : .clear)
     }
 }
 
@@ -148,8 +209,10 @@ private struct FileLabel: View {
 final class FileNode: Identifiable {
     let url: URL
     let isDirectory: Bool
+    /// `FileNavigation.realPath(url)`: the row's identity, and what expansion and FSEvents use.
+    nonisolated let path: String
     var name: String { url.lastPathComponent }
-    nonisolated var id: URL { url }
+    nonisolated var id: String { path }
 
     // Loading happens while SwiftUI reads `children`, so the cache itself is not observed (writing observed
     // state during a view update would loop); `version` tells views when a refresh changed it.
@@ -159,6 +222,7 @@ final class FileNode: Identifiable {
     init(url: URL, isDirectory: Bool) {
         self.url = url
         self.isDirectory = isDirectory
+        path = FileNavigation.realPath(url)
     }
 
     var children: [FileNode] {
@@ -173,13 +237,13 @@ final class FileNode: Identifiable {
     /// (`FileNavigation.realPath` form). Nodes that are still there are kept, so open folders stay open.
     func refreshLoaded(_ changed: Set<String>? = nil) {
         guard let old = loadedChildren else { return }
-        guard changed == nil || changed?.contains(FileNavigation.realPath(url)) == true else {
+        guard changed == nil || changed?.contains(path) == true else {
             for child in old where child.isDirectory { child.refreshLoaded(changed) }
             return
         }
-        let existing = Dictionary(old.map { ($0.url, $0) }, uniquingKeysWith: { first, _ in first })
+        let existing = Dictionary(old.map { ($0.path, $0) }, uniquingKeysWith: { first, _ in first })
         let fresh = Self.load(url).map { node in
-            existing[node.url].flatMap { $0.isDirectory == node.isDirectory ? $0 : nil } ?? node
+            existing[node.path].flatMap { $0.isDirectory == node.isDirectory ? $0 : nil } ?? node
         }
         if fresh.map(ObjectIdentifier.init) != old.map(ObjectIdentifier.init) {
             loadedChildren = fresh
