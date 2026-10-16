@@ -7,6 +7,8 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-16
+
 ### Added
 - Right-click a file or folder in the Files sidebar to create a file or folder there, rename it, move it to
   the Trash (after asking) or show it in Finder.
@@ -112,7 +114,8 @@ First public release.
 - About window with license, terms and privacy, and acknowledgements; manual Check for Updates… (the only time
   MacMD contacts GitHub). No analytics or telemetry; see [TERMS.md](TERMS.md).
 
-[Unreleased]: https://github.com/rodanr/MacMD/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/rodanr/MacMD/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/rodanr/MacMD/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/rodanr/MacMD/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/rodanr/MacMD/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/rodanr/MacMD/compare/v0.2.0...v0.3.0
