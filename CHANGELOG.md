@@ -7,6 +7,12 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+### Fixed
+- Focus mode keeps the paragraph you're writing readable: it no longer dims the whole page while you type, the
+  paragraph you just wrote stays bright when you press Return to start a new one, a selection keeps every
+  paragraph it touches bright, and dimmed text is lighter so it stays easy to read.
+- Typewriter mode keeps the line you type centered in long documents instead of drifting a line off.
+
 ## [0.3.0] - 2026-10-16
 
 ### Changed

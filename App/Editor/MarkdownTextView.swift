@@ -193,18 +193,16 @@ final class MarkdownTextView: NSTextView {
         return shades
     }
 
+    /// Keeps the lines the selection touches at full strength, or the nearest written paragraph when the caret
+    /// is on a blank line (see `FocusParagraph`).
     func updateFocusDimming() {
-        let text = string as NSString
-        guard isFocusMode, text.length > 0, let textLayoutManager,
-            let contentManager = textLayoutManager.textContentManager,
-            let location = contentManager.location(
-                contentManager.documentRange.location, offsetBy: min(selectedRange().location, text.length - 1)),
-            let fragment = textLayoutManager.textLayoutFragment(for: location)
+        guard isFocusMode, let text = textStorage?.mutableString,
+            let focus = FocusParagraph.range(in: text, selection: selectedRange()),
+            let paragraph = layoutFragmentsFrame(for: focus)
         else {
             subviews.compactMap { $0 as? FocusShadeView }.forEach { $0.isHidden = true }
             return
         }
-        let paragraph = fragment.layoutFragmentFrame.offsetBy(dx: textContainerOrigin.x, dy: textContainerOrigin.y)
         let shades = focusShades
         shades[0].frame = NSRect(x: 0, y: 0, width: bounds.width, height: max(paragraph.minY, 0))
         shades[1].frame = NSRect(
@@ -215,7 +213,46 @@ final class MarkdownTextView: NSTextView {
         }
     }
 
+    /// The frames of the layout fragments (paragraphs) holding `range`, in view coordinates.
+    ///
+    /// TextKit 2 lays out lazily: a paragraph just typed or far down the document has no real frame until it
+    /// is laid out, so this lays it out first.
+    private func layoutFragmentsFrame(for range: NSRange) -> NSRect? {
+        guard let textLayoutManager, let textRange = textRange(for: range) else { return nil }
+        textLayoutManager.ensureLayout(for: textRange)
+        var frame: NSRect?
+        textLayoutManager.enumerateTextLayoutFragments(from: textRange.location, options: [.ensuresLayout]) {
+            fragment in
+            if frame != nil, fragment.rangeInElement.location.compare(textRange.endLocation) != .orderedAscending {
+                return false
+            }
+            frame = frame.map { $0.union(fragment.layoutFragmentFrame) } ?? fragment.layoutFragmentFrame
+            return true
+        }
+        guard let frame, frame.height > 0 else { return nil }
+        return frame.offsetBy(dx: textContainerOrigin.x, dy: textContainerOrigin.y)
+    }
+
+    /// Lines above a paragraph that was just laid out may still have estimated heights; laying those out moves
+    /// the paragraph. Focus shades and typewriter centering follow it after every layout pass.
+    override func textViewportLayoutControllerDidLayout(_ controller: NSTextViewportLayoutController) {
+        super.textViewportLayoutControllerDidLayout(controller)
+        if isFocusMode { updateFocusDimming() }
+        if isTypewriterMode, needsCaretCentering {
+            needsCaretCentering = false
+            scrollCaretToCenter()
+        }
+    }
+
+    /// Set when the caret moves in typewriter mode, so the next layout pass centers it once more.
+    private var needsCaretCentering = false
+
     func centerCaret() {
+        needsCaretCentering = true
+        scrollCaretToCenter()
+    }
+
+    private func scrollCaretToCenter() {
         guard let scrollView = enclosingScrollView,
             let caret = rect(for: NSRange(location: selectedRange().location, length: 0))
         else { return }
@@ -434,13 +471,18 @@ final class MarkdownTextView: NSTextView {
 
 /// Translucent paper over the text outside the focused paragraph.
 final class FocusShadeView: NSView {
+    /// How much of the paper covers dimmed text: 0.45 leaves it at about 55 % strength, quiet but readable.
+    static let opacity: CGFloat = 0.45
+
     var color: NSColor = .textBackgroundColor { didSet { needsDisplay = true } }
 
     override var isFlipped: Bool { true }
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
     override func draw(_ dirtyRect: NSRect) {
-        color.withAlphaComponent(0.65).setFill()
-        dirtyRect.fill()
+        // Views don't clip by default (macOS 14+), and `dirtyRect` can reach past the bounds, over the focused
+        // paragraph; fill only the bounds.
+        color.withAlphaComponent(Self.opacity).setFill()
+        dirtyRect.intersection(bounds).fill()
     }
 }

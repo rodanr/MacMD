@@ -65,4 +65,6 @@ The measure is about 68 characters (Medium: 720 pt in the editor), configurable 
 - Quotes: a 2.5 pt accent bar (45 %), muted text, 16 pt indent.
 - Lists: markers and task boxes in `listMarker` (text at 50%), matching the reader's muted `::marker`;
   wrapped lines hang under the item text.
-- Focus mode dims everything but the current paragraph to 30 %; typewriter mode keeps the caret line centred.
+- Focus mode lays the paper at 45 % opacity (`FocusShadeView.opacity`) over everything but the current paragraph,
+  leaving it at about 55 % strength; on a blank line the paragraph above stays in focus. Typewriter mode keeps the
+  caret line centred.
