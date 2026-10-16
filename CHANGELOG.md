@@ -7,6 +7,8 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-16
+
 ### Added
 - Create Markdown files where you're working: **File → New File in Folder…** (⌥⌘N), the New File button and
   folder menus in the Files sidebar, and **New File Here…** in the Open panel. Each asks for a name and opens
@@ -98,7 +100,8 @@ First public release.
 - About window with license, terms and privacy, and acknowledgements; manual Check for Updates… (the only time
   MacMD contacts GitHub). No analytics or telemetry; see [TERMS.md](TERMS.md).
 
-[Unreleased]: https://github.com/rodanr/MacMD/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/rodanr/MacMD/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/rodanr/MacMD/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/rodanr/MacMD/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/rodanr/MacMD/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/rodanr/MacMD/compare/v0.1.0...v0.2.0
