@@ -7,6 +7,8 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-16
+
 ### Changed
 - A calmer, more consistent look. Code blocks and quotes match between Edit and Read mode; tables sit in
   rounded frames with a tinted header; task boxes are rounded squares sized to the text; diagrams use the
@@ -74,6 +76,7 @@ First public release.
 - About window with license, terms and privacy, and acknowledgements; manual Check for Updates… (the only time
   MacMD contacts GitHub). No analytics or telemetry; see [TERMS.md](TERMS.md).
 
-[Unreleased]: https://github.com/rodanr/MacMD/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/rodanr/MacMD/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/rodanr/MacMD/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/rodanr/MacMD/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/rodanr/MacMD/releases/tag/v0.1.0
