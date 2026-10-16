@@ -101,5 +101,4 @@ Shipped in 0.3.0. Where the result differs from this spec:
 - **Design review screenshots** come from CI (`DesignReviewUITests`, 1024×768), whose results are uploaded for
   pull requests.
 
-Deferred: editor heading spacing from the spacing scale; a spacing pass on the toolbar, Settings and About;
-refreshed README screenshots.
+Deferred: editor heading spacing from the spacing scale; a spacing pass on the toolbar, Settings and About.

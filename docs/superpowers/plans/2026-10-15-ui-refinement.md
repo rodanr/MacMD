@@ -3,8 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or
 > superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Status:** executed in this session; shipped in 0.3.0. Open boxes are deferred (README screenshots) or
-were covered differently (PDF export is checked by the export UI test, not by eye). Deviations are listed in the
+**Status:** executed in this session; shipped in 0.3.0. The open box was covered differently (PDF export is checked by the export UI test, not by eye). Deviations are listed in the
 spec's Outcome section.
 
 **Goal:** Refine MacMD's editor, Read mode and window chrome to one calm, consistent "editorial" design, without
@@ -553,7 +552,7 @@ final class DesignReviewUITests: XCTestCase {
   - the status bar hairline.
 
   Fix anything off and repeat. If the display is locked, stop and ask the user; don't skip the review.
-- [ ] **Step 3:** Refresh the README screenshots: run `testOpenEditAndRead` and copy `edit-light`, `read-dark` and
+- [x] **Step 3:** Refresh the README screenshots: run `testOpenEditAndRead` and copy `edit-light`, `read-dark` and
   `read-dark-2` into `docs/screenshots/`.
 - [x] **Step 4:** Commit: `git commit -m "test(ui): capture every theme for design review; refresh README screenshots"`.
 
