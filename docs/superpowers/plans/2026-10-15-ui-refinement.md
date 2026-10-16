@@ -3,6 +3,10 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or
 > superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Status:** executed in this session; shipped in 0.3.0. Open boxes are deferred (README screenshots) or
+were covered differently (PDF export is checked by the export UI test, not by eye). Deviations are listed in the
+spec's Outcome section.
+
 **Goal:** Refine MacMD's editor, Read mode and window chrome to one calm, consistent "editorial" design, without
 new features. Spec: `docs/superpowers/specs/2026-10-15-ui-refinement-design.md`.
 
@@ -50,17 +54,17 @@ tests.
 
 ### Task 0: Release v0.2.0 and commit the spec
 
-- [ ] **Step 1:** Confirm CI on `54239ef` passed:
+- [x] **Step 1:** Confirm CI on `54239ef` passed:
   `gh run list --workflow ci.yml --branch main --limit 1 --json conclusion,headSha`. Expected:
   `"conclusion":"success"`. If it failed, use superpowers:systematic-debugging, fix, push, and wait again.
-- [ ] **Step 2:** Run `make prepare-release VERSION=0.2.0`. Expected: `Committed: chore(release): 0.2.0` and
+- [x] **Step 2:** Run `make prepare-release VERSION=0.2.0`. Expected: `Committed: chore(release): 0.2.0` and
   `Tagged v0.2.0`.
-- [ ] **Step 3:** Run `git push origin main v0.2.0`, then
+- [x] **Step 3:** Run `git push origin main v0.2.0`, then
   `gh run watch $(gh run list --workflow release.yml --limit 1 --json databaseId -q '.[0].databaseId')`.
   Expected: success.
-- [ ] **Step 4:** Download `MacMD-0.2.0.dmg` with `gh release download v0.2.0`. Verify `shasum -a 256 -c`,
+- [x] **Step 4:** Download `MacMD-0.2.0.dmg` with `gh release download v0.2.0`. Verify `shasum -a 256 -c`,
   `gh attestation verify MacMD-0.2.0.dmg --repo rodanr/MacMD`, and that `CFBundleShortVersionString` is `0.2.0`.
-- [ ] **Step 5:** Copy the spec to `docs/superpowers/specs/2026-10-15-ui-refinement-design.md` and this plan to
+- [x] **Step 5:** Copy the spec to `docs/superpowers/specs/2026-10-15-ui-refinement-design.md` and this plan to
   `docs/superpowers/plans/2026-10-15-ui-refinement.md`. Commit:
   `git commit -m "docs: add the UI refinement spec and plan"`.
 
@@ -70,7 +74,7 @@ tests.
 
 **Files:** `docs/DESIGN.md`, `App/Theme/Theme.swift`, `App/Resources/Web/reader.css`, new `AppTests/ContrastTests.swift`.
 
-- [ ] **Step 1: Write the failing contrast test** (`AppTests/ContrastTests.swift`):
+- [x] **Step 1: Write the failing contrast test** (`AppTests/ContrastTests.swift`):
 
 ```swift
 import AppKit
@@ -119,9 +123,9 @@ import Testing
 }
 ```
 
-- [ ] **Step 2:** Run `make setup && make test-app`. Expected: FAIL on Paper/aqua `secondaryText` (62% ink ≈ 4.4:1),
+- [x] **Step 2:** Run `make setup && make test-app`. Expected: FAIL on Paper/aqua `secondaryText` (62% ink ≈ 4.4:1),
   and possibly syntax markers at 28%.
-- [ ] **Step 3: Update `Theme.swift`.** Replace the color lines and add token constants:
+- [x] **Step 3: Update `Theme.swift`.** Replace the color lines and add token constants:
 
 ```swift
     var secondaryText: NSColor { text.withAlphaComponent(0.66) }
@@ -139,9 +143,9 @@ import Testing
     static let motion = 0.15
 ```
 
-- [ ] **Step 4:** Run `make test-app`. Expected: PASS. If a theme still fails, raise that alpha by 0.02 until it
+- [x] **Step 4:** Run `make test-app`. Expected: PASS. If a theme still fails, raise that alpha by 0.02 until it
   passes and record the value in DESIGN.md.
-- [ ] **Step 5: Mirror in `reader.css`.**
+- [x] **Step 5: Mirror in `reader.css`.**
   - Change every `--ink-muted` alpha from `0.62`/`0.6` to `0.66`, in all theme and appearance blocks.
   - Add to `:root`:
 
@@ -154,10 +158,10 @@ import Testing
 ```
 
   - In each dark block, add `--surface-2: color-mix(in srgb, var(--ink) 3.5%, transparent);`.
-- [ ] **Step 6:** Add a "Tokens" table to `docs/DESIGN.md`. It must list spacing 4·8·12·16·24·32·48; radii 6/10/14
+- [x] **Step 6:** Add a "Tokens" table to `docs/DESIGN.md`. It must list spacing 4·8·12·16·24·32·48; radii 6/10/14
   (task box 4); `--surface` and `--surface-2` values; quote bar 2.5pt at accent 45%; motion 150 ms ease-out with
   none under Reduce Motion; contrast targets text 7, muted 4.5, list markers 3, syntax markers 2.
-- [ ] **Step 7:** `make lint test-kit test-app`, then commit:
+- [x] **Step 7:** `make lint test-kit test-app`, then commit:
   `git commit -m "style: add shared design tokens and contrast checks"`.
 
 ---
@@ -167,7 +171,7 @@ import Testing
 **Files:** `Packages/MacMDKit/Sources/MacMDKit/HTMLRenderer.swift`,
 `Packages/MacMDKit/Tests/MacMDKitTests/HTMLRendererTests.swift`.
 
-- [ ] **Step 1: Write the failing tests** (append to `HTMLRendererTests`):
+- [x] **Step 1: Write the failing tests** (append to `HTMLRendererTests`):
 
 ```swift
     @Test func codeBlocksHaveNoTrailingBlankLine() {
@@ -186,8 +190,8 @@ import Testing
     }
 ```
 
-- [ ] **Step 2:** `cd Packages/MacMDKit && swift test --filter HTMLRendererTests`. Expected: the three new tests FAIL.
-- [ ] **Step 3: Implement.** In `visitCodeBlock`, replace the first line (`let code = Placeholder.restoringTeX(…)`) with:
+- [x] **Step 2:** `cd Packages/MacMDKit && swift test --filter HTMLRendererTests`. Expected: the three new tests FAIL.
+- [x] **Step 3: Implement.** In `visitCodeBlock`, replace the first line (`let code = Placeholder.restoringTeX(…)`) with:
 
 ```swift
         // cmark keeps the line break before the closing fence; it would render as a blank last line.
@@ -204,9 +208,9 @@ import Testing
         output += "</table>\n</div>\n"  // was "</table>\n"
 ```
 
-- [ ] **Step 4:** Run `swift test`. Expected: all pass, including `RendererReferenceTests`, since `div` is filtered
+- [x] **Step 4:** Run `swift test`. Expected: all pass, including `RendererReferenceTests`, since `div` is filtered
   out and white space is collapsed.
-- [ ] **Step 5:** Commit: `git commit -m "style(reader): tidy code block and table markup for styling"`.
+- [x] **Step 5:** Commit: `git commit -m "style(reader): tidy code block and table markup for styling"`.
 
 ---
 
@@ -214,7 +218,7 @@ import Testing
 
 **Files:** `App/Resources/Web/reader.css`. **REQUIRED SKILL:** frontend-design:frontend-design.
 
-- [ ] **Step 1: Replace the code rules** (`/* Code */` section) with:
+- [x] **Step 1: Replace the code rules** (`/* Code */` section) with:
 
 ```css
 code, pre, kbd { font-family: var(--font-mono); font-size: 0.86em; }
@@ -240,7 +244,7 @@ pre {
 }
 ```
 
-- [ ] **Step 2: Replace the table rules** with:
+- [x] **Step 2: Replace the table rules** with:
 
 ```css
 .table {
@@ -271,7 +275,7 @@ tr:last-child td { border-bottom: 0; }
 ```
 
   Also remove `table` from the shared margin selector (`p, ul, ol, … table, …`).
-- [ ] **Step 3: Task boxes, rounded squares.** Replace the `li.task input` and `:checked` rules:
+- [x] **Step 3: Task boxes, rounded squares.** Replace the `li.task input` and `:checked` rules:
 
 ```css
 li.task input {
@@ -301,7 +305,7 @@ li.task input:checked::after {
 }
 ```
 
-- [ ] **Step 4: Quotes, headings, images, links, selection, details:**
+- [x] **Step 4: Quotes, headings, images, links, selection, details:**
 
 ```css
 blockquote { margin-left: 0; padding: 0.1em 0 0.1em 1em; border-left: var(--quote-bar); color: var(--ink-muted); font-style: italic; }
@@ -318,8 +322,8 @@ details { border-radius: var(--radius-block); }
 
   Merge these into the existing rules rather than duplicating selectors. Keep `html[data-theme="mono"] blockquote`
   and the clean-theme roman rule.
-- [ ] **Step 5:** Run `make build`, then `make test-ui` for the Read mode and export tests. Expected: PASS.
-- [ ] **Step 6:** Commit: `git commit -m "style(reader): refine code, tables, task boxes, quotes and rhythm"`.
+- [x] **Step 5:** Run `make build`, then `make test-ui` for the Read mode and export tests. Expected: PASS.
+- [x] **Step 6:** Commit: `git commit -m "style(reader): refine code, tables, task boxes, quotes and rhythm"`.
 
 ---
 
@@ -327,7 +331,7 @@ details { border-radius: var(--radius-block); }
 
 **Files:** `App/Resources/Web/reader.js`, `App/Resources/Web/reader.css`.
 
-- [ ] **Step 1:** Replace `renderDiagrams()` in `reader.js`:
+- [x] **Step 1:** Replace `renderDiagrams()` in `reader.js`:
 
 ```js
   /// A CSS color, composited over the paper so Mermaid gets an opaque color it can shade.
@@ -381,9 +385,9 @@ details { border-radius: var(--radius-block); }
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => renderDiagrams());
 ```
 
-- [ ] **Step 2:** In `reader.css`, add `.mermaid .node rect, .mermaid .node polygon { rx: 8px; ry: 8px; }` and
+- [x] **Step 2:** In `reader.css`, add `.mermaid .node rect, .mermaid .node polygon { rx: 8px; ry: 8px; }` and
   tighten the edge label padding: `.mermaid .edgeLabel p { padding: 0 4px; }`.
-- [ ] **Step 3:** Add `testDiagramRedrawsOnAppearanceChange` to `AppUITests/RobustnessUITests.swift`:
+- [x] **Step 3:** Add `testDiagramRedrawsOnAppearanceChange` to `AppUITests/RobustnessUITests.swift`:
   1. Open the fixture in Read mode with `-appearance light`.
   2. Screenshot.
   3. Open Settings and set the Color scheme to Dark.
@@ -392,7 +396,7 @@ details { border-radius: var(--radius-block); }
   6. Assert that `reader.otherElements` still contains the diagram (the `Write` static text exists).
 
   Review both screenshots: the diagram must use the dark palette in the second.
-- [ ] **Step 4:** `make build test-ui`, then commit:
+- [x] **Step 4:** `make build test-ui`, then commit:
   `git commit -m "fix(reader): theme diagrams from the page and redraw them on appearance change"`.
 
 ---
@@ -402,7 +406,7 @@ details { border-radius: var(--radius-block); }
 **Files:** `App/Editor/BlockDecoration.swift`, `App/Editor/MarkdownStyler.swift`, `App/Editor/MarkdownTextView.swift`,
 `App/Editor/EditorView.swift`.
 
-- [ ] **Step 1: Decorations from tokens.** In `DecoratedLayoutFragment.draw`, the quote bar becomes:
+- [x] **Step 1: Decorations from tokens.** In `DecoratedLayoutFragment.draw`, the quote bar becomes:
 
 ```swift
             let bar = CGRect(
@@ -412,11 +416,11 @@ details { border-radius: var(--radius-block); }
 ```
 
   In `drawCodeBackground`, use `let radius: CGFloat = Theme.blockRadius`.
-- [ ] **Step 2: Code inset.** In `MarkdownStyler.styleCodeBlock`, use
+- [x] **Step 2: Code inset.** In `MarkdownStyler.styleCodeBlock`, use
   `paragraphStyle(indent: Theme.codeInset, tailIndent: -Theme.codeInset, spacing: 0)`.
-- [ ] **Step 3: Focus shade.** In `FocusShadeView.draw`, use `color.withAlphaComponent(0.65)`, so dimmed text sits
+- [x] **Step 3: Focus shade.** In `FocusShadeView.draw`, use `color.withAlphaComponent(0.65)`, so dimmed text sits
   near 35% ink.
-- [ ] **Step 4: Placeholder.** Add to `MarkdownTextView`:
+- [x] **Step 4: Placeholder.** Add to `MarkdownTextView`:
 
 ```swift
     /// Shown in an empty document; drawn, never part of the text.
@@ -439,10 +443,10 @@ details { border-radius: var(--radius-block); }
 
   Make sure `font` and `textColor` are set from the theme in `EditorView.configure`: `textView.font = theme.bodyFont`
   and `textView.textColor = theme.text`.
-- [ ] **Step 5:** Run `make test-app`. Expected: PASS. Then run it once with
+- [x] **Step 5:** Run `make test-app`. Expected: PASS. Then run it once with
   `@Test(arguments: 0..<60)` and `0..<120` steps, and restore afterwards. Run `make test-ui` too: the new-document
   test types into an empty editor, which checks that the placeholder never becomes text.
-- [ ] **Step 6:** Commit: `git commit -m "style(editor): match Read mode's code and quotes, tune focus shade, add an empty-document hint"`.
+- [x] **Step 6:** Commit: `git commit -m "style(editor): match Read mode's code and quotes, tune focus shade, add an empty-document hint"`.
 
 ---
 
@@ -451,10 +455,10 @@ details { border-radius: var(--radius-block); }
 **Files:** `App/Document/DocumentModel.swift`, `App/Reader/ReaderController.swift`, `App/Sidebar/OutlineView.swift`,
 `App/Sidebar/FolderBrowserView.swift`, `App/Window/DocumentView.swift`, `App/Window/HUD.swift`.
 
-- [ ] **Step 1: Observable reader position.**
+- [x] **Step 1: Observable reader position.**
   - Add `var readerTopLine: Int?` to `DocumentModel`.
   - In `ReaderController.userContentController`, case `"topLine"`, also set `model?.readerTopLine = lastTopLine`.
-- [ ] **Step 2: Outline.** Replace the `currentSlug` computation and the row label in `OutlineView`:
+- [x] **Step 2: Outline.** Replace the `currentSlug` computation and the row label in `OutlineView`:
 
 ```swift
     private var currentSlug: String? {
@@ -481,28 +485,28 @@ details { border-radius: var(--radius-block); }
                     .contentShape(Rectangle())
 ```
 
-- [ ] **Step 3: Files.** In `FileNodeChildren`:
+- [x] **Step 3: Files.** In `FileNodeChildren`:
   - Give the current file the same pill (`RoundedRectangle(cornerRadius: 6).fill(Color.accentColor.opacity(0.14))`)
     instead of accent-colored text.
   - Use `Label(…).symbolRenderingMode(.hierarchical).foregroundStyle(.secondary)` for icons, with the text in
     `.primary`.
-- [ ] **Step 4: Status bar.** In `StatusBar`:
+- [x] **Step 4: Status bar.** In `StatusBar`:
   - Set spacing to 16 and padding to `.horizontal 16, .vertical 6`.
   - Add `.overlay(alignment: .top) { Rectangle().fill(.separator).frame(height: 0.5) }`.
   - In `ModeChip`, replace `Capsule()` with `RoundedRectangle(cornerRadius: Theme.panelRadius / 2)`.
-- [ ] **Step 5: Reduce Motion.**
+- [x] **Step 5: Reduce Motion.**
   - In `DocumentView`, add `@Environment(\.accessibilityReduceMotion) private var reduceMotion`. Use
     `.animation(reduceMotion ? nil : .easeOut(duration: Theme.motion), value: model.mode)`, and
     `withAnimation(reduceMotion ? nil : .default)` for the sidebar toggle.
   - In `HUDView`, use the same guard, and the transition `.opacity` only when motion is reduced.
-- [ ] **Step 6:** `make build test-ui`, then commit:
+- [x] **Step 6:** `make build test-ui`, then commit:
   `git commit -m "style(ui): refine the outline, files list and status bar, and respect Reduce Motion"`.
 
 ---
 
 ### Task 7: Design review screenshots and README
 
-- [ ] **Step 1: Create `AppUITests/DesignReviewUITests.swift`:**
+- [x] **Step 1: Create `AppUITests/DesignReviewUITests.swift`:**
 
 ```swift
 import XCTest
@@ -537,7 +541,7 @@ final class DesignReviewUITests: XCTestCase {
 }
 ```
 
-- [ ] **Step 2:** `make setup`, then run it with the display unlocked:
+- [x] **Step 2:** `make setup`, then run it with the display unlocked:
   `xcodebuild … test -only-testing:MacMDUITests/DesignReviewUITests -resultBundlePath build/review.xcresult`.
   Export the attachments and review all 12 images. Check:
   - consistent radii;
@@ -551,21 +555,21 @@ final class DesignReviewUITests: XCTestCase {
   Fix anything off and repeat. If the display is locked, stop and ask the user; don't skip the review.
 - [ ] **Step 3:** Refresh the README screenshots: run `testOpenEditAndRead` and copy `edit-light`, `read-dark` and
   `read-dark-2` into `docs/screenshots/`.
-- [ ] **Step 4:** Commit: `git commit -m "test(ui): capture every theme for design review; refresh README screenshots"`.
+- [x] **Step 4:** Commit: `git commit -m "test(ui): capture every theme for design review; refresh README screenshots"`.
 
 ---
 
 ### Task 8: Verify, document, ship
 
-- [ ] **Step 1:** Run `make lint test` (kit, app, UI). Expected: all pass. Report exact counts.
+- [x] **Step 1:** Run `make lint test` (kit, app, UI). Expected: all pass. Report exact counts.
 - [ ] **Step 2:** Export a PDF of the kitchen sink: `testExportPDFAndHTML` (keep the file) or the File menu.
   Open the PDF and confirm code, tables and diagrams look right on white.
-- [ ] **Step 3:** Run superpowers:requesting-code-review on the commits since the spec commit, then fix valid
+- [x] **Step 3:** Run superpowers:requesting-code-review on the commits since the spec commit, then fix valid
   findings.
-- [ ] **Step 4:** Add to CHANGELOG under Unreleased:
+- [x] **Step 4:** Add to CHANGELOG under Unreleased:
   - **Changed:** "A calmer, more consistent look: matching code blocks and quotes in both modes, tables in rounded
     frames, square task boxes, diagrams in the page's colors, clearer secondary text, an outline that follows
     your place in Read mode, and Reduce Motion support."
   - **Fixed:** "Diagrams switch colors with light and dark mode."
-- [ ] **Step 5:** Run superpowers:verification-before-completion. Commit `docs: …`, then push to `main`.
+- [x] **Step 5:** Run superpowers:verification-before-completion. Commit `docs: …`, then push to `main`.
   Releasing waits for the user.

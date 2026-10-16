@@ -1,6 +1,6 @@
 # UI refinement — design spec
 
-_2026-10-15 · status: approved_
+_2026-10-15 · status: shipped in 0.3.0 (follow-up fixes in 0.3.1)_
 
 ## Goal
 
@@ -85,3 +85,21 @@ New features: hiding syntax, callouts, a command palette, new themes or settings
   the status bar and Settings, for visual review.
 - Appearance switch with a diagram open: the diagram redraws in the new palette.
 - Export UI tests pass; an exported PDF is checked by eye.
+
+## Outcome
+
+Shipped in 0.3.0. Where the result differs from this spec:
+
+- **Task lists** use a hanging indent (box positioned at the start of the item), not a grid: a grid split items
+  with inline formatting onto separate rows. Nested task lists sit under their parent item.
+- **Quote bar** in the editor is drawn as square segments that exactly span each line, so a quote has no seams.
+- **Editor code surface** is derived from each theme's ink (4.5 % light, Mono 5 %, 6 % dark), like Read mode;
+  the dark hairline border is Read mode only.
+- **Syntax markers** are held to ≥ 2:1 contrast (decorative), not 3:1; list markers keep ≥ 3:1.
+- **Focus mode** was reworked in 0.3.1: dimmed text at about 55 % strength (not 35 %), the paragraph just
+  written stays bright on a blank line, and shades no longer paint over the focused paragraph.
+- **Design review screenshots** come from CI (`DesignReviewUITests`, 1024×768), whose results are uploaded for
+  pull requests.
+
+Deferred: editor heading spacing from the spacing scale; a spacing pass on the toolbar, Settings and About;
+refreshed README screenshots.

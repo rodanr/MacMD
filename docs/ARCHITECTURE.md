@@ -49,6 +49,13 @@ Block backgrounds (code), the quote bar and rules are drawn by `DecoratedLayoutF
 `NSTextLayoutManagerDelegate` from a `blockDecoration` attribute. `NSTextBlock`/`NSTextTable` are avoided because
 they force TextKit 1.
 
+**Focus and typewriter modes** never change text or attributes. Focus mode lays two `FocusShadeView`s (paper at
+45 % opacity) above and below the focused range, which `FocusParagraph` (MacMDKit) picks: the lines the selection
+touches, or the nearest non-blank line when the caret is on a blank one. Typewriter mode scrolls the caret line to
+the middle of the view. Both are recomputed from `layout()`, because laying out lines above the caret moves it
+after the fact (`textViewportLayoutControllerDidLayout` would be the natural hook, but only the macOS 27 SDK lets a
+subclass override it). An empty document shows a "Start writing…" hint drawn by the view, never inserted as text.
+
 ## Vim mode
 
 Optional (Settings → Editing, `AppSettings.vimMode`, off by default). `VimEngine` in MacMDKit is a pure key
@@ -91,6 +98,10 @@ Untrusted documents are contained in three ways:
 The web view is created the first time Read mode is shown and then kept, so later switches are instant.
 Exporting and printing use a separate offscreen web view in light appearance.
 
+`reader.js` reports the top visible line (after scrolling, rendering and jumps); the outline uses it to highlight the
+current heading in Read mode. Mermaid diagrams are themed from the page's CSS tokens and drawn again when the
+system switches between light and dark, since their colors are baked into the SVG.
+
 ## Math
 
 cmark consumes backslashes and treats `_` as emphasis, which breaks TeX. `MathExtractor` finds `$…$` and
@@ -109,5 +120,6 @@ cmark consumes backslashes and treats `_` as emphasis, which breaks TeX. `MathEx
 | TextKit 2 `NSTextView` | Native editing: IME, spelling, find bar, accessibility, services. |
 | WKWebView for Read mode | Best-in-class typography, KaTeX and Mermaid; created lazily so editing stays light (~50 MB idle). |
 | Not sandboxed (hardened runtime) | Relative images and the folder sidebar need access to files next to the document, which the App Sandbox blocks for a document opened on its own. |
+| Launch arguments read like `UserDefaults` | `-key value` pairs are settings (the UI tests pin every setting this way); only the remaining arguments are files to open (`LaunchArguments`), and a setting given at launch is never saved. |
 | XcodeGen | `project.yml` is reviewable; no `.pbxproj` merge conflicts. |
 | Vendored, pinned web libraries | Works offline, reproducible builds, upgrades are explicit (`make vendor`). |
