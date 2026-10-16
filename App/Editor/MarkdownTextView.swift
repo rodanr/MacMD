@@ -234,9 +234,10 @@ final class MarkdownTextView: NSTextView {
     }
 
     /// Lines above a paragraph that was just laid out may still have estimated heights; laying those out moves
-    /// the paragraph. Focus shades and typewriter centering follow it after every layout pass.
-    override func textViewportLayoutControllerDidLayout(_ controller: NSTextViewportLayoutController) {
-        super.textViewportLayoutControllerDidLayout(controller)
+    /// the paragraph. Focus shades and typewriter centering follow it after every layout pass. (`layout()` rather
+    /// than `textViewportLayoutControllerDidLayout`, which only the macOS 27 SDK lets a subclass override.)
+    override func layout() {
+        super.layout()
         if isFocusMode { updateFocusDimming() }
         if isTypewriterMode, needsCaretCentering {
             needsCaretCentering = false
