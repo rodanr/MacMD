@@ -44,9 +44,19 @@ final class DocumentModel {
         didSet {
             guard browsedFolder?.standardizedFileURL != oldValue?.standardizedFileURL else { return }
             fileTree = browsedFolder.map { FileNode(url: $0, isDirectory: true) }
+            // Files created, renamed or deleted anywhere (here, Finder, git) show up in the list.
+            folderWatcher = browsedFolder.map { folder in
+                FolderWatcher(folder: folder) { [weak self] changed in self?.fileTree?.refreshLoaded(changed) }
+            }
         }
     }
     private(set) var fileTree: FileNode?
+    @ObservationIgnored private var folderWatcher: FolderWatcher?
+    /// A section to show once the document can show it (a link to `file.md#section` opened the file). Only for
+    /// the text as loaded: the first edit drops it, so the caret never jumps while you type.
+    @ObservationIgnored var pendingAnchor: String?
+    /// The outline matches the loaded text (it is computed shortly after loading).
+    @ObservationIgnored private var hasOutline = false
     @ObservationIgnored private let settings: AppSettings
     var isFocusMode: Bool
     var isTypewriterMode: Bool
@@ -65,7 +75,9 @@ final class DocumentModel {
     private(set) var isLargeDocument = false
 
     /// Set by the editor and reader so commands can be routed to whichever is visible.
-    @ObservationIgnored weak var editor: MarkdownTextView?
+    @ObservationIgnored weak var editor: MarkdownTextView? {
+        didSet { revealPendingAnchorInEditor() }
+    }
     /// Created the first time Read mode is shown, then kept for instant switching.
     @ObservationIgnored private(set) var reader: ReaderController?
 
@@ -134,6 +146,26 @@ final class DocumentModel {
         }
     }
 
+    /// Shows the section with this anchor (a heading's slug), now or once the document has been laid out.
+    func reveal(anchor: String) {
+        switch mode {
+        case .edit:
+            pendingAnchor = anchor
+            revealPendingAnchorInEditor()
+        case .read:
+            if let reader, reader.isLoaded { reader.scroll(toAnchor: anchor) } else { pendingAnchor = anchor }
+        }
+    }
+
+    /// Edit mode needs both the outline (to find the heading's line) and the editor; whichever comes last
+    /// shows the section, after the editor's first layout.
+    private func revealPendingAnchorInEditor() {
+        guard mode == .edit, hasOutline, editor != nil, let anchor = pendingAnchor else { return }
+        pendingAnchor = nil
+        guard let item = outline.first(where: { $0.slug == anchor }) else { return }
+        Task { @MainActor [weak self] in self?.editor?.scroll(toLine: item.line, select: true) }
+    }
+
     var isSidebarVisible: Bool { sidebarVisibility != .detailOnly }
 
     func toggleSidebar() {
@@ -151,6 +183,8 @@ final class DocumentModel {
 
     private func textDidChange() {
         revision += 1
+        // Loading the text is the first change; any later one is an edit.
+        if revision > 1 { pendingAnchor = nil }
         editor?.textStorageDidChangeCharacters()
         isLargeDocument = textStorage.length > Self.largeDocumentThreshold
         derivedUpdate?.cancel()
@@ -165,6 +199,8 @@ final class DocumentModel {
             guard !Task.isCancelled, let self else { return }
             self.outline = outline
             self.stats = stats
+            self.hasOutline = true
+            self.revealPendingAnchorInEditor()
         }
     }
 }

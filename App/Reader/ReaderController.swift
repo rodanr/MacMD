@@ -13,7 +13,7 @@ final class ReaderController: NSObject, WKNavigationDelegate, WKScriptMessageHan
     /// The document's location at the last render: relative images and links resolve against it, and a
     /// document opened straight into Read mode only learns it after the first render.
     private var renderedFileURL: URL?
-    private var isLoaded = false
+    private(set) var isLoaded = false
     /// Set right before the app loads a page, so only that navigation is allowed.
     private var expectsOwnLoad = false
     /// Source line to show once the page has rendered.
@@ -54,7 +54,8 @@ final class ReaderController: NSObject, WKNavigationDelegate, WKScriptMessageHan
         if pendingLine == nil { pendingLine = lastTopLine }
         let markdown = model.text
         let title = model.fileURL?.lastPathComponent ?? "Untitled"
-        let baseURL = ReaderPage.baseURL(for: model.fileURL?.deletingLastPathComponent())
+        // An untitled document resolves relative links against the folder it was created in.
+        let baseURL = ReaderPage.baseURL(for: model.fileURL?.deletingLastPathComponent() ?? model.browsedFolder)
         let revision = model.revision
         let fileURL = model.fileURL
         Task {
@@ -89,7 +90,13 @@ final class ReaderController: NSObject, WKNavigationDelegate, WKScriptMessageHan
         case "rendered":
             isLoaded = true
             reveal()
-            if let line = pendingLine { scroll(toLine: line) }
+            if model?.mode == .read, let anchor = model?.pendingAnchor {
+                model?.pendingAnchor = nil
+                pendingLine = nil
+                scroll(toAnchor: anchor)
+            } else if let line = pendingLine {
+                scroll(toLine: line)
+            }
         case "topLine":
             lastTopLine = body["line"] as? Int
             // Observation notifies on every assignment: only publish real changes, not every scroll frame.
@@ -125,7 +132,7 @@ final class ReaderController: NSObject, WKNavigationDelegate, WKScriptMessageHan
             return .allow
         }
         // Nothing else (clicked links, meta refresh, forms, scripts) may replace the document.
-        if navigationAction.navigationType == .linkActivated { LinkRouter.open(url) }
+        if navigationAction.navigationType == .linkActivated { LinkRouter.open(url, from: model) }
         return .cancel
     }
 }
@@ -137,41 +144,5 @@ private final class WeakScriptMessageHandler: NSObject, WKScriptMessageHandler {
 
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
         target?.userContentController(controller, didReceive: message)
-    }
-}
-
-/// Opens links clicked in documents: Markdown files in MacMD, everything else in its default app.
-@MainActor
-enum LinkRouter {
-    static let markdownExtensions: Set<String> = ["md", "markdown", "mdown", "mkd", "mkdn", "mdwn"]
-
-    static let webSchemes: Set<String> = ["http", "https", "mailto"]
-
-    /// Web links open in the browser and local Markdown opens in MacMD. Other local files are only
-    /// revealed in Finder, so a link in a document can never launch an app or a script.
-    static func open(_ url: URL) {
-        let scheme = url.scheme?.lowercased() ?? ""
-        if scheme == ReaderPage.scheme, url.host() == "file" {
-            openFile(URL(filePath: url.path(percentEncoded: false)))
-        } else if scheme == "file" {
-            openFile(url)
-        } else if webSchemes.contains(scheme) {
-            NSWorkspace.shared.open(url)
-        }
-    }
-
-    /// `browsing` is the folder of the Files sidebar the file was opened from; the new document keeps
-    /// browsing it, so moving between files doesn't lose your place.
-    static func openFile(_ fileURL: URL, browsing folder: URL? = nil) {
-        if markdownExtensions.contains(fileURL.pathExtension.lowercased()) {
-            NSDocumentController.shared.openDocument(withContentsOf: fileURL, display: true) { document, _, _ in
-                guard let folder, let document = document as? MarkdownDocument,
-                    fileURL.standardizedFileURL.path.hasPrefix(folder.standardizedFileURL.path + "/")
-                else { return }
-                document.model.browsedFolder = folder
-            }
-        } else {
-            NSWorkspace.shared.activateFileViewerSelecting([fileURL])
-        }
     }
 }

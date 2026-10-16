@@ -6,6 +6,8 @@ import SwiftUI
 enum MacMDMain {
     static func main() {
         let app = NSApplication.shared
+        // The first document controller created becomes the shared one.
+        _ = MarkdownDocumentController()
         let delegate = AppDelegate()
         app.delegate = delegate
         withExtendedLifetime(delegate) { app.run() }
@@ -73,6 +75,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 
     @objc func showAbout(_ sender: Any?) {
         AboutWindowController.shared.showWindow(sender)
+    }
+
+    /// File → New File in Folder…: next to the current document, or in a folder you pick.
+    @objc func newFileInFolder(_ sender: Any?) {
+        let model = (NSDocumentController.shared.currentDocument as? MarkdownDocument)?.model
+        if let folder = model?.fileURL?.deletingLastPathComponent() ?? model?.browsedFolder {
+            NewFile.create(in: folder, browsing: model?.browsedFolder)
+            return
+        }
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.canCreateDirectories = true
+        panel.prompt = "Choose"
+        panel.message = "Choose the folder for the new Markdown file."
+        if panel.runModal() == .OK, let folder = panel.url { NewFile.create(in: folder) }
     }
 
     @objc func checkForUpdates(_ sender: Any?) { UpdateChecker.checkForUpdates() }

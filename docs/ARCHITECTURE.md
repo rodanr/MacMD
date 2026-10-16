@@ -94,6 +94,13 @@ Untrusted documents are contained in three ways:
   Meta refreshes and other redirects are cancelled.
 - **Links.** `http`, `https` and `mailto` links open in the default app. Links to Markdown files open in
   MacMD. Any other local file is only revealed in Finder, so a link can never launch an app or script.
+  `LinkRouter` opens linked files with the Files sidebar folder of the document the link is in (kept when the
+  file is inside it, `FileNavigation.folderToBrowse`) and at the linked section (`DocumentModel.pendingAnchor`).
+
+The Files sidebar's tree (`FileNode`) is read lazily and kept current by an FSEvents stream on the browsed
+folder (`FolderWatcher`), which sees changes from every app. New files come from `NewFile`, used by the File
+menu, the Files sidebar and the Open panel (`MarkdownDocumentController`, which also starts ⌘N documents in the
+current folder).
 
 The web view is created the first time Read mode is shown and then kept, so later switches are instant.
 Exporting and printing use a separate offscreen web view in light appearance.

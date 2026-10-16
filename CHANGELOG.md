@@ -7,6 +7,20 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+### Added
+- Create Markdown files where you're working: **File → New File in Folder…** (⌥⌘N), the New File button and
+  folder menus in the Files sidebar, and **New File Here…** in the Open panel. Each asks for a name and opens
+  the new file.
+
+### Fixed
+- Following a link to another Markdown file keeps the Files sidebar on the folder you were browsing, instead
+  of jumping to the linked file's folder.
+- Relative links and images that go up a folder (`../notes.md`) open the right file in Read mode and exports.
+- Links to a section of another file (`notes.md#setup`) open the file at that section.
+- A link to a file that doesn't exist says so instead of doing nothing.
+- The Files sidebar updates when files are added, renamed or deleted, here or in other apps.
+- A new document (⌘N) keeps the folder you were working in, and saving it suggests that folder.
+
 ## [0.3.1] - 2026-10-16
 
 ### Fixed

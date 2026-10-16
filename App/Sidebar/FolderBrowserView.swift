@@ -1,4 +1,5 @@
 import AppKit
+import MacMDKit
 import SwiftUI
 
 /// A lazily loaded tree of Markdown files around the current document.
@@ -44,6 +45,14 @@ struct FolderBrowserView: View {
                 .lineLimit(1)
                 .truncationMode(.middle)
             Spacer()
+            Button {
+                NewFile.create(in: root.url, browsing: root.url)
+            } label: {
+                Image(systemName: "doc.badge.plus")
+            }
+            .buttonStyle(.borderless)
+            .help("New File…")
+            .accessibilityLabel("New File")
             Button(action: chooseFolder) { Image(systemName: "folder.badge.plus") }
                 .buttonStyle(.borderless)
                 .help("Choose Folder…")
@@ -81,6 +90,10 @@ private struct FileNodeChildren: View {
                     FileLabel(name: child.name, systemImage: "folder")
                         .padding(.vertical, 2 * zoom)
                         .padding(.horizontal, 6 * zoom)
+                        .contextMenu {
+                            Button("New File…") { NewFile.create(in: child.url, browsing: browsedFolder) }
+                            showInFinder(child.url)
+                        }
                 }
             } else {
                 let isCurrent = child.url.standardizedFileURL == currentFile?.standardizedFileURL
@@ -99,8 +112,18 @@ private struct FileNodeChildren: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(isCurrent ? .isSelected : [])
+                .contextMenu {
+                    Button("New File…") {
+                        NewFile.create(in: child.url.deletingLastPathComponent(), browsing: browsedFolder)
+                    }
+                    showInFinder(child.url)
+                }
             }
         }
+    }
+
+    private func showInFinder(_ url: URL) -> some View {
+        Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([url]) }
     }
 }
 
@@ -128,7 +151,10 @@ final class FileNode: Identifiable {
     var name: String { url.lastPathComponent }
     nonisolated var id: URL { url }
 
+    // Loading happens while SwiftUI reads `children`, so the cache itself is not observed (writing observed
+    // state during a view update would loop); `version` tells views when a refresh changed it.
     @ObservationIgnored private var loadedChildren: [FileNode]?
+    private var version = 0
 
     init(url: URL, isDirectory: Bool) {
         self.url = url
@@ -136,10 +162,30 @@ final class FileNode: Identifiable {
     }
 
     var children: [FileNode] {
+        _ = version
         if let loadedChildren { return loadedChildren }
         let loaded = Self.load(url)
         loadedChildren = loaded
         return loaded
+    }
+
+    /// Re-reads the folders that have been read (never the ones nobody opened), or only those in `changed`
+    /// (`FileNavigation.realPath` form). Nodes that are still there are kept, so open folders stay open.
+    func refreshLoaded(_ changed: Set<String>? = nil) {
+        guard let old = loadedChildren else { return }
+        guard changed == nil || changed?.contains(FileNavigation.realPath(url)) == true else {
+            for child in old where child.isDirectory { child.refreshLoaded(changed) }
+            return
+        }
+        let existing = Dictionary(old.map { ($0.url, $0) }, uniquingKeysWith: { first, _ in first })
+        let fresh = Self.load(url).map { node in
+            existing[node.url].flatMap { $0.isDirectory == node.isDirectory ? $0 : nil } ?? node
+        }
+        if fresh.map(ObjectIdentifier.init) != old.map(ObjectIdentifier.init) {
+            loadedChildren = fresh
+            version += 1
+        }
+        for child in fresh where child.isDirectory { child.refreshLoaded(changed) }
     }
 
     private static func load(_ url: URL) -> [FileNode] {
@@ -150,9 +196,7 @@ final class FileNode: Identifiable {
             ?? []
         return contents.compactMap { item in
             let isDirectory = (try? item.resourceValues(forKeys: Set(keys)).isDirectory) ?? false
-            guard isDirectory || LinkRouter.markdownExtensions.contains(item.pathExtension.lowercased()) else {
-                return nil
-            }
+            guard isDirectory || MarkdownFile.isMarkdown(item) else { return nil }
             return FileNode(url: item, isDirectory: isDirectory)
         }
         .sorted { lhs, rhs in

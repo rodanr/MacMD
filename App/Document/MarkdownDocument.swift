@@ -95,6 +95,14 @@ final class MarkdownDocument: NSDocument {
         }
     }
 
+    /// An untitled document saves into the folder it was created in (its Files sidebar folder).
+    override func prepareSavePanel(_ savePanel: NSSavePanel) -> Bool {
+        if fileURL == nil, let folder = model.browsedFolder {
+            savePanel.directoryURL = folder
+        }
+        return super.prepareSavePanel(savePanel)
+    }
+
     // MARK: Printing
 
     override func printDocument(_ sender: Any?) {
