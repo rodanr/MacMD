@@ -6,6 +6,8 @@ DERIVED   := build/DerivedData
 APP       := $(DERIVED)/Build/Products/Release/MacMD.app
 DEBUG_APP := $(DERIVED)/Build/Products/Debug/MacMD.app
 XCB       := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -derivedDataPath $(DERIVED) -destination 'platform=macOS,arch=arm64'
+# Drops xcodebuild's harmless debugger-lookup noise (two lines per app launch); the exit status is kept.
+QUIET_XCB := { grep -v -e 'IDELaunchParametersSnapshot' || true; }
 SWIFT_SOURCES := App AppTests AppUITests Packages/MacMDKit/Sources Packages/MacMDKit/Tests Packages/MacMDKit/Package.swift
 
 .PHONY: help setup build release run test test-kit test-app test-ui lint format dmg icon vendor prepare-release clean
@@ -32,10 +34,11 @@ test-kit: ## Run MacMDKit unit tests (fast, no Xcode project needed)
 	cd Packages/MacMDKit && swift test
 
 test-app: setup ## Run the app's unit tests (styling engine, inside the app)
-	$(XCB) test -only-testing:MacMDTests -quiet
+	set -o pipefail; $(XCB) test -only-testing:MacMDTests -quiet 2>&1 | $(QUIET_XCB)
 
 test-ui: setup ## Run the app's UI tests (a failing test is retried once: UI timing can be flaky)
-	$(XCB) test -only-testing:MacMDUITests -retry-tests-on-failure -test-iterations 2 -quiet
+	set -o pipefail; $(XCB) test -only-testing:MacMDUITests -retry-tests-on-failure -test-iterations 2 -quiet 2>&1 \
+		| $(QUIET_XCB)
 
 lint: ## Check formatting
 	swift format lint --strict --recursive $(SWIFT_SOURCES)
