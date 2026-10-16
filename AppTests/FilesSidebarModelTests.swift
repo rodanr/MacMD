@@ -63,4 +63,21 @@ struct FilesSidebarModelTests {
         #expect(model.expandedFolders == [path("manual"), path("manual/deep")])
         #expect(model.selectedFolder == renamed)
     }
+
+    @Test func theMarkdownIndexFollowsTheDisk() async throws {
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root.appending(path: "src"), withIntermediateDirectories: true)
+        try Data().write(to: root.appending(path: "src/main.swift"))
+        let model = DocumentModel()
+        model.browsedFolder = root
+        for _ in 0..<60 where model.markdownIndex == nil { try await Task.sleep(for: .milliseconds(50)) }
+        #expect(model.markdownIndex?.hasMarkdown(inFolderAt: path("docs")) == true)
+        #expect(model.markdownIndex?.hasMarkdown(inFolderAt: path("src")) == false)
+
+        try Data().write(to: root.appending(path: "src/notes.md"))
+        for _ in 0..<60 where model.markdownIndex?.hasMarkdown(inFolderAt: path("src")) != true {
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        #expect(model.markdownIndex?.hasMarkdown(inFolderAt: path("src")) == true, "a new file is picked up")
+    }
 }

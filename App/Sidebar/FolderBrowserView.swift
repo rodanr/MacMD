@@ -6,17 +6,27 @@ import SwiftUI
 struct FolderBrowserView: View {
     let model: DocumentModel
     @Environment(\.zoom) private var zoom
+    /// The Files filter; per window and never saved.
+    @State private var query = ""
 
     var body: some View {
         Group {
             if let root = model.fileTree {
                 ScrollViewReader { proxy in
-                    List {
-                        FileNodeChildren(
-                            node: root, model: model, currentPath: model.fileURL.map(FileNavigation.realPath))
+                    Group {
+                        if query.trimmingCharacters(in: .whitespaces).isEmpty {
+                            List {
+                                FileNodeChildren(node: root, model: model, currentPath: currentPath)
+                            }
+                        } else {
+                            FilterResults(query: query, model: model, currentPath: currentPath)
+                        }
                     }
                     .listStyle(.sidebar)
                     .font(.system(size: 13 * zoom))
+                    .safeAreaInset(edge: .top) {
+                        FilterField(query: $query)
+                    }
                     .safeAreaInset(edge: .bottom) {
                         footer(for: root)
                     }
@@ -36,6 +46,8 @@ struct FolderBrowserView: View {
         .onAppear(perform: browseDocumentFolderIfNeeded)
         .onChange(of: model.fileURL) { browseDocumentFolderIfNeeded() }
     }
+
+    private var currentPath: String? { model.fileURL.map(FileNavigation.realPath) }
 
     /// Keeps the current file in view once its folders are open (rows only exist once their folder is).
     private func scroll(_ proxy: ScrollViewProxy) {
@@ -96,12 +108,12 @@ private struct FileNodeChildren: View {
     @Environment(\.zoom) private var zoom
 
     var body: some View {
-        ForEach(node.children) { child in
+        ForEach(orderedChildren) { child in
             if child.isDirectory {
                 DisclosureGroup(isExpanded: expansion(of: child)) {
                     FileNodeChildren(node: child, model: model, currentPath: currentPath)
                 } label: {
-                    FolderRow(node: child, model: model, isExpanded: expansion(of: child))
+                    FolderRow(node: child, model: model, isExpanded: expansion(of: child), isQuiet: isQuiet(child))
                 }
             } else {
                 let isCurrent = child.path == currentPath
@@ -123,6 +135,19 @@ private struct FileNodeChildren: View {
         }
     }
 
+    /// Folders with Markdown first, then files, then folders without any, which are listed but quiet.
+    private var orderedChildren: [FileNode] {
+        let children = node.children
+        guard model.markdownIndex != nil else { return children }
+        let folders = children.filter(\.isDirectory)
+        return folders.filter { !isQuiet($0) } + children.filter { !$0.isDirectory } + folders.filter(isQuiet)
+    }
+
+    /// Known to hold no Markdown at any depth (never a guess: an unfinished scan quiets nothing).
+    private func isQuiet(_ folder: FileNode) -> Bool {
+        model.markdownIndex?.hasMarkdown(inFolderAt: folder.path) == false
+    }
+
     private func expansion(of folder: FileNode) -> Binding<Bool> {
         Binding(
             get: { model.expandedFolders.contains(folder.path) },
@@ -132,11 +157,13 @@ private struct FileNodeChildren: View {
     }
 }
 
-/// A folder's name: clicking selects it (New File creates there) and opens it.
+/// A folder's name: clicking selects it (New File creates there) and opens it. A folder without Markdown is
+/// quiet: secondary text, but just as usable.
 private struct FolderRow: View {
     let node: FileNode
     let model: DocumentModel
     @Binding var isExpanded: Bool
+    let isQuiet: Bool
     @Environment(\.zoom) private var zoom
 
     var body: some View {
@@ -147,7 +174,7 @@ private struct FolderRow: View {
             model.selectedFolder = node.url
         } label: {
             // The same insets as a file row's pill, so folder and file icons line up.
-            FileLabel(name: node.name, systemImage: "folder")
+            FileLabel(name: node.name, systemImage: "folder", isQuiet: isQuiet)
                 .padding(.vertical, 2 * zoom)
                 .padding(.horizontal, 6 * zoom)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -155,6 +182,8 @@ private struct FolderRow: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .help(isQuiet ? "No Markdown files yet. Right-click → New File… to add one." : "")
+        .accessibilityValue(isQuiet ? "No Markdown files" : "")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .contextMenu { RowMenu(url: node.url, isDirectory: true, model: model) }
     }
@@ -192,14 +221,101 @@ private struct SelectionPill: View {
 private struct FileLabel: View {
     let name: String
     let systemImage: String
+    var isQuiet = false
 
     var body: some View {
         Label {
-            Text(name).foregroundStyle(.primary)
+            Text(name).foregroundStyle(isQuiet ? .secondary : .primary)
         } icon: {
             Image(systemName: systemImage)
                 .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(isQuiet ? .tertiary : .secondary)
+        }
+    }
+}
+
+/// The search field above the Files list. Esc clears it.
+private struct FilterField: View {
+    @Binding var query: String
+    @Environment(\.zoom) private var zoom
+
+    var body: some View {
+        HStack(spacing: 4 * zoom) {
+            Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+            TextField("Filter Markdown Files", text: $query)
+                .textFieldStyle(.plain)
+                .accessibilityIdentifier("files-filter")
+                .onExitCommand { query = "" }
+            if !query.isEmpty {
+                Button {
+                    query = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                }
+                .buttonStyle(.borderless)
                 .foregroundStyle(.secondary)
+                .accessibilityLabel("Clear Filter")
+            }
+        }
+        .font(.system(size: 12 * zoom))
+        .padding(.horizontal, 8 * zoom)
+        .padding(.vertical, 5 * zoom)
+        .background(RoundedRectangle(cornerRadius: Theme.panelRadius / 2).fill(.quaternary.opacity(0.6)))
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+    }
+}
+
+/// Markdown files matching the filter, from every folder, each with the folder it's in.
+private struct FilterResults: View {
+    let query: String
+    let model: DocumentModel
+    let currentPath: String?
+    @Environment(\.zoom) private var zoom
+
+    var body: some View {
+        if let index = model.markdownIndex {
+            let results = index.matches(query)
+            List {
+                ForEach(results, id: \.relativePath) { entry in
+                    let isCurrent = FileNavigation.realPath(entry.url) == currentPath
+                    let folder = (entry.relativePath as NSString).deletingLastPathComponent
+                    Button {
+                        model.selectedFolder = nil
+                        LinkRouter.openFile(entry.url, browsing: model.browsedFolder, expanding: model.expandedFolders)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 1) {
+                            FileLabel(name: entry.url.lastPathComponent, systemImage: "doc.text")
+                            if !folder.isEmpty {
+                                Text(folder)
+                                    .font(.system(size: 11 * zoom))
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                                    .truncationMode(.head)
+                                    .padding(.leading, 22 * zoom)
+                            }
+                        }
+                        .padding(.vertical, 2 * zoom)
+                        .padding(.horizontal, 6 * zoom)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(SelectionPill(isSelected: isCurrent))
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(entry.url.lastPathComponent)
+                    .accessibilityValue(folder)
+                    .accessibilityAddTraits(isCurrent ? .isSelected : [])
+                    .contextMenu { RowMenu(url: entry.url, isDirectory: false, model: model) }
+                }
+                if results.isEmpty {
+                    Text("No Markdown files match “\(query)”.").foregroundStyle(.secondary)
+                }
+                if !index.isComplete {
+                    Text("Searched the first 20,000 items.").font(.caption).foregroundStyle(.tertiary)
+                }
+            }
+        } else {
+            ProgressView().controlSize(.small).frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }

@@ -11,6 +11,8 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 - Right-click a file or folder in the Files sidebar to create a file or folder there, rename it, move it to
   the Trash (after asking) or show it in Finder.
 - Click a folder in the Files sidebar to choose where New File creates; the sidebar's footer shows the folder.
+- Code folders are easier to browse: folders without Markdown files are quieter and listed last (still there
+  for new files), and a filter at the top of the Files sidebar finds Markdown files by name in any folder.
 
 ### Fixed
 - A file opened from a link or another folder is shown in the Files sidebar: its folders open, and the list

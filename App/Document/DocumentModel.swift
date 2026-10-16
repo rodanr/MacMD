@@ -46,15 +46,24 @@ final class DocumentModel {
             fileTree = browsedFolder.map { FileNode(url: $0, isDirectory: true) }
             expandedFolders = []
             selectedFolder = nil
+            markdownIndex = nil
+            rescanMarkdown()
             revealInFiles()
             // Files created, renamed or deleted anywhere (here, Finder, git) show up in the list.
             folderWatcher = browsedFolder.map { folder in
-                FolderWatcher(folder: folder) { [weak self] changed in self?.fileTree?.refreshLoaded(changed) }
+                FolderWatcher(folder: folder) { [weak self] changed in
+                    self?.fileTree?.refreshLoaded(changed)
+                    if self?.mayChangeMarkdown(changed) == true { self?.rescanMarkdown(after: .milliseconds(500)) }
+                }
             }
         }
     }
     private(set) var fileTree: FileNode?
     @ObservationIgnored private var folderWatcher: FolderWatcher?
+    /// The Markdown below the browsed folder: quiets folders without any, and feeds the Files filter. Nil
+    /// until the first scan finishes.
+    private(set) var markdownIndex: MarkdownIndex?
+    @ObservationIgnored private var indexScan: Task<Void, Never>?
     /// Folders open in the Files sidebar, as `FileNavigation.realPath`s.
     var expandedFolders: Set<String> = []
     /// The folder last clicked in the Files sidebar: New File creates there.
@@ -157,6 +166,33 @@ final class DocumentModel {
         switch mode {
         case .edit: editor?.scroll(toLine: item.line, select: true)
         case .read: reader?.scroll(toAnchor: item.slug)
+        }
+    }
+
+    /// Scans the browsed folder off the main thread; a newer scan replaces one still running.
+    private func rescanMarkdown(after delay: Duration = .zero) {
+        indexScan?.cancel()
+        guard let root = browsedFolder else { return }
+        indexScan = Task { [weak self] in
+            try? await Task.sleep(for: delay)
+            guard !Task.isCancelled else { return }
+            let index = await Task.detached(priority: .utility) { MarkdownIndex.scan(root: root) }.value
+            guard !Task.isCancelled, let self, self.browsedFolder == root else { return }
+            if self.markdownIndex != index { self.markdownIndex = index }
+        }
+    }
+
+    /// Changes only inside hidden or skipped folders (`.git`, `node_modules`, build output) never change
+    /// the index, so builds and git don't trigger rescans. Only the part below the browsed folder counts: the
+    /// folder itself may well live in a hidden one.
+    private func mayChangeMarkdown(_ changed: Set<String>?) -> Bool {
+        guard let changed, let root = browsedFolder else { return true }
+        let rootPath = FileNavigation.realPath(root)
+        return changed.contains { path in
+            guard path.hasPrefix(rootPath + "/") else { return true }
+            return !path.dropFirst(rootPath.count + 1).split(separator: "/").contains { component in
+                component.hasPrefix(".") || MarkdownIndex.skippedFolders.contains(String(component))
+            }
         }
     }
 

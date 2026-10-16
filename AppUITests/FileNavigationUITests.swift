@@ -369,4 +369,63 @@ final class FileNavigationUITests: XCTestCase {
         XCTAssertTrue(waitUntil { !window.buttons["old.md"].exists }, "and leaves the list")
         app.terminate()
     }
+
+    // MARK: Code folders
+
+    /// A repository whose Markdown is in a few places only.
+    private func makeCodeFolder() throws -> URL {
+        try makeFolder([
+            "README.md": "# Project", "docs/guide.md": "# Guide", "src/main.swift": "print(1)",
+            "src/util/helpers.swift": "", "node_modules/pkg/readme.md": "# Dependency",
+        ])
+    }
+
+    @MainActor
+    func testFoldersWithoutMarkdownAreQuietAndListedLast() throws {
+        let folder = try makeCodeFolder()
+        let (app, window) = open(folder.appending(path: "README.md"))
+        let docs = window.buttons["docs"]
+        let src = window.buttons["src"]
+        XCTAssertTrue(src.waitForExistence(timeout: 5))
+        XCTAssertTrue(
+            waitUntil { src.value as? String == "No Markdown files" }, "src is marked as having no Markdown")
+        XCTAssertTrue(
+            window.buttons["node_modules"].value as? String == "No Markdown files", "dependencies don't count")
+        XCTAssertNotEqual(docs.value as? String, "No Markdown files")
+        XCTAssertLessThan(docs.frame.minY, src.frame.minY, "folders with Markdown come first")
+        attach(window, "files-code-folder")
+
+        // Still usable: create a file in it, and it stops being quiet.
+        src.rightClick()
+        window.menuItems["New File…"].click()
+        answerNamePrompt(app, with: "notes")
+        XCTAssertTrue(app.windows["notes.md"].waitForExistence(timeout: 10))
+        let srcNow = app.windows["notes.md"].buttons["src"]
+        XCTAssertTrue(srcNow.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitUntil { srcNow.value as? String != "No Markdown files" }, "src now holds Markdown")
+        app.terminate()
+    }
+
+    @MainActor
+    func testFilterFindsMarkdownFilesByName() throws {
+        let folder = try makeCodeFolder()
+        let (app, window) = open(folder.appending(path: "README.md"))
+        let filter = window.textFields["files-filter"]
+        XCTAssertTrue(filter.waitForExistence(timeout: 5))
+        filter.click()
+        filter.typeText("guide")
+        let result = window.buttons["guide.md"]
+        XCTAssertTrue(result.waitForExistence(timeout: 5), "the filter lists matching files from any folder")
+        XCTAssertFalse(window.buttons["src"].exists, "the tree is replaced by the results")
+        attach(window, "files-filter")
+
+        filter.typeKey(.escape, modifierFlags: [])
+        XCTAssertTrue(window.buttons["src"].waitForExistence(timeout: 5), "Esc clears the filter")
+
+        filter.typeText("guide")
+        XCTAssertTrue(result.waitForExistence(timeout: 5))
+        result.click()
+        XCTAssertTrue(app.windows["guide.md"].waitForExistence(timeout: 10), "a result opens")
+        app.terminate()
+    }
 }

@@ -100,7 +100,9 @@ Untrusted documents are contained in three ways:
 The Files sidebar's open and selected folders live in `DocumentModel` (`expandedFolders`, keyed by
 `FileNavigation.realPath`, and `selectedFolder`), so opening a file reveals it and a new tab keeps the tree as
 it was. Row actions (new, rename, trash) are in `FileActions` and are file-coordinated, so open documents
-follow renames. The tree (`FileNode`) is read lazily and kept current by an FSEvents stream on the browsed
+follow renames. `MarkdownIndex` (MacMDKit) scans the folder off the main thread, skipping dependency and build folders: folders
+without Markdown are quieted and listed last, and the Files filter searches it. The tree (`FileNode`) is read
+lazily and kept current by an FSEvents stream on the browsed
 folder (`FolderWatcher`), which sees changes from every app. New files come from `NewFile`, used by the File
 menu, the Files sidebar and the Open panel (`MarkdownDocumentController`, which also starts ⌘N documents in the
 current folder).
