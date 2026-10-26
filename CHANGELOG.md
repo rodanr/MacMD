@@ -7,6 +7,11 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+### Fixed
+- The Files sidebar no longer shows rows through the filter field and folder footer while you scroll, and
+  switching between files flickers less: the list opens already scrolled to the current file and keeps its
+  folder order.
+
 ## [0.5.1] - 2026-10-16
 
 ### Fixed

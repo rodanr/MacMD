@@ -43,11 +43,15 @@ final class DocumentModel {
     var browsedFolder: URL? {
         didSet {
             guard browsedFolder?.standardizedFileURL != oldValue?.standardizedFileURL else { return }
-            fileTree = browsedFolder.map { FileNode(url: $0, isDirectory: true) }
+            // A folder already browsed in another document comes with its tree and index, so a new tab shows the
+            // same list at once (brought up to date here, and by the watcher below).
+            let remembered = browsedFolder.flatMap { FolderMemory.shared.snapshot(for: FileNavigation.realPath($0)) }
+            remembered?.tree.refreshLoaded()
+            fileTree = remembered?.tree ?? browsedFolder.map { FileNode(url: $0, isDirectory: true) }
             // The root stays open too, so it shows open if a later root is its parent.
             if let browsedFolder { expandedFolders.insert(FileNavigation.realPath(browsedFolder)) }
             selectedFolder = nil
-            markdownIndex = nil
+            markdownIndex = remembered?.index
             rescanMarkdown()
             revealInFiles()
             // Files created, renamed or deleted anywhere (here, Finder, git) show up in the list.
@@ -183,6 +187,7 @@ final class DocumentModel {
             let index = await Task.detached(priority: .utility) { MarkdownIndex.scan(root: root) }.value
             guard !Task.isCancelled, let self, self.browsedFolder == root else { return }
             if self.markdownIndex != index { self.markdownIndex = index }
+            if let tree = self.fileTree { FolderMemory.shared.store(index: index, tree: tree) }
         }
     }
 

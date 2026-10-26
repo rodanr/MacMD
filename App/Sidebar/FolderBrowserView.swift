@@ -8,6 +8,8 @@ struct FolderBrowserView: View {
     @Environment(\.zoom) private var zoom
     /// The Files filter; per window and never saved.
     @State private var query = ""
+    /// The list has been scrolled to the current file (or has nothing to scroll to).
+    @State private var isPositioned = false
 
     var body: some View {
         Group {
@@ -24,12 +26,17 @@ struct FolderBrowserView: View {
                     }
                     .listStyle(.sidebar)
                     .font(.system(size: 13 * zoom))
-                    .safeAreaInset(edge: .top) {
+                    // Rows scroll under the filter and footer: they need their own backing, or the rows show through.
+                    .safeAreaInset(edge: .top, spacing: 0) {
                         FilterField(query: $query)
+                            .background(.bar)
                     }
-                    .safeAreaInset(edge: .bottom) {
+                    .safeAreaInset(edge: .bottom, spacing: 0) {
                         footer(for: root)
+                            .background(.bar)
                     }
+                    // A new window starts at the top: stay hidden until it has scrolled to the current file.
+                    .opacity(isPositioned ? 1 : 0)
                     .onAppear { scroll(proxy) }
                     .onChange(of: model.filesScrollTarget) { scroll(proxy) }
                 }
@@ -51,9 +58,15 @@ struct FolderBrowserView: View {
 
     /// Keeps the current file in view once its folders are open (rows only exist once their folder is).
     private func scroll(_ proxy: ScrollViewProxy) {
-        guard let target = model.filesScrollTarget else { return }
+        guard let target = model.filesScrollTarget else {
+            isPositioned = true
+            return
+        }
         let id = FileNavigation.realPath(target)
-        Task { @MainActor in proxy.scrollTo(id, anchor: .center) }
+        Task { @MainActor in
+            proxy.scrollTo(id, anchor: .center)
+            isPositioned = true
+        }
     }
 
     /// Without a chosen folder, browse the one the document is in (once it has been saved).
