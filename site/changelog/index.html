@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MacMD Changelog: Release Notes and Version History</title>
+<meta name="description" content="Release notes for every MacMD version: new features and fixes for the native Markdown editor and reader for macOS.">
+<link rel="canonical" href="https://macmd.rodan.com.np/changelog/">
+<meta name="theme-color" content="#fafaf8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1b1e" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/style.css">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="MacMD">
+<meta property="og:title" content="MacMD Changelog: Release Notes and Version History">
+<meta property="og:description" content="Release notes for every MacMD version: new features and fixes for the native Markdown editor and reader for macOS.">
+<meta property="og:url" content="https://macmd.rodan.com.np/changelog/">
+<meta property="og:image" content="https://macmd.rodan.com.np/img/og.png">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<div class="wrap">
+  <header class="site">
+    <a class="brand" href="/"><img src="/img/icon.webp" width="32" height="32" alt="">MacMD</a>
+    <nav aria-label="Main">
+      <a href="/#features">Features</a>
+      <a href="/#install">Install</a>
+      <a href="/changelog/">Changelog</a>
+      <a class="keep" href="https://github.com/rodanr/MacMD">GitHub</a>
+    </nav>
+  </header>
+  <main class="narrow article">
+    <h1>MacMD changelog</h1>
+    <p>Every release of MacMD, the native Markdown editor and reader for Mac. Latest first. MacMD is in early development (0.x), so features and settings can change between minor versions.</p>
+<h2 id="v0.5.2">0.5.2 <span class="date">2026-10-26</span></h2>
+<h3>Fixed</h3>
+<ul>
+<li>The Files sidebar no longer shows rows through the filter field and folder footer while you scroll, and
+ switching between files flickers less: the list opens already scrolled to the current file and keeps its
+ folder order.
+</ul>
+<h2 id="v0.5.1">0.5.1 <span class="date">2026-10-16</span></h2>
+<h3>Fixed</h3>
+<ul>
+<li>Folders you open in the Files sidebar stay open when you open a file from another folder, in every tab and
+ window, including the folder you were browsing when a link takes you to its parent.
+</ul>
+<h2 id="v0.5.0">0.5.0 <span class="date">2026-10-16</span></h2>
+<h3>Added</h3>
+<ul>
+<li>Right-click a file or folder in the Files sidebar to create a file or folder there, rename it, move it to
+ the Trash (after asking) or show it in Finder.</li>
+<li>Click a folder in the Files sidebar to choose where New File creates; the sidebar's footer shows the folder.</li>
+<li>Code folders are easier to browse: folders without Markdown files are quieter and listed last (still there
+ for new files), and a filter at the top of the Files sidebar finds Markdown files by name in any folder.
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>A file opened from a link or another folder is shown in the Files sidebar: its folders open, and the list
+ scrolls to it and highlights it. Open folders stay open when you move to another file.</li>
+<li>New File creates in the folder of the file you're in instead of always at the top.
+</ul>
+<h2 id="v0.4.0">0.4.0 <span class="date">2026-10-16</span></h2>
+<h3>Added</h3>
+<ul>
+<li>Create Markdown files where you're working: <strong>File → New File in Folder…</strong> (⌥⌘N), the New File button and
+ folder menus in the Files sidebar, and <strong>New File Here…</strong> in the Open panel. Each asks for a name and opens
+ the new file.
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Following a link to another Markdown file keeps the Files sidebar on the folder you were browsing, instead
+ of jumping to the linked file's folder.</li>
+<li>Relative links and images that go up a folder (<code>../notes.md</code>) open the right file in Read mode and exports.</li>
+<li>Links to a section of another file (<code>notes.md#setup</code>) open the file at that section.</li>
+<li>A link to a file that doesn't exist says so instead of doing nothing.</li>
+<li>The Files sidebar updates when files are added, renamed or deleted, here or in other apps.</li>
+<li>A new document (⌘N) keeps the folder you were working in, and saving it suggests that folder.
+</ul>
+<h2 id="v0.3.1">0.3.1 <span class="date">2026-10-16</span></h2>
+<h3>Fixed</h3>
+<ul>
+<li>Focus mode keeps the paragraph you're writing readable: it no longer dims the whole page while you type, the
+ paragraph you just wrote stays bright when you press Return to start a new one, a selection keeps every
+ paragraph it touches bright, and dimmed text is lighter so it stays easy to read.</li>
+<li>Typewriter mode keeps the line you type centered in long documents instead of drifting a line off.
+</ul>
+<h2 id="v0.3.0">0.3.0 <span class="date">2026-10-16</span></h2>
+<h3>Changed</h3>
+<ul>
+<li>A calmer, more consistent look. Code blocks and quotes match between Edit and Read mode; tables sit in
+ rounded frames with a tinted header; task boxes are rounded squares sized to the text; diagrams use the
+ page's colors and a clean sans font; secondary text and Markdown markers are easier to read.</li>
+<li>The outline shows indent guides and highlights the current heading in Read mode too; the status bar and
+ Files list are tidier, and an empty document shows a quiet "Start writing…" hint.</li>
+<li>Animations respect Reduce Motion.
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Diagrams switch colors when macOS switches between light and dark.</li>
+<li>Nested task lists in Read mode sit under their parent item instead of beside it.</li>
+<li>Settings passed at launch (<code>-theme mono</code>) are no longer mistaken for files to open, and only apply to that
+ launch instead of overwriting your saved preferences.
+</ul>
+<h2 id="v0.2.0">0.2.0 <span class="date">2026-10-16</span></h2>
+<h3>Added</h3>
+<ul>
+<li>Settings → Size → Font size: set the editor and Read mode text size in points (type it or use the
+ stepper), or change it with ⌥⌘+ / ⌥⌘−. Zoom still scales the whole window on top of it.
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>The Settings window fits small screens: it scrolls instead of running off the bottom.</li>
+<li>Vim mode now matches Vim: a file's final line break no longer counts as an extra line, and <code>dw</code>, <code>cw</code>, <code>dG</code>,
+ <code>2dd</code>, <code>J</code>, <code>{</code> / <code>}</code>, <code>v$</code>, <code>aw</code>, <code>a"</code>, <code>i(</code> and paste follow Vim's rules at line ends, empty lines and the
+ end of the file. Checked against real Vim on thousands of commands.</li>
+<li>Documents opened straight into Read mode show their relative images and follow links to other files
+ (they were resolved before the document's folder was known).</li>
+<li>VoiceOver names the toolbar's mode buttons "Edit" and "Read" (the Read button was announced as "Bookmark").</li>
+<li>Pasting an image (for example a screenshot) works: ⌘V was disabled when the clipboard held only an image.</li>
+<li>Exported HTML can no longer run scripts from a document (event handlers, <code>javascript:</code> links and
+ <code>&lt;script&gt;</code> are removed, and the file carries a strict Content Security Policy).</li>
+<li>Styling no longer goes stale after some edits: math colors spreading into the next paragraph, a nested list
+ item losing its indent, or a code fence line missing its code style.</li>
+<li>A setext heading (a line underlined with <code>---</code> or <code>===</code>) no longer styles the line after it as a heading.</li>
+<li>Pressing Return after a horizontal rule (<code>* * *</code>, <code>- - -</code>) no longer starts a list.</li>
+<li>⌘I on bold text makes it bold italic instead of replacing bold with italic, and ⌘B works the same way.</li>
+<li>Headings that differ only by a number suffix ("Intro", "Intro 1", "Intro") get unique anchors.</li>
+<li>Opening a file from the Files sidebar no longer closes the sidebar: the file opens in a new tab with the
+ same folder listed.</li>
+<li>New windows and tabs open with the sidebar the way you last left it (shown or hidden, Outline or Files).
+</ul>
+<h2 id="v0.1.0">0.1.0 <span class="date">2026-10-15</span></h2>
+<h3>Added</h3>
+<ul>
+<li>Native TextKit 2 editor that styles Markdown as you type: headings, emphasis, code, quotes, lists, tasks,
+ tables, links and math, with Markdown syntax drawn faintly.</li>
+<li>Read mode (⌘E) with syntax-highlighted code, KaTeX math and Mermaid diagrams, all offline.</li>
+<li>Outline and folder sidebars with a toolbar button (⌃⌘S), focus mode (F8) and typewriter mode (F9).</li>
+<li>Paper, Clean and Mono themes in light and dark, and a line width setting (narrow, medium, wide or full)
+ that applies to both editing and Read mode.</li>
+<li>Zoom (⌘+, ⌘-, ⌘0) scales the editor, Read mode, sidebar and status bar together; the status bar shows the
+ current level.</li>
+<li>Smart editing: list, quote and task continuation; Tab and ⇧Tab indent; ⌘B, ⌘I, ⌘K, ⇧⌘K, ⇧⌘X; ⌘1–⌘6 headings, ⌥⌘0 paragraph;
+ typing a delimiter wraps the selection.</li>
+<li>Image drag and paste with relative links (pasted images are saved to <code>assets/</code>).</li>
+<li>Export to HTML and PDF, Print, Copy as HTML.</li>
+<li>Autosave, versions, tabs, Open Recent and automatic reload when the file changes on disk.</li>
+<li>Settings → General: choose whether documents open in Edit or Read mode.</li>
+<li>Every release ships with a SHA-256 checksum and a GitHub build attestation, so downloads can be verified.</li>
+<li>Optional Vim mode (Settings → Editing): normal, insert and visual modes, motions, operators, text objects,
+ search, <code>.</code> repeat and <code>:w</code>. Off by default.</li>
+<li>Liquid Glass app icon with light, dark and tinted variants.</li>
+<li>About window with license, terms and privacy, and acknowledgements; manual Check for Updates… (the only time
+ MacMD contacts GitHub). No analytics or telemetry; see <a href="https://github.com/rodanr/MacMD/blob/main/TERMS.md">TERMS.md</a>.
+</li></ul>
+    <p style="margin-top:40px"><a class="button" href="https://github.com/rodanr/MacMD/releases/latest">Download MacMD for Mac</a></p>
+  </main>
+  <footer>
+    <a href="/">Home</a>
+    <a href="/markdown-editor-for-mac/">Markdown editor for Mac</a>
+    <a href="/markdown-cheat-sheet/">Cheat sheet</a>
+    <a href="/vs/typora/">vs Typora</a>
+    <a href="/vs/obsidian/">vs Obsidian</a>
+    <a href="/changelog/">Changelog</a>
+    <a href="https://github.com/rodanr/MacMD">GitHub</a>
+    <p>MacMD is released under the MIT License. Mac, macOS and other product names are trademarks of their owners.</p>
+  </footer>
+</div>
+</body>
+</html>

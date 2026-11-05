@@ -109,3 +109,16 @@ footer a { color: var(--ink-muted); margin-right: 16px; }
   nav a:not(.keep) { display: none; }
   .button.secondary { margin: 12px 0 0; }
 }
+
+/* Article pages */
+.article { padding-top: 24px; }
+.article h1 { font-size: clamp(32px, 6vw, 48px); line-height: 1.1; letter-spacing: -0.03em; margin: 0 0 16px; }
+.article h2 { font-size: 26px; margin: 40px 0 12px; }
+.article h3 { font-size: 17px; margin: 24px 0 8px; }
+.article .lede { font-size: 20px; color: var(--ink-muted); }
+.article .date { font: 400 14px -apple-system, system-ui, sans-serif; color: var(--ink-muted); margin-left: 8px; }
+.article pre { background: var(--surface); border-radius: var(--radius); padding: 14px 16px; overflow-x: auto; margin: 0; }
+.article pre code { background: none; padding: 0; font-size: 14px; line-height: 1.5; }
+.article ul { padding-left: 1.2em; }
+.article li { margin-bottom: 6px; }
+.article td:first-child { font-weight: 600; white-space: nowrap; padding-right: 16px; }
