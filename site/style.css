@@ -1,0 +1,111 @@
+:root {
+  --paper: #fafaf8;
+  --ink: #24262b;
+  --ink-muted: color-mix(in srgb, var(--ink) 66%, transparent);
+  --ink-faint: color-mix(in srgb, var(--ink) 12%, transparent);
+  --surface: color-mix(in srgb, var(--ink) 4.5%, transparent);
+  --link: AccentColor;
+  --radius: 10px;
+  --radius-panel: 14px;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #1a1b1e;
+    --ink: #e4e2dd;
+    --surface: color-mix(in srgb, var(--ink) 6%, transparent);
+    --link: color-mix(in srgb, AccentColor 65%, var(--ink));
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 17px/1.65 ui-serif, "New York", Georgia, serif;
+}
+
+h1, h2, h3, nav, .button, .meta, summary, th {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+}
+
+a { color: var(--link); }
+
+.wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+.narrow { max-width: 680px; }
+
+header.site {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 0;
+}
+header.site a.brand {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--ink); text-decoration: none; font: 600 17px -apple-system, system-ui, sans-serif;
+}
+header.site img { border-radius: 8px; }
+nav a { margin-left: 20px; font-size: 15px; color: var(--ink-muted); text-decoration: none; }
+nav a:hover { color: var(--ink); }
+
+.hero { text-align: center; padding: 56px 0 32px; }
+.hero h1 {
+  font-size: clamp(36px, 7vw, 64px); line-height: 1.05; letter-spacing: -0.03em;
+  margin: 0 auto 20px; max-width: 14em; font-weight: 700;
+}
+.hero p.lede { font-size: 20px; color: var(--ink-muted); max-width: 34em; margin: 0 auto 32px; }
+
+.button {
+  display: inline-block; padding: 12px 24px; border-radius: 999px;
+  background: var(--ink); color: var(--paper); text-decoration: none;
+  font-size: 16px; font-weight: 600;
+}
+.button:hover { opacity: 0.88; }
+.button.secondary { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink-faint); margin-left: 8px; }
+.meta { font-size: 14px; color: var(--ink-muted); margin-top: 16px; }
+
+figure { margin: 0; }
+figure img {
+  display: block; width: 100%; height: auto;
+  border-radius: var(--radius-panel); box-shadow: 0 0 0 1px var(--ink-faint), 0 20px 50px -20px rgb(0 0 0 / 0.35);
+}
+figcaption { font-size: 14px; color: var(--ink-muted); text-align: center; margin-top: 12px; font-family: -apple-system, system-ui, sans-serif; }
+.hero-shot { margin: 24px auto 0; }
+
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0 0; }
+
+section { padding: 56px 0 0; }
+h2 { font-size: 32px; line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 20px; }
+h3 { font-size: 18px; margin: 0 0 4px; }
+
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.features div { background: var(--surface); border-radius: var(--radius-panel); padding: 20px; }
+.features p { margin: 0; color: var(--ink-muted); font-size: 16px; line-height: 1.5; }
+
+ol.steps { padding-left: 1.2em; }
+ol.steps li { margin-bottom: 8px; }
+
+code, kbd {
+  font: 0.9em ui-monospace, "SF Mono", Menlo, monospace;
+  background: var(--surface); border-radius: 6px; padding: 0.1em 0.4em;
+}
+
+details { border-top: 1px solid var(--ink-faint); padding: 16px 0; }
+details:last-of-type { border-bottom: 1px solid var(--ink-faint); }
+summary { cursor: pointer; font-weight: 600; font-size: 17px; }
+details p { margin: 12px 0 0; color: var(--ink-muted); }
+
+table { border-collapse: collapse; width: 100%; font-size: 16px; }
+th, td { text-align: left; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--ink-faint); vertical-align: top; }
+
+footer { margin-top: 80px; padding: 32px 0 48px; border-top: 1px solid var(--ink-faint); color: var(--ink-muted); font-size: 14px; font-family: -apple-system, system-ui, sans-serif; }
+footer a { color: var(--ink-muted); margin-right: 16px; }
+
+@media (max-width: 640px) {
+  .pair { grid-template-columns: 1fr; }
+  nav a:not(.keep) { display: none; }
+  .button.secondary { margin: 12px 0 0; }
+}

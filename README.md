@@ -15,7 +15,7 @@ Write in plain Markdown that styles itself as you type, then press ⌘E to read 
 ![Apple silicon](https://img.shields.io/badge/Apple%20silicon-native-black)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-[**Download**](https://github.com/rodanr/MacMD/releases/latest) · [Features](#features) · [Shortcuts](#keyboard-shortcuts) · [Build from source](#build-from-source)
+[**Download**](https://github.com/rodanr/MacMD/releases/latest) · [Website](https://macmd.rodan.com.np) · [Features](#features) · [Shortcuts](#keyboard-shortcuts) · [Build from source](#build-from-source)
 
 </div>
 

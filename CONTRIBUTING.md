@@ -50,7 +50,7 @@ Commits follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.
 | `build` / `ci` | The build, project file, scripts or GitHub Actions |
 | `chore` | Maintenance, including `chore(release): X.Y.Z` |
 
-Scopes are optional and name the area: `editor`, `reader`, `vim`, `export`, `sidebar`, `settings`, `kit`.
+Scopes are optional and name the area: `editor`, `reader`, `vim`, `export`, `sidebar`, `settings`, `kit`, `site`.
 Mark breaking changes with `!` (`feat(settings)!: …`) and a `BREAKING CHANGE:` footer. Examples:
 
 ```text

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://macmd.rodan.com.np/sitemap.xml

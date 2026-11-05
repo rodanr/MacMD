@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MacMD: Native Markdown Editor and Reader for Mac</title>
+<meta name="description" content="MacMD is a free, open-source Markdown editor and reader for macOS. Live-styled editing, a typeset Read mode, math, diagrams and Vim mode. No accounts, no tracking.">
+<link rel="canonical" href="https://macmd.rodan.com.np/">
+<meta name="theme-color" content="#fafaf8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1b1e" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/style.css">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="MacMD">
+<meta property="og:title" content="MacMD: Native Markdown Editor and Reader for Mac">
+<meta property="og:description" content="A quiet, native Markdown editor and reader for the Mac. Free and open source.">
+<meta property="og:url" content="https://macmd.rodan.com.np/">
+<meta property="og:image" content="https://macmd.rodan.com.np/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "MacMD",
+  "description": "A free, open-source, native Markdown editor and reader for macOS with live styling, a typeset Read mode, math, diagrams and Vim mode.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "macOS 26 or later (Apple silicon)",
+  "url": "https://macmd.rodan.com.np/",
+  "downloadUrl": "https://github.com/rodanr/MacMD/releases/latest",
+  "license": "https://opensource.org/licenses/MIT",
+  "image": "https://macmd.rodan.com.np/img/og.png",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Person", "name": "Rodan Ramdam" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Is MacMD free?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. MacMD is free and open source under the MIT License." } },
+    { "@type": "Question", "name": "Which Macs does MacMD run on?",
+      "acceptedAnswer": { "@type": "Answer", "text": "MacMD requires macOS 26 Tahoe or later on an Apple silicon Mac." } },
+    { "@type": "Question", "name": "Does MacMD collect data?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No. MacMD has no accounts, analytics or telemetry, and only goes online when you ask it to, for example to check for updates." } },
+    { "@type": "Question", "name": "Does MacMD change my Markdown files?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No. Your file stays plain text. Markdown syntax is shown faintly, never hidden, so what you see is what you save." } }
+  ]
+}
+</script>
+</head>
+<body>
+<div class="wrap">
+  <header class="site">
+    <a class="brand" href="/"><img src="/img/icon.webp" width="32" height="32" alt="">MacMD</a>
+    <nav aria-label="Main">
+      <a href="#features">Features</a>
+      <a href="#install">Install</a>
+      <a href="#faq">FAQ</a>
+      <a class="keep" href="https://github.com/rodanr/MacMD">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1>The quiet Markdown editor for Mac</h1>
+      <p class="lede">Write in plain Markdown that styles itself as you type, then press <kbd>⌘E</kbd> to read it as a beautifully set page. Native, light and private.</p>
+      <a class="button" href="https://github.com/rodanr/MacMD/releases/latest">Download for Mac</a>
+      <a class="button secondary" href="https://github.com/rodanr/MacMD">View on GitHub</a>
+      <p class="meta">Free and open source · macOS 26 or later · Apple silicon</p>
+      <figure class="hero-shot">
+        <img src="/img/edit-light.webp" width="1600" height="1040" alt="MacMD editing a Markdown document with the outline sidebar in the light Paper theme" fetchpriority="high">
+      </figure>
+    </div>
+
+    <section id="why">
+      <h2>A Markdown editor that behaves like a Mac app</h2>
+      <p>MacMD is built with AppKit, SwiftUI and TextKit 2, so it has autosave, versions, tabs, spell checking, Find, Services and your system accent color. It uses about 50&nbsp;MB of memory with a document open, downloads at about 5&nbsp;MB, and has no Electron and no background work.</p>
+      <p>Your file stays plain text. Markdown syntax is shown faintly, never hidden, so what you see is exactly what you save.</p>
+      <div class="pair">
+        <figure><img src="/img/read-dark.webp" width="1600" height="1040" loading="lazy" alt="Read mode in dark appearance with highlighted code, a table and math"><figcaption>Read mode, dark appearance</figcaption></figure>
+        <figure><img src="/img/read-dark-2.webp" width="1600" height="1040" loading="lazy" alt="Math and a Mermaid diagram rendered in MacMD Read mode"><figcaption>Math and diagrams, offline</figcaption></figure>
+      </div>
+    </section>
+
+    <section id="features">
+      <h2>Features</h2>
+      <div class="features">
+        <div><h3>Live styling</h3><p>Headings, emphasis, code, quotes, lists, task lists, tables, links and math are styled as you type.</p></div>
+        <div><h3>Read mode</h3><p>⌘E switches to a typeset page and keeps your place in the document.</p></div>
+        <div><h3>Code, math, diagrams</h3><p>Syntax highlighting, TeX math (KaTeX) and Mermaid diagrams, all offline.</p></div>
+        <div><h3>Outline and files</h3><p>Jump between headings, or browse the Markdown files in a folder.</p></div>
+        <div><h3>Focus and typewriter</h3><p>Dim everything but the current paragraph, or keep the caret centered.</p></div>
+        <div><h3>Smart editing</h3><p>Lists, quotes and tasks continue on Return. Tab indents. Typing <code>*</code> around a selection wraps it.</p></div>
+        <div><h3>Vim mode</h3><p>For people who think in motions. Optional, and off until you turn it on.</p></div>
+        <div><h3>Images</h3><p>Drop or paste images and MacMD inserts a relative link next to your document.</p></div>
+        <div><h3>Themes</h3><p>Paper, Clean and Mono, each in light and dark, with adjustable font size.</p></div>
+        <div><h3>Export</h3><p>HTML, PDF, Print, and Copy as HTML.</p></div>
+        <div><h3>Stays in sync</h3><p>Reloads automatically when another app changes the file.</p></div>
+        <div><h3>Private</h3><p>No accounts, analytics or telemetry. It only goes online when you ask it to.</p></div>
+      </div>
+    </section>
+
+    <section id="install" class="narrow">
+      <h2>Install</h2>
+      <p>Requires macOS 26 Tahoe or later on Apple silicon.</p>
+      <ol class="steps">
+        <li>Download the DMG from the <a href="https://github.com/rodanr/MacMD/releases/latest">latest release</a>.</li>
+        <li>Open it and drag <strong>MacMD</strong> onto <strong>Applications</strong>.</li>
+        <li>Open MacMD. macOS says it was not opened: click <strong>Done</strong>.</li>
+        <li>In <strong>System Settings → Privacy &amp; Security</strong>, click <strong>Open Anyway</strong> next to MacMD and confirm.</li>
+      </ol>
+      <p>MacMD is a free, independent project and is not yet notarized by Apple, which is why macOS asks. The code is open, releases are built in public on GitHub Actions, and every download has a checksum. The <a href="https://github.com/rodanr/MacMD#install">full install notes</a> explain how to verify it.</p>
+    </section>
+
+    <section id="faq" class="narrow">
+      <h2>Questions</h2>
+      <details><summary>Is MacMD free?</summary><p>Yes. It is free and open source under the MIT License.</p></details>
+      <details><summary>Which Macs does it run on?</summary><p>macOS 26 Tahoe or later on an Apple silicon Mac.</p></details>
+      <details><summary>Does MacMD collect data?</summary><p>No. There are no accounts, analytics or telemetry. It only goes online when you ask it to, for example to check for updates. See the <a href="https://github.com/rodanr/MacMD/blob/main/TERMS.md">Terms and Privacy</a>.</p></details>
+      <details><summary>Does it change my Markdown files?</summary><p>No. Your file stays plain text, and styling never changes the characters.</p></details>
+      <details><summary>How do I report a bug or ask for a feature?</summary><p>Open an <a href="https://github.com/rodanr/MacMD/issues/new/choose">issue on GitHub</a>.</p></details>
+    </section>
+  </main>
+
+  <footer>
+    <a href="https://github.com/rodanr/MacMD">GitHub</a>
+    <a href="https://github.com/rodanr/MacMD/releases">Releases</a>
+    <a href="https://github.com/rodanr/MacMD/blob/main/CHANGELOG.md">Changelog</a>
+    <a href="https://github.com/rodanr/MacMD/blob/main/TERMS.md">Terms &amp; Privacy</a>
+    <p>MacMD is released under the MIT License. Mac and macOS are trademarks of Apple Inc.</p>
+  </footer>
+</div>
+</body>
+</html>
