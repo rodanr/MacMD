@@ -6,7 +6,9 @@
 
 **A quiet, native Markdown editor and reader for the Mac.**
 
-Write in plain Markdown that styles itself as you type, then press ⌘E to read it as a beautifully set page.
+Free, open-source Markdown editor for macOS with live styling, a typeset Read mode, math, Mermaid diagrams and
+optional Vim mode. Write in plain Markdown that styles itself as you type, then press ⌘E to read it as a
+beautifully set page.
 
 [![CI](https://github.com/rodanr/MacMD/actions/workflows/ci.yml/badge.svg)](https://github.com/rodanr/MacMD/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/rodanr/MacMD?sort=semver&cacheSeconds=3600)](https://github.com/rodanr/MacMD/releases/latest)
@@ -15,16 +17,19 @@ Write in plain Markdown that styles itself as you type, then press ⌘E to read 
 ![Apple silicon](https://img.shields.io/badge/Apple%20silicon-native-black)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-[**Download**](https://github.com/rodanr/MacMD/releases/latest) · [Website](https://macmd.rodan.com.np) · [Features](#features) · [Shortcuts](#keyboard-shortcuts) · [Build from source](#build-from-source)
+[**Download**](https://github.com/rodanr/MacMD/releases/latest) · [**Website**](https://macmd.rodan.com.np) · [Features](#features) · [Shortcuts](#keyboard-shortcuts) · [Build from source](#build-from-source)
 
 </div>
 
 <p align="center">
-  <img src="docs/screenshots/edit-light.png" width="49%" alt="Editing a document with the outline sidebar, light Paper theme">
-  <img src="docs/screenshots/read-dark.png" width="49%" alt="Read mode in dark appearance with highlighted code, a table and math">
+  <img src="docs/screenshots/edit-light.png" width="49%" alt="MacMD, a native Markdown editor for Mac, editing a document with the outline sidebar in the light Paper theme">
+  <img src="docs/screenshots/read-dark.png" width="49%" alt="MacMD Read mode in dark appearance with highlighted code, a table and math">
 </p>
 
 ## Why MacMD
+
+MacMD is a free, open-source Markdown editor and reader for macOS on Apple silicon, built as a real Mac app
+rather than a web wrapper.
 
 - **Native.** Built with AppKit, SwiftUI and TextKit 2, so it behaves like a Mac app: autosave, versions,
   tabs, spelling, Find, Services and your system accent color.
