@@ -9,6 +9,12 @@ final class MarkdownDocument: NSDocument {
 
     override class var autosavesInPlace: Bool { true }
 
+    /// Remembers where the file was being read, so reopening it can offer to continue from there.
+    override func close() {
+        model.saveReadingPosition(flush: true)
+        super.close()
+    }
+
     override class func canConcurrentlyReadDocuments(ofType typeName: String) -> Bool { false }
 
     override func makeWindowControllers() {

@@ -7,6 +7,11 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+### Added
+- Reopening a file now offers to continue where you left off: a small banner at the top (and View ▸
+  Continue Where You Left Off) jumps back to the last position you were reading, in the mode you left it in. It
+  can be turned off in Settings.
+
 ### Fixed
 - Selecting text across paragraphs in Read mode no longer paints the highlight into the empty margins
   beside the text column.

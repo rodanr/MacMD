@@ -48,6 +48,24 @@ final class AppSettings {
     /// The sidebar as last left, so new windows and tabs open the same way.
     var sidebarVisible: Bool { didSet { store(sidebarVisible, for: .sidebarVisible) } }
     var sidebarTab: String { didSet { store(sidebarTab, for: .sidebarTab) } }
+    /// Offer to continue from where a file was last read when it is reopened.
+    var offerResume: Bool { didSet { store(offerResume, for: .offerResume) } }
+
+    /// Where each file was last read. Updated in memory as you read, written out by `saveReadingPositions()`.
+    @ObservationIgnored private var readingPositions: ReadingPositionStore
+
+    func readingPosition(for url: URL) -> ReadingPosition? {
+        readingPositions.position(for: FileNavigation.realPath(url))
+    }
+
+    func recordReadingPosition(_ position: ReadingPosition, for url: URL) {
+        readingPositions.record(position, for: FileNavigation.realPath(url))
+    }
+
+    func saveReadingPositions() {
+        guard let data = try? JSONEncoder().encode(readingPositions) else { return }
+        store(data, for: .readingPositions)
+    }
 
     var theme: Theme { Theme(id: themeID, fontSize: fontSize * zoom) }
 
@@ -58,7 +76,7 @@ final class AppSettings {
 
     private enum Key: String {
         case theme, appearance, zoom, lineWidth, focusMode, typewriterMode, spellChecking, openInReadMode
-        case vimMode, sidebarVisible, sidebarTab, fontSize
+        case vimMode, sidebarVisible, sidebarTab, fontSize, offerResume, readingPositions
     }
 
     init(defaults: UserDefaults = .standard) {
@@ -75,6 +93,10 @@ final class AppSettings {
         vimMode = defaults.bool(forKey: Key.vimMode.rawValue)
         sidebarVisible = defaults.bool(forKey: Key.sidebarVisible.rawValue)
         sidebarTab = defaults.string(forKey: Key.sidebarTab.rawValue) ?? "outline"
+        offerResume = defaults.object(forKey: Key.offerResume.rawValue) as? Bool ?? true
+        readingPositions =
+            defaults.data(forKey: Key.readingPositions.rawValue)
+            .flatMap { try? JSONDecoder().decode(ReadingPositionStore.self, from: $0) } ?? ReadingPositionStore()
     }
 
     func applyAppearance() {

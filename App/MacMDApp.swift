@@ -25,6 +25,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         settings.applyAppearance()
     }
 
+    func applicationWillTerminate(_ notification: Notification) { saveReadingPositions() }
+
+    func applicationDidResignActive(_ notification: Notification) { saveReadingPositions() }
+
+    /// Saves where every open file is being read, then writes them out (a crash or force quit loses little).
+    private func saveReadingPositions() {
+        for case let document as MarkdownDocument in NSDocumentController.shared.documents {
+            document.model.saveReadingPosition()
+        }
+        settings.saveReadingPositions()
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         openFilesFromCommandLine()
     }

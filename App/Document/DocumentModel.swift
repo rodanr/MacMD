@@ -90,6 +90,7 @@ final class DocumentModel {
         didSet {
             guard fileURL != oldValue else { return }
             revealInFiles()
+            evaluateResumeOffer()
         }
     }
     private(set) var outline: [OutlineItem] = []
@@ -97,10 +98,24 @@ final class DocumentModel {
     /// 1-based caret position.
     /// The Vim mode line ("NORMAL", "INSERT", …), or nil when Vim mode is off.
     var vimStatus: String?
-    var caretLine = 1
+    var caretLine = 1 {
+        didSet { if caretLine != oldValue { scheduleReadingPositionSave() } }
+    }
     /// The first source line visible in Read mode, as last reported by the reader.
-    var readerTopLine: Int?
+    var readerTopLine: Int? {
+        didSet {
+            guard readerTopLine != oldValue else { return }
+            // The first report (nil -> line) is the page loading, not the reader scrolling away.
+            if oldValue != nil { resumeOffer = nil }
+            scheduleReadingPositionSave()
+        }
+    }
     var caretColumn = 1
+    /// Where this file was last read, offered once after it loads. Nil when there is nothing to offer or it
+    /// was taken, dismissed, or overtaken by editing or scrolling.
+    private(set) var resumeOffer: ReadingPosition.Target?
+    @ObservationIgnored private var didEvaluateResume = false
+    @ObservationIgnored private var positionSave: Task<Void, Never>?
     /// Incremented on every character edit; lets views know their snapshot is stale.
     private(set) var revision = 0
     private(set) var isLargeDocument = false
@@ -141,6 +156,67 @@ final class DocumentModel {
             editor.setSelectedRange(NSRange(location: location, length: 0))
         }
         editor?.undoManager?.removeAllActions()
+    }
+
+    // MARK: Resume reading
+
+    /// Decides once, after the text and outline are ready and the file's location is known, whether to offer
+    /// to continue where the file was last read. Only for the text as loaded: never after an edit or reload,
+    /// and never when a link already asked for a section.
+    private func evaluateResumeOffer() {
+        guard !didEvaluateResume, hasOutline, let url = fileURL else { return }
+        didEvaluateResume = true
+        guard revision == 1, pendingAnchor == nil, settings.offerResume,
+            let saved = settings.readingPosition(for: url)
+        else { return }
+        resumeOffer = saved.resolve(in: text)
+    }
+
+    func dismissResumeOffer() { resumeOffer = nil }
+
+    /// Jumps to the offered position, in the mode it was left in.
+    func continueReading() {
+        guard let offer = resumeOffer else { return }
+        resumeOffer = nil
+        if (offer.readMode ? Mode.read : .edit) != mode { toggleMode() }
+        switch mode {
+        case .read:
+            let reader = makeReaderIfNeeded()
+            reader.pendingLine = offer.line
+            if reader.isLoaded { reader.scroll(toLine: offer.line) }
+        case .edit:
+            editor?.scroll(toLine: offer.line, select: false)
+        }
+    }
+
+    private func currentReadingPosition() -> ReadingPosition? {
+        let line: Int
+        switch mode {
+        case .edit: line = editor?.topVisibleLine() ?? caretLine
+        case .read:
+            guard let reading = readerTopLine ?? reader?.lastTopLine else { return nil }
+            line = reading
+        }
+        return .make(line: line, outline: outline, readMode: mode == .read)
+    }
+
+    /// Remembers the current position. Held back while an offer is pending so merely opening the file
+    /// (which sits at the top) cannot overwrite the position the offer points to.
+    func saveReadingPosition(flush: Bool = false) {
+        positionSave?.cancel()
+        guard didEvaluateResume, resumeOffer == nil, let url = fileURL, let position = currentReadingPosition()
+        else { return }
+        settings.recordReadingPosition(position, for: url)
+        if flush { settings.saveReadingPositions() }
+    }
+
+    private func scheduleReadingPositionSave() {
+        positionSave?.cancel()
+        positionSave = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
+            self?.saveReadingPosition()
+        }
     }
 
     func toggleFocusMode() {
@@ -241,6 +317,7 @@ final class DocumentModel {
 
     /// Shows the section with this anchor (a heading's slug), now or once the document has been laid out.
     func reveal(anchor: String) {
+        resumeOffer = nil
         switch mode {
         case .edit:
             pendingAnchor = anchor
@@ -277,7 +354,10 @@ final class DocumentModel {
     private func textDidChange() {
         revision += 1
         // Loading the text is the first change; any later one is an edit.
-        if revision > 1 { pendingAnchor = nil }
+        if revision > 1 {
+            pendingAnchor = nil
+            resumeOffer = nil
+        }
         editor?.textStorageDidChangeCharacters()
         isLargeDocument = textStorage.length > Self.largeDocumentThreshold
         derivedUpdate?.cancel()
@@ -293,6 +373,8 @@ final class DocumentModel {
             self.outline = outline
             self.stats = stats
             self.hasOutline = true
+            // Before the anchor is consumed: a link to a section wins over resuming.
+            self.evaluateResumeOffer()
             self.revealPendingAnchorInEditor()
         }
     }

@@ -18,6 +18,8 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.segmented)
                 .accessibilityIdentifier("openModePicker")
+                Toggle("Offer to continue where you left off", isOn: $settings.offerResume)
+                    .accessibilityIdentifier("resumeToggle")
                 Toggle("Start new windows in Focus mode", isOn: $settings.focusModeByDefault)
                 Toggle("Start new windows in Typewriter mode", isOn: $settings.typewriterModeByDefault)
             } header: {

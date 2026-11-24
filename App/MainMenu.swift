@@ -128,6 +128,9 @@ enum MainMenu {
     private static func viewMenu() -> NSMenu {
         let menu = NSMenu(title: "View")
         menu.addItem(withTitle: "Read Mode", action: #selector(MarkdownDocument.toggleReadMode(_:)), keyEquivalent: "e")
+        menu.addItem(
+            withTitle: "Continue Where You Left Off", action: #selector(MarkdownDocument.continueReading(_:)),
+            keyEquivalent: "")
         menu.addItem(.separator())
         menu.addItem(
             item("Show Sidebar", #selector(MarkdownDocument.toggleDocumentSidebar(_:)), "s", [.command, .control]))

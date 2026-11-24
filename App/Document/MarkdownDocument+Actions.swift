@@ -5,6 +5,7 @@ import MacMDKit
 /// responder chain (window controller → document), so they work from any focused view.
 extension MarkdownDocument {
     @objc func toggleReadMode(_ sender: Any?) { model.toggleMode() }
+    @objc func continueReading(_ sender: Any?) { model.continueReading() }
     @objc func toggleFocusMode(_ sender: Any?) { model.toggleFocusMode() }
     @objc func toggleTypewriterMode(_ sender: Any?) { model.toggleTypewriterMode() }
     @objc func toggleDocumentSidebar(_ sender: Any?) { model.toggleSidebar() }
@@ -33,6 +34,8 @@ extension MarkdownDocument {
         switch menuItem.action {
         case #selector(toggleReadMode(_:)):
             menuItem.title = model.mode == .edit ? "Read Mode" : "Edit Mode"
+        case #selector(continueReading(_:)):
+            return model.resumeOffer != nil
         case #selector(toggleDocumentSidebar(_:)):
             menuItem.title = model.isSidebarVisible ? "Hide Sidebar" : "Show Sidebar"
         case #selector(toggleFocusMode(_:)):
