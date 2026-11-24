@@ -7,6 +7,10 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+### Fixed
+- Selecting text across paragraphs in Read mode no longer paints the highlight into the empty margins
+  beside the text column.
+
 ## [0.5.2] - 2026-10-26
 
 ### Fixed
