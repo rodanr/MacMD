@@ -7,6 +7,8 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-25
+
 ### Added
 - Reopening a file now offers to continue where you left off: a small banner at the top (and View ▸
   Continue Where You Left Off) jumps back to the last position you were reading, in the mode you left it in. It
@@ -136,7 +138,8 @@ First public release.
 - About window with license, terms and privacy, and acknowledgements; manual Check for Updates… (the only time
   MacMD contacts GitHub). No analytics or telemetry; see [TERMS.md](TERMS.md).
 
-[Unreleased]: https://github.com/rodanr/MacMD/compare/v0.5.2...HEAD
+[Unreleased]: https://github.com/rodanr/MacMD/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/rodanr/MacMD/compare/v0.5.2...v0.6.0
 [0.5.2]: https://github.com/rodanr/MacMD/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/rodanr/MacMD/releases/tag/v0.5.1
 [0.5.0]: https://github.com/rodanr/MacMD/compare/v0.4.0...v0.5.0
