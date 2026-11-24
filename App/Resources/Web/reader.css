@@ -57,6 +57,37 @@ html[data-theme="mono"] {
   --surface: rgb(34 35 38 / 0.05);
 }
 
+html[data-theme="sepia"] {
+  --paper: #f4ecd8;
+  --ink: #2a1f17;
+  --ink-muted: rgb(42 31 23 / 0.66);
+  --ink-faint: rgb(42 31 23 / 0.12);
+  --surface: rgb(42 31 23 / 0.045);
+}
+
+html[data-theme="nord"],
+html[data-theme="midnight"] {
+  --font-body: system-ui, -apple-system, "SF Pro Text", sans-serif;
+  --size: 16px;
+  --leading: 1.6;
+}
+
+html[data-theme="nord"] {
+  --paper: #eceff4;
+  --ink: #1b202a;
+  --ink-muted: rgb(27 32 42 / 0.66);
+  --ink-faint: rgb(27 32 42 / 0.12);
+  --surface: rgb(27 32 42 / 0.045);
+}
+
+html[data-theme="midnight"] {
+  --paper: #f7f8fa;
+  --ink: #1b1e24;
+  --ink-muted: rgb(27 30 36 / 0.66);
+  --ink-faint: rgb(27 30 36 / 0.11);
+  --surface: rgb(27 30 36 / 0.045);
+}
+
 @media (prefers-color-scheme: dark) {
   html[data-theme="clean"] {
     --paper: #1e1e20;
@@ -71,6 +102,27 @@ html[data-theme="mono"] {
     --ink-muted: rgb(220 220 216 / 0.66);
     --ink-faint: rgb(220 220 216 / 0.12);
     --surface: rgb(220 220 216 / 0.06);
+  }
+  html[data-theme="sepia"] {
+    --paper: #221c16;
+    --ink: #e6dac5;
+    --ink-muted: rgb(230 218 197 / 0.66);
+    --ink-faint: rgb(230 218 197 / 0.12);
+    --surface: rgb(230 218 197 / 0.06);
+  }
+  html[data-theme="nord"] {
+    --paper: #2e3440;
+    --ink: #d8dee9;
+    --ink-muted: rgb(216 222 233 / 0.66);
+    --ink-faint: rgb(216 222 233 / 0.12);
+    --surface: rgb(216 222 233 / 0.06);
+  }
+  html[data-theme="midnight"] {
+    --paper: #0e1116;
+    --ink: #d7dce4;
+    --ink-muted: rgb(215 220 228 / 0.66);
+    --ink-faint: rgb(215 220 228 / 0.12);
+    --surface: rgb(215 220 228 / 0.06);
   }
 }
 
@@ -218,6 +270,8 @@ blockquote {
 }
 
 html[data-theme="clean"] blockquote,
+html[data-theme="nord"] blockquote,
+html[data-theme="midnight"] blockquote,
 html[data-theme="mono"] blockquote { font-style: normal; }
 blockquote > :last-child { margin-bottom: 0; }
 

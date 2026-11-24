@@ -5,7 +5,7 @@ import XCTest
 final class DesignReviewUITests: XCTestCase {
     @MainActor
     func testCaptureThemes() throws {
-        for theme in ["paper", "clean", "mono"] {
+        for theme in ["paper", "clean", "mono", "sepia", "nord", "midnight"] {
             for appearance in ["light", "dark"] {
                 let app = launch([
                     fixture, "-theme", theme, "-appearance", appearance, "-sidebarVisible", "YES",

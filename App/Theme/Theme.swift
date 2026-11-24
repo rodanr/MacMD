@@ -5,7 +5,7 @@ import AppKit
 /// Colors are dynamic `NSColor`s, so a theme adapts to light and dark appearance by itself.
 struct Theme: Equatable, Sendable {
     enum ID: String, CaseIterable, Identifiable, Sendable {
-        case paper, clean, mono
+        case paper, clean, mono, sepia, nord, midnight
         var id: String { rawValue }
 
         var displayName: String {
@@ -13,6 +13,9 @@ struct Theme: Equatable, Sendable {
             case .paper: "Paper"
             case .clean: "Clean"
             case .mono: "Mono"
+            case .sepia: "Sepia"
+            case .nord: "Nord"
+            case .midnight: "Midnight"
             }
         }
 
@@ -21,6 +24,9 @@ struct Theme: Equatable, Sendable {
             case .paper: "New York serif, ink on paper"
             case .clean: "SF Pro, crisp and neutral"
             case .mono: "SF Mono, focused writing"
+            case .sepia: "New York, warm cream paper"
+            case .nord: "SF Pro, calm blue-grey"
+            case .midnight: "SF Pro, deep blue-black"
             }
         }
     }
@@ -54,8 +60,8 @@ struct Theme: Equatable, Sendable {
         let base = NSFont.systemFont(ofSize: size, weight: weight)
         let design: NSFontDescriptor.SystemDesign =
             switch id {
-            case .paper: .serif
-            case .clean: .default
+            case .paper, .sepia: .serif
+            case .clean, .nord, .midnight: .default
             case .mono: .monospaced
             }
         guard let descriptor = base.fontDescriptor.withDesign(design) else { return base }
@@ -69,6 +75,9 @@ struct Theme: Equatable, Sendable {
         case .paper: .dynamic(light: 0xFAFAF8, dark: 0x1A1B1E)
         case .clean: .dynamic(light: 0xFFFFFF, dark: 0x1E1E20)
         case .mono: .dynamic(light: 0xF6F6F4, dark: 0x18191B)
+        case .sepia: .dynamic(light: 0xF4ECD8, dark: 0x221C16)
+        case .nord: .dynamic(light: 0xECEFF4, dark: 0x2E3440)
+        case .midnight: .dynamic(light: 0xF7F8FA, dark: 0x0E1116)
         }
     }
 
@@ -77,6 +86,9 @@ struct Theme: Equatable, Sendable {
         case .paper: .dynamic(light: 0x24262B, dark: 0xE4E2DD)
         case .clean: .dynamic(light: 0x1D1D1F, dark: 0xE5E5E7)
         case .mono: .dynamic(light: 0x222326, dark: 0xDCDCD8)
+        case .sepia: .dynamic(light: 0x2A1F17, dark: 0xE6DAC5)
+        case .nord: .dynamic(light: 0x1B202A, dark: 0xD8DEE9)
+        case .midnight: .dynamic(light: 0x1B1E24, dark: 0xD7DCE4)
         }
     }
 

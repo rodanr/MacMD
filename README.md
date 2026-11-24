@@ -53,7 +53,7 @@ rather than a web wrapper.
 | **Smart editing** | Lists, quotes and tasks continue on Return; Tab indents; typing `*`, `` ` `` or `[` around a selection wraps it |
 | **Vim mode** | For people who think in motions. Optional, and off until you turn it on in Settings |
 | **Images** | Drop or paste images; MacMD inserts a relative link and saves pasted images next to your document |
-| **Themes & sizes** | Paper, Clean and Mono, each in light and dark; set the font size, or zoom the whole window |
+| **Themes & sizes** | Paper, Clean, Mono, Sepia, Nord and Midnight, each in light and dark; set the font size, or zoom the whole window |
 | **Export** | HTML, PDF, Print, and Copy as HTML |
 | **Stays in sync** | Reloads automatically when another app changes the file |
 

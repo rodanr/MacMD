@@ -7,6 +7,9 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+### Added
+- Three new themes: Sepia, Nord and Midnight, each in light and dark.
+
 ## [0.7.0] - 2026-11-25
 
 ### Added

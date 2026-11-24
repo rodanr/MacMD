@@ -24,6 +24,14 @@ MacMD should feel like a quiet sheet of paper that happens to understand Markdow
 | Body face | New York | SF Pro | SF Mono |
 | Reader size / leading | 17 px / 1.65 | 16 px / 1.6 | 15 px / 1.7 |
 
+| Token | Sepia (light / dark) | Nord (light / dark) | Midnight (light / dark) |
+|---|---|---|---|
+| Background `--paper` | `#F4ECD8` / `#221C16` | `#ECEFF4` / `#2E3440` | `#F7F8FA` / `#0E1116` |
+| Text `--ink` | `#2A1F17` / `#E6DAC5` | `#1B202A` / `#D8DEE9` | `#1B1E24` / `#D7DCE4` |
+| Muted, hairlines, code surface | as Paper | as Clean | as Clean |
+| Body face | New York | SF Pro | SF Pro |
+| Reader size / leading | 17 px / 1.65 | 16 px / 1.6 | 16 px / 1.6 |
+
 Links use the system accent (`controlAccentColor`, CSS `AccentColor`); in dark mode they are mixed 35 % toward
 the ink (`Theme.link`, CSS `--link`) because saturated accents glare on dark paper. Math uses a violet
 (`#7A4BC2` / `#C3A6F2`) in the editor so it reads as "not prose".
