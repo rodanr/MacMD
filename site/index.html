@@ -75,7 +75,7 @@
       <a class="button secondary" href="https://github.com/rodanr/MacMD">View on GitHub</a>
       <p class="meta">Free and open source · macOS 26 or later · Apple silicon</p>
       <figure class="hero-shot">
-        <img src="/img/edit-light.webp" width="1600" height="1040" alt="MacMD editing a Markdown document with the outline sidebar in the light Paper theme" fetchpriority="high">
+        <picture><source media="(prefers-color-scheme: dark)" srcset="/img/edit-dark.webp"><img src="/img/edit-light.webp" width="1600" height="1040" fetchpriority="high" alt="MacMD editing a Markdown document in the Paper theme"></picture>
       </figure>
     </div>
 
@@ -84,8 +84,8 @@
       <p>MacMD is built with AppKit, SwiftUI and TextKit 2, so it has autosave, versions, tabs, spell checking, Find, Services and your system accent color. It uses about 50&nbsp;MB of memory with a document open, downloads at about 5&nbsp;MB, and has no Electron and no background work.</p>
       <p>Your file stays plain text. Markdown syntax is shown faintly, never hidden, so what you see is exactly what you save.</p>
       <div class="pair">
-        <figure><img src="/img/read-dark.webp" width="1600" height="1040" loading="lazy" alt="Read mode in dark appearance with highlighted code, a table and math"><figcaption>Read mode, dark appearance</figcaption></figure>
-        <figure><img src="/img/read-dark-2.webp" width="1600" height="1040" loading="lazy" alt="Math and a Mermaid diagram rendered in MacMD Read mode"><figcaption>Math and diagrams, offline</figcaption></figure>
+        <figure><picture><source media="(prefers-color-scheme: dark)" srcset="/img/read-dark.webp"><img src="/img/read-light.webp" width="1600" height="1040" loading="lazy" alt="Read mode with highlighted code, a table and math"></picture><figcaption>Read mode, in light or dark</figcaption></figure>
+        <figure><picture><source media="(prefers-color-scheme: dark)" srcset="/img/read-dark-2.webp"><img src="/img/read-light-2.webp" width="1600" height="1040" loading="lazy" alt="Math and a Mermaid diagram rendered in MacMD Read mode"></picture><figcaption>Math and diagrams, offline</figcaption></figure>
       </div>
     </section>
 

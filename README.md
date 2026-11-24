@@ -22,8 +22,14 @@ beautifully set page.
 </div>
 
 <p align="center">
-  <img src="docs/screenshots/edit-light.png" width="49%" alt="MacMD, a native Markdown editor for Mac, editing a document with the outline sidebar in the light Paper theme">
-  <img src="docs/screenshots/read-dark.png" width="49%" alt="MacMD Read mode in dark appearance with highlighted code, a table and math">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/edit-dark.png">
+    <img src="docs/screenshots/edit-light.png" width="49%" alt="MacMD, a native Markdown editor for Mac, editing a Markdown document in the Paper theme">
+  </picture>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/read-dark.png">
+    <img src="docs/screenshots/read-light.png" width="49%" alt="MacMD Read mode with highlighted code, a table and math">
+  </picture>
 </p>
 
 ## Why MacMD
@@ -58,7 +64,10 @@ rather than a web wrapper.
 | **Stays in sync** | Reloads automatically when another app changes the file |
 
 <p align="center">
-  <img src="docs/screenshots/read-dark-2.png" width="70%" alt="Math and a Mermaid diagram in Read mode">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/read-dark-2.png">
+    <img src="docs/screenshots/read-light-2.png" width="70%" alt="Math and a Mermaid diagram in Read mode">
+  </picture>
 </p>
 
 ## Install
