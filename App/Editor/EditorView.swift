@@ -54,6 +54,11 @@ struct EditorView: NSViewRepresentable {
         scrollView.autohidesScrollers = true
         scrollView.drawsBackground = true
         scrollView.automaticallyAdjustsContentInsets = true
+        // Scrolling moves the view without moving the caret; the outline follows what is on screen.
+        scrollView.contentView.postsBoundsChangedNotifications = true
+        NotificationCenter.default.addObserver(
+            context.coordinator, selector: #selector(Coordinator.viewportDidScroll(_:)),
+            name: NSView.boundsDidChangeNotification, object: scrollView.contentView)
 
         let engine = StyleEngine(storage: model.textStorage, textView: textView, theme: theme)
         context.coordinator.engine = engine
@@ -94,8 +99,20 @@ struct EditorView: NSViewRepresentable {
         /// Read from the layout delegate callback, which TextKit invokes on the main thread.
         nonisolated(unsafe) var palette = DecorationPalette()
         private var caretUpdate: Task<Void, Never>?
+        private var viewportUpdate: Task<Void, Never>?
 
         init(model: DocumentModel) { self.model = model }
+
+        @objc func viewportDidScroll(_ notification: Notification) {
+            guard !model.outline.isEmpty, let textView = model.editor else { return }
+            viewportUpdate?.cancel()
+            viewportUpdate = Task { [weak self, weak textView] in
+                try? await Task.sleep(for: .milliseconds(80))
+                guard !Task.isCancelled, let self, let textView else { return }
+                let line = textView.topVisibleLine()
+                if self.model.editorTopLine != line { self.model.editorTopLine = line }
+            }
+        }
 
         func textViewDidChangeSelection(_ notification: Notification) {
             guard let textView = notification.object as? MarkdownTextView else { return }

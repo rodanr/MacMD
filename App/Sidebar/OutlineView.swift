@@ -6,10 +6,10 @@ struct OutlineView: View {
     let model: DocumentModel
     @Environment(\.zoom) private var zoom
 
-    /// The heading of the section being read or edited: it follows the caret in Edit mode and the
-    /// top of the page in Read mode.
+    /// The heading of the section being read or edited: it follows the top visible line in both
+    /// Edit and Read mode.
     private var currentSlug: String? {
-        let line = model.mode == .read ? (model.readerTopLine ?? 1) : model.caretLine
+        let line = model.mode == .read ? (model.readerTopLine ?? 1) : model.editorTopLine
         return model.outline.last { $0.line <= line }?.slug
     }
 
@@ -21,41 +21,51 @@ struct OutlineView: View {
         } else {
             let minLevel = model.outline.map(\.level).min() ?? 1
             let current = currentSlug
-            List(model.outline) { item in
-                Button {
-                    model.reveal(item)
-                } label: {
-                    HStack(spacing: 0) {
-                        // Hairline guides, one per nesting level; decorative only.
-                        ForEach(0..<(item.level - minLevel), id: \.self) { _ in
-                            Rectangle()
-                                .fill(.separator)
-                                .frame(width: 1)
-                                .padding(.leading, 6 * zoom)
-                                .padding(.trailing, 5 * zoom)
-                                .accessibilityHidden(true)
+            ScrollViewReader { proxy in
+                List(model.outline) { item in
+                    Button {
+                        model.reveal(item)
+                    } label: {
+                        HStack(spacing: 0) {
+                            // Hairline guides, one per nesting level; decorative only.
+                            ForEach(0..<(item.level - minLevel), id: \.self) { _ in
+                                Rectangle()
+                                    .fill(.separator)
+                                    .frame(width: 1)
+                                    .padding(.leading, 6 * zoom)
+                                    .padding(.trailing, 5 * zoom)
+                                    .accessibilityHidden(true)
+                            }
+                            Text(item.title.isEmpty ? "Untitled" : item.title)
+                                .font(
+                                    .system(
+                                        size: 13 * zoom,
+                                        weight: item.level == minLevel || item.slug == current ? .semibold : .regular)
+                                )
+                                .foregroundStyle(item.slug == current ? Color.accentColor : .primary)
+                                .lineLimit(1)
+                                .padding(.vertical, 3 * zoom)
                         }
-                        Text(item.title.isEmpty ? "Untitled" : item.title)
-                            .font(.system(size: 13 * zoom, weight: item.level == minLevel ? .semibold : .regular))
-                            .foregroundStyle(.primary)
-                            .lineLimit(1)
-                            .padding(.vertical, 3 * zoom)
+                        .padding(.horizontal, 6 * zoom)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(
+                            RoundedRectangle(cornerRadius: Theme.panelRadius / 2)
+                                .fill(item.slug == current ? Color.accentColor.opacity(0.22) : .clear)
+                        )
+                        .contentShape(Rectangle())
                     }
-                    .padding(.horizontal, 6 * zoom)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(
-                        RoundedRectangle(cornerRadius: Theme.panelRadius / 2)
-                            .fill(item.slug == current ? Color.accentColor.opacity(0.14) : .clear)
-                    )
-                    .contentShape(Rectangle())
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(item.slug == current ? .isSelected : [])
+                    .help(item.title)
+                    // No gaps between rows, so the indent guides run on unbroken.
+                    .listRowInsets(EdgeInsets(top: 0, leading: 8 * zoom, bottom: 0, trailing: 8 * zoom))
                 }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(item.slug == current ? .isSelected : [])
-                .help(item.title)
-                // No gaps between rows, so the indent guides run on unbroken.
-                .listRowInsets(EdgeInsets(top: 0, leading: 8 * zoom, bottom: 0, trailing: 8 * zoom))
+                .listStyle(.sidebar)
+                .onChange(of: current) { _, slug in
+                    guard let slug else { return }
+                    withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(slug, anchor: .center) }
+                }
             }
-            .listStyle(.sidebar)
         }
     }
 }

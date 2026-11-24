@@ -7,6 +7,10 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+### Fixed
+- The sidebar outline now follows the section on screen as you scroll in Edit mode, and the current section stands
+  out more and stays in view in long outlines.
+
 ## [0.6.0] - 2026-11-25
 
 ### Added

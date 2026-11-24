@@ -111,6 +111,8 @@ final class DocumentModel {
         }
     }
     var caretColumn = 1
+    /// The first source line visible in Edit mode; the outline follows it as the view scrolls.
+    var editorTopLine = 1
     /// Where this file was last read, offered once after it loads. Nil when there is nothing to offer or it
     /// was taken, dismissed, or overtaken by editing or scrolling.
     private(set) var resumeOffer: ReadingPosition.Target?
