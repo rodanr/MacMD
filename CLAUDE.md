@@ -32,7 +32,7 @@ make prepare-release VERSION=X.Y.Z   # version + changelog + commit + tag (never
 | `App/Sidebar`, `App/Settings`, `App/Theme`, `App/Window` | SwiftUI views, `AppSettings`, `Theme` tokens |
 | `Packages/MacMDKit/Sources/MacMDKit/Vim` | Vim engine: parses keys, returns `VimAction`s; holds no text. `App/Editor/MarkdownTextView+Vim.swift` applies them |
 | `App/About`, `App/Support` | About window and legal texts (bundles `LICENSE`, `TERMS.md`), `AppInfo` links, `UpdateChecker` |
-| `App/Resources/AppIcon.icon` | Icon Composer icon (glyph layer + `icon.json`; edit in Xcode → Open Developer Tool → Icon Composer); `make icon` renders the README preview |
+| `App/Resources/AppIcon.icon` | Icon Composer icon (`M` and `Hash` layers + `icon.json`; masters in `docs/brand/`; edit in Xcode → Open Developer Tool → Icon Composer); `make icon` renders the README preview |
 | `App/MainMenu.swift` | The whole menu bar, built in code |
 | `docs/` | `ARCHITECTURE.md` (data flow, decisions), `DESIGN.md` (type, color tokens), `RELEASING.md` |
 

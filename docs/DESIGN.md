@@ -76,3 +76,8 @@ The measure is about 68 characters (Medium: 720 pt in the editor), configurable 
 - Focus mode lays the paper at 45 % opacity (`FocusShadeView.opacity`) over everything but the current paragraph,
   leaving it at about 55 % strength; on a blank line the paragraph above stays in focus. Typewriter mode keeps the
   caret line centred.
+
+## Logo
+
+The app icon is an M drawn as a Markdown `#`: paper-white M, amber (`#F2A93B`) bars, ink gradient background.
+Masters, colours and usage rules: [`docs/brand/`](brand/README.md).
