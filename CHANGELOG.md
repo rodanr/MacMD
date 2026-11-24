@@ -7,6 +7,10 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+### Added
+- Search in Read mode: ⌘F opens a find bar over the page, with next and previous match (⌘G, ⇧⌘G) and a note
+  when nothing matches.
+
 ### Fixed
 - The sidebar outline now follows the section on screen as you scroll in Edit mode, and the current section stands
   out more and stays in view in long outlines.

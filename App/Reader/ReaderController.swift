@@ -77,6 +77,23 @@ final class ReaderController: NSObject, WKNavigationDelegate, WKScriptMessageHan
         webView.evaluateJavaScript("window.macmd && macmd.scrollToLine(\(line))")
     }
 
+    /// Finds the next (or previous) match with the web view's own search, which selects it and scrolls it into
+    /// view. Returns whether there was a match.
+    func find(_ query: String, backwards: Bool) async -> Bool {
+        let configuration = WKFindConfiguration()
+        configuration.backwards = backwards
+        configuration.caseSensitive = false
+        configuration.wraps = true
+        let result = try? await webView.find(query, configuration: configuration)
+        return result?.matchFound ?? false
+    }
+
+    /// Clears the match selection and hands the keyboard back to the page.
+    func endFind() {
+        webView.evaluateJavaScript("window.getSelection().removeAllRanges()")
+        webView.window?.makeFirstResponder(webView)
+    }
+
     func scroll(toAnchor slug: String) {
         guard let data = try? JSONEncoder().encode(slug), let json = String(data: data, encoding: .utf8) else { return }
         webView.evaluateJavaScript("window.macmd && macmd.scrollToAnchor(\(json))")

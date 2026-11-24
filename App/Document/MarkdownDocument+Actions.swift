@@ -30,10 +30,30 @@ extension MarkdownDocument {
         pasteboard.setString(html, forType: .string)
     }
 
+    /// Find in Read mode, where the web view is first responder and has no find panel of its own. In Edit mode the
+    /// text view answers first, so this is only reached from the reader.
+    @objc func performFindPanelAction(_ sender: Any?) {
+        guard model.mode == .read, let tag = (sender as? NSMenuItem)?.tag,
+            let action = NSTextFinder.Action(rawValue: tag)
+        else { return }
+        switch action {
+        case .showFindInterface: model.showFindBar()
+        case .nextMatch: model.findInReader()
+        case .previousMatch: model.findInReader(backwards: true)
+        default: break
+        }
+    }
+
     override func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         switch menuItem.action {
         case #selector(toggleReadMode(_:)):
             menuItem.title = model.mode == .edit ? "Read Mode" : "Edit Mode"
+        case #selector(performFindPanelAction(_:)):
+            switch NSTextFinder.Action(rawValue: menuItem.tag) {
+            case .showFindInterface: return model.mode == .read
+            case .nextMatch, .previousMatch: return model.mode == .read && !model.findQuery.isEmpty
+            default: return false
+            }
         case #selector(continueReading(_:)):
             return model.resumeOffer != nil
         case #selector(toggleDocumentSidebar(_:)):

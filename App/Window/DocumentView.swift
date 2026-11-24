@@ -15,6 +15,11 @@ struct DocumentView: View {
             detail
                 .overlay(alignment: .bottom) { HUDView().padding(.bottom, 24) }
                 .overlay(alignment: .top) { ResumeBanner(model: model).padding(.top, 12) }
+                .overlay(alignment: .topTrailing) {
+                    if model.mode == .read && model.isFindBarVisible {
+                        ReaderFindBar(model: model).padding(12)
+                    }
+                }
                 .safeAreaInset(edge: .bottom, spacing: 0) { StatusBar(model: model, settings: settings) }
                 .background(Color(nsColor: settings.theme.background))
         }

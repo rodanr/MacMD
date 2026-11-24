@@ -111,6 +111,10 @@ final class DocumentModel {
         }
     }
     var caretColumn = 1
+    /// Read-mode search: the bar's visibility, its query, and whether the last search found nothing.
+    var isFindBarVisible = false
+    var findQuery = ""
+    private(set) var findHasNoMatch = false
     /// The first source line visible in Edit mode; the outline follows it as the view scrolls.
     var editorTopLine = 1
     /// Where this file was last read, offered once after it loads. Nil when there is nothing to offer or it
@@ -175,6 +179,29 @@ final class DocumentModel {
     }
 
     func dismissResumeOffer() { resumeOffer = nil }
+
+    // MARK: Read-mode search
+
+    func showFindBar() { isFindBarVisible = true }
+
+    func hideFindBar() {
+        isFindBarVisible = false
+        findHasNoMatch = false
+        reader?.endFind()
+    }
+
+    /// Selects the next or previous match of `findQuery` in the reader.
+    func findInReader(backwards: Bool = false) {
+        guard let reader, !findQuery.isEmpty else {
+            findHasNoMatch = false
+            return
+        }
+        let query = findQuery
+        Task {
+            let found = await reader.find(query, backwards: backwards)
+            if query == findQuery { findHasNoMatch = !found }
+        }
+    }
 
     /// Jumps to the offered position, in the mode it was left in.
     func continueReading() {
