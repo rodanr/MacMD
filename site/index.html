@@ -10,7 +10,7 @@
 <meta name="theme-color" content="#1a1b1e" media="(prefers-color-scheme: dark)">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/style.css?v=2">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="MacMD">
@@ -71,9 +71,15 @@
     <div class="hero">
       <h1>The quiet Markdown editor for Mac</h1>
       <p class="lede">Write in plain Markdown that styles itself as you type, then press <kbd>⌘E</kbd> to read it as a beautifully set page. Native, light and private.</p>
-      <pre class="install-cmd hero-cmd" aria-label="Install with Homebrew"><code>brew install --cask rodanr/tap/macmd</code></pre>
-      <a class="button" href="https://github.com/rodanr/MacMD/releases/latest">Download for Mac</a>
-      <a class="button secondary" href="https://github.com/rodanr/MacMD">View on GitHub</a>
+      <div class="install-pill">
+        <span class="prompt" aria-hidden="true">$</span>
+        <code id="brew-cmd">brew install --cask rodanr/tap/macmd</code>
+        <button class="copy" type="button" data-copy="brew-cmd" hidden>Copy</button>
+      </div>
+      <div class="hero-actions">
+        <a class="button secondary" href="https://github.com/rodanr/MacMD/releases/latest">Download for Mac</a>
+        <a class="button secondary" href="https://github.com/rodanr/MacMD">View on GitHub</a>
+      </div>
       <p class="meta">Free and open source · macOS 26 or later · Apple silicon</p>
       <figure class="hero-shot">
         <picture><source media="(prefers-color-scheme: dark)" srcset="/img/edit-dark.webp"><img src="/img/edit-light.webp" width="1600" height="1040" fetchpriority="high" alt="MacMD editing a Markdown document in the Paper theme"></picture>
@@ -146,5 +152,22 @@
     <p>MacMD is released under the MIT License. Mac and macOS are trademarks of Apple Inc.</p>
   </footer>
 </div>
+<script>
+  // Copy buttons stay hidden without JavaScript or clipboard access; the command is still selectable.
+  if (navigator.clipboard) {
+    for (const button of document.querySelectorAll("button[data-copy]")) {
+      button.hidden = false;
+      button.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(document.getElementById(button.dataset.copy).textContent);
+          button.textContent = "Copied";
+        } catch {
+          button.textContent = "Select and copy";
+        }
+        setTimeout(() => { button.textContent = "Copy"; }, 1600);
+      });
+    }
+  }
+</script>
 </body>
 </html>

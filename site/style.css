@@ -74,9 +74,29 @@ figure img {
 }
 figcaption { font-size: 14px; color: var(--ink-muted); text-align: center; margin-top: 12px; font-family: -apple-system, system-ui, sans-serif; }
 .hero-shot { margin: 24px auto 0; }
-.hero pre.hero-cmd { width: fit-content; max-width: 100%; margin: 0 auto 20px; text-align: left; }
-.hero pre.hero-cmd code { user-select: all; }
-@media (max-width: 420px) { .hero pre.hero-cmd code { font-size: 12px; } }
+
+/* Homebrew command: the hero's primary action, styled like the main button */
+.install-pill {
+  display: inline-flex; align-items: center; gap: 12px; max-width: 100%;
+  padding: 8px 8px 8px 22px; border-radius: 999px;
+  background: var(--ink); color: var(--paper);
+  font: 15px/1.4 ui-monospace, "SF Mono", Menlo, monospace;
+}
+.install-pill .prompt { opacity: 0.5; user-select: none; }
+.install-pill code { background: none; padding: 0; font: inherit; color: inherit; user-select: all; white-space: nowrap; overflow-x: auto; }
+.install-pill .copy {
+  flex: none; border: 0; border-radius: 999px; padding: 8px 16px; cursor: pointer;
+  background: color-mix(in srgb, var(--paper) 16%, transparent); color: inherit;
+  font: 600 14px -apple-system, system-ui, sans-serif;
+}
+.install-pill .copy:hover { background: color-mix(in srgb, var(--paper) 26%, transparent); }
+.hero-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.hero-actions .button.secondary { margin: 0; }
+@media (max-width: 480px) {
+  .install-pill { display: flex; flex-direction: column; gap: 10px; border-radius: 18px; padding: 16px 14px 12px; font-size: 13px; }
+  .install-pill .prompt { display: none; }
+  .install-pill .copy { width: 100%; }
+}
 
 .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0 0; }
 
