@@ -1,3 +1,4 @@
+import AppKit
 import XCTest
 
 /// Moving between files (links, the Files sidebar, New) keeps the folder you're working in, and new Markdown
@@ -195,9 +196,17 @@ final class FileNavigationUITests: XCTestCase {
         // The system Open panel's own accessibility identifier.
         let panel = app.windows["open-panel"]
         XCTAssertTrue(panel.waitForExistence(timeout: 5))
+        // Go to Folder keeps the last path it was given, and typing a long temporary path key by key is slow
+        // (CI recordings show ~8 s), so replace the text and paste the path in one go. List view keeps the
+        // file in sight; column view can leave a deep folder's files off to the side.
+        panel.typeKey("2", modifierFlags: .command)
         panel.typeKey("g", modifierFlags: [.command, .shift])
-        app.typeText(folder.path + "\n")
-        XCTAssertTrue(waitUntil { panel.textFields["a.md"].exists }, "the panel shows the folder")
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(folder.path, forType: .string)
+        app.typeKey("a", modifierFlags: .command)
+        app.typeKey("v", modifierFlags: .command)
+        app.typeKey(.return, modifierFlags: [])
+        XCTAssertTrue(waitUntil(timeout: 15) { panel.textFields["a.md"].exists }, "the panel shows the folder")
         panel.buttons["New File Here…"].click()
         answerNamePrompt(app, with: "from-open")
 
