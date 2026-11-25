@@ -94,7 +94,9 @@ The app is then signed with the hardened runtime, the DMG is notarized and stapl
 Pre-releases and manual draft runs skip it. The tap's own CI then runs `brew test-bot`. If a push was missed,
 its daily `brew bump` workflow opens a pull request.
 
-The step needs a deploy key, and is skipped until one is configured:
+The step pushes with a deploy key: write access to `homebrew-tap` only, stored in MacMD as the Actions secret
+`HOMEBREW_TAP_DEPLOY_KEY`. It has been configured since 2026-11-25. Without the secret, the step is skipped.
+To rotate the key (or set it up again), delete the old *MacMD release* key in the tap, then:
 
 1. `ssh-keygen -t ed25519 -N "" -C "MacMD release" -f tap_key`
 2. In **homebrew-tap → Settings → Deploy keys**, add `tap_key.pub` and tick **Allow write access**.

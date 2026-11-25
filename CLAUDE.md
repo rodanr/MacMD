@@ -35,6 +35,8 @@ make prepare-release VERSION=X.Y.Z   # version + changelog + commit + tag (never
 | `App/Resources/AppIcon.icon` | Icon Composer icon (`M` and `Hash` layers + `icon.json`; masters in `docs/brand/`; edit in Xcode → Open Developer Tool → Icon Composer); `make icon` renders the README preview |
 | `App/MainMenu.swift` | The whole menu bar, built in code |
 | `docs/` | `ARCHITECTURE.md` (data flow, decisions), `DESIGN.md` (type, color tokens), `RELEASING.md` |
+| `site/` | Website (macmd.rodan.com.np), static HTML + `style.css`, deployed by `.github/workflows/pages.yml` on push to `main`. Bump `style.css?v=N` in every page when the CSS changes |
+| `.github/workflows/release.yml` | Tag → DMG → GitHub Release → updates the Homebrew cask in the separate repo `rodanr/homebrew-tap` (`Casks/macmd.rb`). Details: `docs/RELEASING.md` |
 
 ## Rules
 
@@ -48,6 +50,10 @@ make prepare-release VERSION=X.Y.Z   # version + changelog + commit + tag (never
 - No force unwraps outside tests and static literals; no new dependencies without discussion.
 - No network access unless the user asks for it (TERMS.md promises this). New network use updates TERMS.md.
 - Keep colors in `Theme.swift` and `reader.css` in sync (`docs/DESIGN.md` lists the tokens).
+- Install instructions live in three places: README `## Install`, `site/index.html` (hero + `#install`) and the
+  `rodanr/homebrew-tap` README. Change them together. Homebrew (`brew install --cask rodanr/tap/macmd`) comes first.
+- Changing the bundle id, the DMG name or the app's data locations means updating `Casks/macmd.rb` in the tap
+  (`url`, `zap`) and the tap-update step in `release.yml`.
 
 ## Commits
 
