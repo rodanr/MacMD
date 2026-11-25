@@ -86,6 +86,29 @@ variables → Actions**). The workflow picks them up automatically:
 The app is then signed with the hardened runtime, the DMG is notarized and stapled, and the
 "Open Anyway" note disappears from the release notes.
 
+## Homebrew tap
+
+[`rodanr/homebrew-tap`](https://github.com/rodanr/homebrew-tap) holds `Casks/macmd.rb`, so users can run
+`brew install --cask rodanr/tap/macmd`. After a stable tag is published, the release workflow's
+*Update Homebrew tap* step rewrites the cask's `version` and `sha256` and pushes `macmd X.Y.Z` to the tap.
+Pre-releases and manual draft runs skip it. The tap's own CI then runs `brew test-bot`. If a push was missed,
+its daily `brew bump` workflow opens a pull request.
+
+The step needs a deploy key, and is skipped until one is configured:
+
+1. `ssh-keygen -t ed25519 -N "" -C "MacMD release" -f tap_key`
+2. In **homebrew-tap → Settings → Deploy keys**, add `tap_key.pub` and tick **Allow write access**.
+3. In **MacMD → Settings → Secrets and variables → Actions**, add the contents of `tap_key` as
+   `HOMEBREW_TAP_DEPLOY_KEY`. Then delete both files.
+
+To bump by hand, edit `version` and `sha256` (from the release's `.sha256` file) in the tap and push, then
+check with `brew audit --cask --strict --online rodanr/tap/macmd`.
+
+The cask's `postflight_steps` clear the quarantine flag because builds aren't notarized. **Remove that block
+once Developer ID notarization is enabled.** Gatekeeper then passes on its own.
+
+After each release, also run `brew update && brew upgrade macmd` and check **About MacMD**.
+
 ## Local packaging
 
 ```sh

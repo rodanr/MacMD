@@ -23,6 +23,7 @@ jobs:
     env:
       VERSION: ${{ github.event.inputs.version || github.ref_name }}
       HAS_SIGNING: ${{ secrets.MACOS_CERT_P12 != '' }}
+      HAS_TAP_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY != '' }}
     steps:
       - uses: actions/checkout@v5
 
@@ -118,6 +119,7 @@ jobs:
           open MacMD, click **Done**, then **System Settings → Privacy & Security → Open Anyway**.
           Step-by-step guide, and why you can trust this build:
           https://github.com/rodanr/MacMD#install
+          Homebrew users skip this step: `brew install --cask rodanr/tap/macmd`
           NOTE
           fi
 
@@ -141,3 +143,33 @@ jobs:
             --notes-file build/release-notes.md \
             "build/release/MacMD-$VERSION.dmg" \
             "build/release/MacMD-$VERSION.dmg.sha256"
+
+      # Stable tags only, and only once the deploy key is configured (see docs/RELEASING.md).
+      - name: Update Homebrew tap
+        if: github.event_name == 'push' && !contains(env.VERSION, '-') && env.HAS_TAP_KEY == 'true'
+        env:
+          TAP_DEPLOY_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
+        run: |
+          echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || { echo "::error::Bad version '$VERSION'"; exit 1; }
+          SHA256="$(awk '{ print $1 }' "build/release/MacMD-$VERSION.dmg.sha256")"
+          echo "$SHA256" | grep -Eq '^[0-9a-f]{64}$' || { echo "::error::Bad checksum '$SHA256'"; exit 1; }
+
+          KEY="$RUNNER_TEMP/tap_key"
+          trap 'rm -f "$KEY"' EXIT
+          (umask 077 && printf '%s\n' "$TAP_DEPLOY_KEY" > "$KEY")
+          export GIT_SSH_COMMAND="ssh -i $KEY -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+          git clone --depth 1 git@github.com:rodanr/homebrew-tap.git "$RUNNER_TEMP/tap"
+
+          CASK="$RUNNER_TEMP/tap/Casks/macmd.rb"
+          sed -i '' -E "s/^  version \"[^\"]+\"$/  version \"$VERSION\"/" "$CASK"
+          sed -i '' -E "s/^  sha256 \"[0-9a-f]{64}\"$/  sha256 \"$SHA256\"/" "$CASK"
+          if ! grep -qx "  version \"$VERSION\"" "$CASK" || ! grep -qx "  sha256 \"$SHA256\"" "$CASK"; then
+            echo "::error::Could not update $CASK"; exit 1
+          fi
+
+          cd "$RUNNER_TEMP/tap"
+          if git diff --quiet; then echo "Tap already at $VERSION"; exit 0; fi
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -qam "macmd $VERSION"
+          git push origin HEAD:main

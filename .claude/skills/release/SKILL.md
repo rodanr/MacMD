@@ -22,6 +22,8 @@ settings → minor (`0.2.1` → `0.3.0`). Testers first → `0.3.0-beta.1`. Neve
 4. **Ask the maintainer**, then `git push origin main vX.Y.Z`.
 5. Watch: `gh run watch $(gh run list --workflow release.yml --limit 1 --json databaseId -q '.[0].databaseId')`.
 6. Check the release page has `MacMD-X.Y.Z.dmg` and its `.sha256`, and the notes match the changelog.
+7. Stable releases: check `rodanr/homebrew-tap` got a `macmd X.Y.Z` commit, then
+   `brew update && brew upgrade macmd`.
 
 Never edit `MARKETING_VERSION` or old changelog sections by hand, and never move or delete a pushed tag:
 fix forward with a new patch version.
@@ -32,4 +34,7 @@ fix forward with a new patch version.
 - **"CHANGELOG.md has no '## [X.Y.Z]' section"** → same cause; use `make prepare-release`.
 - **"nothing under ## [Unreleased]"** → write the changelog entries first.
 - **Archive fails but `make build` works** → Release-only issue: try `make release` locally.
+- **Update Homebrew tap fails** → `Permission denied (publickey)`: the `HOMEBREW_TAP_DEPLOY_KEY` secret or the
+  tap's write deploy key is missing (docs/RELEASING.md). The release itself is already published, so bump the
+  cask by hand.
 - **Notarization rejected** → `xcrun notarytool log <id>`; usually a missing hardened runtime or an unsigned nested binary.
