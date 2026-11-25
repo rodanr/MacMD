@@ -8,7 +8,8 @@ import Testing
         "", "\n", "#", "# ", "**", "`", "```", "```\n", "$", "$$", "$$$", "\\", "> ", "- ", "1.",
         "- [ ]", "| a |\n|", "[a](", "![](", "<div>", "\r\n\r\n", "~~~\n$x$\n~~~", "* * *",
         "a\u{0}b", "😀**😀**😀", "Title\n===", "  - a\n    - b\n      - c", "$x$\r\n$$\r\ny\r\n$$",
-        "---\n---", "---\na: $1$\n...", "> [!NOTE]", "> [!TIP]\n", "> [!x]\n> y", ">[!NOTE]\n>",
+        "---\n---", "---\na: $1$\n...", "> [!NOTE]", "> [!TIP]\n", "[^1]", "[^1]:", "a[^1]\n[^1]:", "[^a]: b\n  c[^a]",
+        "```\n[^1]: x\n```", "[^1]: Yes\n[^1]", "> [!x]\n> y", ">[!NOTE]\n>",
         "---\r\nx: 😀\r\n---\r\n# T", "---\n~~~\n---\n", "---\na\n",
     ]
 
@@ -18,7 +19,7 @@ import Testing
     }
 
     @Test func randomInputNeverCrashes() {
-        let alphabet = Array("ab #*_`~$\\>-+1.[]()!|:\n\r\t😀é漢<>&\"xNOTE")
+        let alphabet = Array("ab #*_`~$\\>-+1.[]()!|:\n\r\t😀é漢<>&\"xNOTE^")
         var generator = SeededGenerator(seed: 42)
         for _ in 0..<500 {
             let length = Int.random(in: 0..<80, using: &generator)

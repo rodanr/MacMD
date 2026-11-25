@@ -5,14 +5,21 @@ import Markdown
 public enum SpanCollector {
     public static func collect(_ text: String) -> StyleResult {
         // Front matter is parsed as a fenced code block; positions are unchanged, so spans map onto `text`.
-        let source = FrontMatter.fenced(text)
+        // Footnote definitions are found first and defused, so the parser can't take one for a link definition.
+        let fenced = FrontMatter.fenced(text)
+        let footnotes = Footnotes.definitions(in: fenced)
+        let source = Footnotes.neutralized(fenced, definitions: footnotes)
         let math = MathExtractor.spans(in: source)
         let document = MarkdownParser.parse(MathExtractor.masked(source, spans: math))
-        var walker = SpanWalker(text: text as NSString, mapper: SourceRangeMapper(text))
+        var walker = SpanWalker(text: text as NSString, mapper: SourceRangeMapper(text), footnotes: footnotes)
         walker.visit(document)
         var spans = walker.spans
         spans += math.map { StyleSpan(range: $0.range, kind: .math) }
         spans += frontMatterDelimiters(in: text)
+        for footnote in footnotes {
+            spans.append(StyleSpan(range: footnote.range, kind: .footnoteDefinition))
+            spans.append(StyleSpan(range: footnote.labelRange, kind: .syntaxMarker))
+        }
         return StyleResult(spans: spans, blocks: blocks(of: document, spans: spans, walker: walker))
     }
 
@@ -77,10 +84,17 @@ private struct SpanWalker: MarkupWalker {
     let text: NSString
     let mapper: SourceRangeMapper
     var spans: [StyleSpan] = []
+    /// Labels with a definition, and the definitions' own `[^label]:` (which aren't references).
+    private let footnoteLabels: Set<String>
+    private let footnoteLabelRanges: [NSRange]
+    /// Inside a link or image, where a footnote reference would nest one link in another.
+    private var linkDepth = 0
 
-    init(text: NSString, mapper: SourceRangeMapper) {
+    init(text: NSString, mapper: SourceRangeMapper, footnotes: [FootnoteDefinition] = []) {
         self.text = text
         self.mapper = mapper
+        self.footnoteLabels = Set(footnotes.map(\.label))
+        self.footnoteLabelRanges = footnotes.map(\.labelRange)
     }
 
     // MARK: Blocks
@@ -190,8 +204,35 @@ private struct SpanWalker: MarkupWalker {
     mutating func visitStrong(_ strong: Strong) { inlineContainer(strong, .strong) }
     mutating func visitEmphasis(_ emphasis: Emphasis) { inlineContainer(emphasis, .emphasis) }
     mutating func visitStrikethrough(_ strikethrough: Strikethrough) { inlineContainer(strikethrough, .strikethrough) }
-    mutating func visitLink(_ link: Link) { inlineContainer(link, .link) }
-    mutating func visitImage(_ image: Image) { inlineContainer(image, .image) }
+    mutating func visitLink(_ link: Link) {
+        linkDepth += 1
+        inlineContainer(link, .link)
+        linkDepth -= 1
+    }
+
+    mutating func visitImage(_ image: Image) {
+        linkDepth += 1
+        inlineContainer(image, .image)
+        linkDepth -= 1
+    }
+
+    /// Footnote references are plain text to the parser; find them in the source this text came from.
+    mutating func visitText(_ textNode: Text) {
+        guard !footnoteLabels.isEmpty, linkDepth == 0, let range = mapper.nsRange(textNode.range) else { return }
+        let source = text.substring(with: range)
+        for match in source.matches(of: Footnotes.reference)
+        where footnoteLabels.contains(match.output.1.lowercased()) {
+            let start = range.location + source.utf16.distance(from: source.startIndex, to: match.range.lowerBound)
+            let length = String(match.output.0).utf16.count
+            let reference = NSRange(location: start, length: length)
+            guard !footnoteLabelRanges.contains(where: { NSIntersectionRange($0, reference).length > 0 }) else {
+                continue
+            }
+            add(reference, .footnoteReference)
+            add(NSRange(location: start, length: 2), .syntaxMarker)
+            add(NSRange(location: NSMaxRange(reference) - 1, length: 1), .syntaxMarker)
+        }
+    }
 
     mutating func visitInlineCode(_ inlineCode: InlineCode) {
         guard let range = mapper.nsRange(inlineCode.range) else { return }

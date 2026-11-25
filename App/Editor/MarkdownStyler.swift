@@ -166,6 +166,10 @@ final class MarkdownStyler {
         case .alertTitle(let kind):
             storage.addAttribute(.foregroundColor, value: theme.alertColor(kind), range: range)
             addTraits(.bold, to: range, in: storage)
+        case .footnoteReference:
+            storage.addAttribute(.foregroundColor, value: theme.link, range: range)
+        case .footnoteDefinition:
+            storage.addAttribute(.foregroundColor, value: theme.secondaryText, range: range)
         case .listMarker:
             storage.addAttribute(.foregroundColor, value: theme.listMarker, range: range)
             hangIndent(afterMarker: range, in: storage)
@@ -256,9 +260,9 @@ final class MarkdownStyler {
 
     private func priority(_ kind: StyleKind) -> Int {
         switch kind {
-        case .codeBlock, .blockQuote, .table, .thematicBreak, .html: 0
+        case .codeBlock, .blockQuote, .table, .thematicBreak, .html, .footnoteDefinition: 0
         case .heading, .alert: 1
-        case .link, .image, .strong, .emphasis, .strikethrough, .alertTitle: 2
+        case .link, .image, .strong, .emphasis, .strikethrough, .alertTitle, .footnoteReference: 2
         case .inlineCode, .math: 3
         case .listMarker, .taskBox: 4
         case .syntaxMarker: 5

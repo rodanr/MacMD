@@ -21,6 +21,10 @@ public enum StyleKind: Hashable, Sendable {
     case alert(AlertKind)
     /// The `[!NOTE]` marker on an alert's first line.
     case alertTitle(AlertKind)
+    /// A footnote reference such as `[^1]` whose label has a definition.
+    case footnoteReference
+    /// A footnote definition, `[^1]: note` and its indented continuation lines.
+    case footnoteDefinition
     /// Markdown punctuation (`#`, `**`, backticks, `>` …) that the editor renders faintly.
     case syntaxMarker
 }

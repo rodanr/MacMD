@@ -59,7 +59,7 @@ rather than a web wrapper.
 
 | | |
 |---|---|
-| **Live styling** | Headings, emphasis, code, quotes, lists, task lists, tables, links and math are styled as you type |
+| **Live styling** | Headings, emphasis, code, quotes, lists, task lists, tables, links, math, footnotes and GitHub alerts are styled as you type; front matter stays out of the way |
 | **Read mode** | ⌘E switches to a typeset page, keeping your place in the document |
 | **Code, math, diagrams** | Syntax highlighting (highlight.js), TeX math (KaTeX) and Mermaid diagrams, all offline |
 | **Outline & files** | Jump between headings, or browse the Markdown files in a folder |

@@ -16,6 +16,9 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
   stray heading.
 - GitHub alerts: quotes that start with `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]` or `[!CAUTION]` get a
   colored bar and title in Edit and Read mode and in exports, in every theme.
+- Footnotes: `text[^1]` with `[^1]: note` (indent further lines to continue a note). Read mode and exports show
+  numbered links and a list of notes at the end with links back; Edit mode highlights references and dims the
+  notes.
 
 ### Fixed
 - Text that stopped being part of a code block or front matter because of an edit further up no longer keeps

@@ -62,4 +62,6 @@ graph LR
 
 ---
 
-Made with care · 日本語もOK · emoji 🎉
+Made with care · 日本語もOK · emoji 🎉[^care]
+
+[^care]: Footnotes are numbered in the order you first use them.

@@ -308,6 +308,22 @@ blockquote.alert-caution { --alert: var(--alert-caution); }
   margin-bottom: 0.35em;
 }
 
+/* Footnotes: references as small raised numbers, notes in a quiet list at the end. */
+
+sup.footnote-ref { font-size: 0.72em; line-height: 0; vertical-align: super; }
+sup.footnote-ref a { text-decoration: none; padding: 0 0.1em; }
+section.footnotes {
+  margin-top: 3em;
+  padding-top: 1em;
+  border-top: 1px solid var(--ink-faint);
+  color: var(--ink-muted);
+  font-size: 0.9em;
+}
+section.footnotes ol { padding-left: 1.4em; }
+section.footnotes li { scroll-margin-top: 24px; }
+sup.footnote-ref a, .footnote-back { scroll-margin-top: 24px; }
+.footnote-back { text-decoration: none; margin-left: 0.2em; }
+
 /* Code */
 
 code, pre, kbd { font-family: var(--font-mono); font-size: 0.86em; }
