@@ -17,7 +17,11 @@ beautifully set page.
 ![Apple silicon](https://img.shields.io/badge/Apple%20silicon-native-black)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-[**Download**](https://github.com/rodanr/MacMD/releases/latest) · [**Website**](https://macmd.rodan.com.np) · [Features](#features) · [Shortcuts](#keyboard-shortcuts) · [Build from source](#build-from-source)
+```sh
+brew install --cask rodanr/tap/macmd
+```
+
+[**Install**](#install) · [Download DMG](https://github.com/rodanr/MacMD/releases/latest) · [**Website**](https://macmd.rodan.com.np) · [Features](#features) · [Shortcuts](#keyboard-shortcuts) · [Build from source](#build-from-source)
 
 </div>
 

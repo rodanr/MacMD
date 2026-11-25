@@ -74,6 +74,9 @@ figure img {
 }
 figcaption { font-size: 14px; color: var(--ink-muted); text-align: center; margin-top: 12px; font-family: -apple-system, system-ui, sans-serif; }
 .hero-shot { margin: 24px auto 0; }
+.hero pre.hero-cmd { width: fit-content; max-width: 100%; margin: 0 auto 20px; text-align: left; }
+.hero pre.hero-cmd code { user-select: all; }
+@media (max-width: 420px) { .hero pre.hero-cmd code { font-size: 12px; } }
 
 .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0 0; }
 
