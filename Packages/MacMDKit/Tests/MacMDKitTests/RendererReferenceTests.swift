@@ -62,7 +62,8 @@ import cmark_gfm_extensions
             let count = Int.random(in: 1...14, using: &generator)
             let markdown = (0..<count).map { _ in Self.lines.randomElement(using: &generator)! }.joined(separator: "\n")
             let ours = HTMLRenderer.render(markdown).body
-            let reference = Self.referenceHTML(markdown)
+            // MacMD leaves out front matter on purpose; the rest must match.
+            let reference = Self.referenceHTML(FrontMatter.removed(markdown))
             if Self.text(ours) != Self.text(reference) || Self.elements(ours) != Self.elements(reference) {
                 failures.append(markdown)
             }
@@ -72,7 +73,7 @@ import cmark_gfm_extensions
                 """
                 \(failures.count) of 500 differ. Shortest: \(shortest.debugDescription)
                 ours:      \(HTMLRenderer.render(shortest).body.debugDescription)
-                reference: \(Self.referenceHTML(shortest).debugDescription)
+                reference: \(Self.referenceHTML(FrontMatter.removed(shortest)).debugDescription)
                 """)
         }
     }
@@ -85,7 +86,8 @@ import cmark_gfm_extensions
             let length = Int.random(in: 0...120, using: &generator)
             let markdown = String((0..<length).map { _ in Self.alphabet.randomElement(using: &generator)! })
             let ours = HTMLRenderer.render(markdown).body
-            let reference = Self.referenceHTML(markdown)
+            // MacMD leaves out front matter on purpose; the rest must match.
+            let reference = Self.referenceHTML(FrontMatter.removed(markdown))
             if Self.text(ours) != Self.text(reference) || Self.elements(ours) != Self.elements(reference) {
                 failures.append(markdown)
             }
@@ -95,7 +97,7 @@ import cmark_gfm_extensions
                 """
                 \(failures.count) of 500 differ. Shortest: \(shortest.debugDescription)
                 ours:      \(HTMLRenderer.render(shortest).body.debugDescription)
-                reference: \(Self.referenceHTML(shortest).debugDescription)
+                reference: \(Self.referenceHTML(FrontMatter.removed(shortest)).debugDescription)
                 """)
         }
     }

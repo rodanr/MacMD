@@ -4,13 +4,26 @@ import Markdown
 /// Walks the Markdown AST and produces editor style spans in UTF-16 coordinates.
 public enum SpanCollector {
     public static func collect(_ text: String) -> StyleResult {
-        let math = MathExtractor.spans(in: text)
-        let document = MarkdownParser.parse(MathExtractor.masked(text, spans: math))
+        // Front matter is parsed as a fenced code block; positions are unchanged, so spans map onto `text`.
+        let source = FrontMatter.fenced(text)
+        let math = MathExtractor.spans(in: source)
+        let document = MarkdownParser.parse(MathExtractor.masked(source, spans: math))
         var walker = SpanWalker(text: text as NSString, mapper: SourceRangeMapper(text))
         walker.visit(document)
         var spans = walker.spans
         spans += math.map { StyleSpan(range: $0.range, kind: .math) }
+        spans += frontMatterDelimiters(in: text)
         return StyleResult(spans: spans, blocks: blocks(of: document, spans: spans, walker: walker))
+    }
+
+    /// The `---` lines around front matter, dimmed like code fences.
+    private static func frontMatterDelimiters(in text: String) -> [StyleSpan] {
+        guard let range = FrontMatter.range(in: text) else { return [] }
+        let closing = (text as NSString).lineRange(for: NSRange(location: NSMaxRange(range) - 1, length: 0)).location
+        return [
+            StyleSpan(range: NSRange(location: 0, length: 3), kind: .syntaxMarker),
+            StyleSpan(range: NSRange(location: closing, length: 3), kind: .syntaxMarker),
+        ]
     }
 
     public static func spans(for text: String) -> [StyleSpan] {

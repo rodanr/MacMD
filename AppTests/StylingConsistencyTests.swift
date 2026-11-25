@@ -10,6 +10,9 @@ import Testing
 @MainActor
 @Suite struct StylingConsistencyTests {
     private static let initial = """
+        ---
+        title: Front matter
+        ---
         # Title
 
         Some **bold** and *italic* text with `code` and $x^2$.
@@ -37,9 +40,10 @@ import Testing
     private static let fragments = [
         "**", "*", "`", "```\n", "# ", "## ", "\n", "\n\n", "- ", "1. ", "> ", "$", "$$\n", "---\n", "x", "word ",
         "[link](u)", "| c |", "~~", "<b>", "\\", "😀", "Title\n===\n",
+        "---", "...\n", "---\nkey: $v$\n---\n",
     ]
 
-    @Test(arguments: 0..<12)
+    @Test(arguments: 0..<40)
     func incrementalStylingMatchesAFreshPass(seed: Int) async {
         var random = SplitMix(seed: UInt64(seed) &+ 77)
         let theme = Theme(id: .paper, fontSize: 16)

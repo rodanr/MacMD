@@ -11,6 +11,13 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 - Install and update MacMD with Homebrew: `brew install --cask rodanr/tap/macmd`. No Open Anyway step needed.
 - **Check for Updates** knows when MacMD was installed with Homebrew and offers to copy `brew upgrade macmd`
   instead of sending you to the download page.
+- Front matter at the top of a file (the `---` block used by Jekyll, Hugo, Obsidian and Astro) shows as a code
+  block in Edit mode and is left out of Read mode, exports and the outline, instead of turning into a rule and a
+  stray heading.
+
+### Fixed
+- Text that stopped being part of a code block or front matter because of an edit further up no longer keeps
+  its code styling.
 
 ## [0.8.0] - 2026-11-25
 

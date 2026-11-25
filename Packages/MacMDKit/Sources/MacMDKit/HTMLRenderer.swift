@@ -26,7 +26,8 @@ public struct RenderedHTML: Hashable, Sendable {
 /// scroll position in sync with the editor. Headings get the same anchors as `Outline`.
 public enum HTMLRenderer {
     public static func render(_ markdown: String) -> RenderedHTML {
-        let (prepared, math) = MathExtractor.replacingWithPlaceholders(markdown)
+        // Front matter is metadata, not content: Read mode and exports leave it out.
+        let (prepared, math) = MathExtractor.replacingWithPlaceholders(FrontMatter.removed(markdown))
         var visitor = HTMLVisitor(math: math)
         visitor.visit(MarkdownParser.parse(prepared))
         if !math.isEmpty { visitor.features.insert(.math) }

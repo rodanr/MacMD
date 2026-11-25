@@ -14,7 +14,7 @@ public struct OutlineItem: Hashable, Sendable, Identifiable {
 
 public enum Outline {
     public static func items(for text: String) -> [OutlineItem] {
-        let (prepared, math) = MathExtractor.replacingWithPlaceholders(text)
+        let (prepared, math) = MathExtractor.replacingWithPlaceholders(FrontMatter.fenced(text))
         var slugger = Slugger()
         return MarkdownParser.parse(prepared).children.compactMap { block in
             guard let heading = block as? Heading, let line = heading.range?.lowerBound.line else { return nil }
