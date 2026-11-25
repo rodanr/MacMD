@@ -255,17 +255,28 @@ final class FeatureUITests: XCTestCase {
     @MainActor
     func testCheckForUpdatesAnswers() throws {
         // A local feed instead of GitHub: deterministic, and UI tests never touch the network.
+        // A fake Homebrew prefix, so the answer doesn't depend on whether this Mac installed MacMD with brew.
         let folder = try temporaryFolder()
-        for (tag, answer, button) in [
-            ("v0.0.1", "You’re up to date", "OK"), ("v999.0.0", "MacMD 999.0.0 is available", "Later"),
+        let noBrew = folder.appending(path: "no-brew")
+        let brew = folder.appending(path: "brew")
+        try FileManager.default.createDirectory(
+            at: brew.appending(path: "Caskroom/macmd"), withIntermediateDirectories: true)
+        for (tag, prefix, answer, detail, button) in [
+            ("v0.0.1", noBrew, "You’re up to date", nil, "OK"),
+            ("v999.0.0", noBrew, "MacMD 999.0.0 is available", "Download the new version", "Later"),
+            ("v999.0.0", brew, "MacMD 999.0.0 is available", "brew upgrade macmd", "Later"),
         ] {
             let feed = folder.appending(path: "\(tag).json")
             try #"{"tag_name": "\#(tag)", "html_url": "https://github.com/rodanr/MacMD/releases"}"#.write(
                 to: feed, atomically: true, encoding: .utf8)
-            let app = launch(["-updateFeedURL", feed.absoluteString])
+            let app = launch(["-updateFeedURL", feed.absoluteString, "-homebrewPrefix", prefix.path])
             app.menuBars.menuBarItems["MacMD"].click()
             app.menuBars.menuItems["Check for Updates…"].click()
             XCTAssertTrue(app.staticTexts[answer].waitForExistence(timeout: 10), "\(tag): \(answer)")
+            if let detail {
+                let text = app.staticTexts.containing(NSPredicate(format: "value CONTAINS %@", detail)).firstMatch
+                XCTAssertTrue(text.exists, "\(tag) via \(prefix.lastPathComponent): \(detail)")
+            }
             app.buttons[button].firstMatch.click()
             app.terminate()
         }

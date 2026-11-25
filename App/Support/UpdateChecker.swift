@@ -49,6 +49,17 @@ enum UpdateChecker {
         return AppInfo.latestReleaseAPI
     }
 
+    /// Whether this copy came from Homebrew, which changes how it should be updated. UI tests pass
+    /// `-homebrewPrefix /path` so the answer doesn't depend on what the test Mac has installed.
+    private static var installSource: InstallSource {
+        let prefixes =
+            UserDefaults.standard.string(forKey: "homebrewPrefix").map { [$0] } ?? InstallSource.homebrewPrefixes
+        return InstallSource.detect(prefixes: prefixes) { path in
+            var isDirectory: ObjCBool = false
+            return FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory) && isDirectory.boolValue
+        }
+    }
+
     /// The latest published release, or `nil` when none has been published yet.
     private static func latestRelease() async throws -> Release? {
         var request = URLRequest(url: feedURL, timeoutInterval: 15)
@@ -68,10 +79,23 @@ enum UpdateChecker {
             current < latest
         {
             alert.messageText = "\(AppInfo.name) \(latest) is available"
-            alert.informativeText = "You have version \(current). Download the new version from GitHub?"
-            alert.addButton(withTitle: "Download")
-            alert.addButton(withTitle: "Later")
-            if alert.runModal() == .alertFirstButtonReturn { NSWorkspace.shared.open(release.htmlURL) }
+            switch installSource {
+            case .homebrew:
+                alert.informativeText =
+                    "You have version \(current), installed with Homebrew. To update, run this in Terminal:\n\n"
+                    + InstallSource.upgradeCommand
+                alert.addButton(withTitle: "Copy Command")
+                alert.addButton(withTitle: "Later")
+                if alert.runModal() == .alertFirstButtonReturn {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(InstallSource.upgradeCommand, forType: .string)
+                }
+            case .direct:
+                alert.informativeText = "You have version \(current). Download the new version from GitHub?"
+                alert.addButton(withTitle: "Download")
+                alert.addButton(withTitle: "Later")
+                if alert.runModal() == .alertFirstButtonReturn { NSWorkspace.shared.open(release.htmlURL) }
+            }
         } else {
             alert.messageText = "You’re up to date"
             alert.informativeText = "\(AppInfo.name) \(AppInfo.version) is the latest version."
