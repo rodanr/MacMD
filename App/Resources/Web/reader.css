@@ -275,6 +275,39 @@ html[data-theme="midnight"] blockquote,
 html[data-theme="mono"] blockquote { font-style: normal; }
 blockquote > :last-child { margin-bottom: 0; }
 
+/* GitHub alerts (> [!NOTE] …). Colors are shared by every theme: GitHub's hues, nudged to reach 4.5:1 on each
+   paper. Keep in sync with Theme.alertColor (docs/DESIGN.md). */
+:root {
+  --alert-note: #0966d3;
+  --alert-tip: #197a35;
+  --alert-important: #7c4cd4;
+  --alert-warning: #8f6000;
+  --alert-caution: #cd232e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --alert-note: #599ff9;
+    --alert-tip: #3fb950;
+    --alert-important: #b389f9;
+    --alert-warning: #d29922;
+    --alert-caution: #f9746d;
+  }
+}
+
+blockquote.alert { border-left-color: var(--alert); color: var(--ink); font-style: normal; }
+blockquote.alert-note { --alert: var(--alert-note); }
+blockquote.alert-tip { --alert: var(--alert-tip); }
+blockquote.alert-important { --alert: var(--alert-important); }
+blockquote.alert-warning { --alert: var(--alert-warning); }
+blockquote.alert-caution { --alert: var(--alert-caution); }
+.alert-title {
+  color: var(--alert);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  margin-bottom: 0.35em;
+}
+
 /* Code */
 
 code, pre, kbd { font-family: var(--font-mono); font-size: 0.86em; }

@@ -36,6 +36,17 @@ Links use the system accent (`controlAccentColor`, CSS `AccentColor`); in dark m
 the ink (`Theme.link`, CSS `--link`) because saturated accents glare on dark paper. Math uses a violet
 (`#7A4BC2` / `#C3A6F2`) in the editor so it reads as "not prose".
 
+GitHub alerts (`> [!NOTE]` …) use GitHub's hues, nudged to reach 4.5:1 on every theme's paper, shared by all
+themes (`Theme.alertColor`, CSS `--alert-*`) for the bar and the title; the body uses the full ink color.
+
+| Alert | Light | Dark |
+|---|---|---|
+| Note | `#0966D3` | `#599FF9` |
+| Tip | `#197A35` | `#3FB950` |
+| Important | `#7C4CD4` | `#B389F9` |
+| Warning | `#8F6000` | `#D29922` |
+| Caution | `#CD232E` | `#F9746D` |
+
 Keep `App/Theme/Theme.swift` and `App/Resources/Web/reader.css` in sync when changing any of these values.
 
 ## Tokens
@@ -52,7 +63,7 @@ Shared by the editor (`Theme` constants) and the reader (CSS custom properties).
 | Motion | 150 ms ease-out (`Theme.motion`); none under Reduce Motion |
 
 Contrast targets (WCAG, checked for every theme and appearance by `ContrastTests`): text ≥ 7, muted text ≥ 4.5,
-list markers ≥ 3, syntax markers ≥ 2 (decorative).
+list markers ≥ 3, syntax markers ≥ 2 (decorative), alert colors ≥ 4.5.
 
 ## Type scale
 

@@ -17,6 +17,10 @@ public enum StyleKind: Hashable, Sendable {
     case table
     case html
     case math
+    /// A GitHub alert (`> [!NOTE]` …): the whole quote, drawn with the alert's color.
+    case alert(AlertKind)
+    /// The `[!NOTE]` marker on an alert's first line.
+    case alertTitle(AlertKind)
     /// Markdown punctuation (`#`, `**`, backticks, `>` …) that the editor renders faintly.
     case syntaxMarker
 }

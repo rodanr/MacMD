@@ -74,9 +74,30 @@ private struct HTMLVisitor: MarkupWalker {
     }
 
     mutating func visitBlockQuote(_ blockQuote: BlockQuote) {
-        output += "<blockquote\(lineAttribute(blockQuote))>\n"
+        guard let kind = Alert.kind(of: blockQuote) else {
+            output += "<blockquote\(lineAttribute(blockQuote))>\n"
+            tightListDepth.append(false)
+            descendInto(blockQuote)
+            tightListDepth.removeLast()
+            output += "</blockquote>\n"
+            return
+        }
+        output += #"<blockquote class="alert alert-\#(kind.rawValue)"\#(lineAttribute(blockQuote))>"# + "\n"
+        output += #"<p class="alert-title">\#(kind.title)</p>"# + "\n"
         tightListDepth.append(false)
-        descendInto(blockQuote)
+        for (index, child) in blockQuote.children.enumerated() {
+            guard index == 0, let paragraph = child as? Paragraph else {
+                visit(child)
+                continue
+            }
+            // The first paragraph loses its marker line; whatever follows it is the alert's first paragraph.
+            let rest = Alert.inlinesAfterMarker(in: paragraph)
+            guard !rest.isEmpty else { continue }
+            let line = paragraph.range.map { #" data-line="\#($0.lowerBound.line + 1)""# } ?? ""
+            output += "<p\(line)>"
+            for inline in rest { visit(inline) }
+            output += "</p>\n"
+        }
         tightListDepth.removeLast()
         output += "</blockquote>\n"
     }

@@ -14,6 +14,8 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 - Front matter at the top of a file (the `---` block used by Jekyll, Hugo, Obsidian and Astro) shows as a code
   block in Edit mode and is left out of Read mode, exports and the outline, instead of turning into a rule and a
   stray heading.
+- GitHub alerts: quotes that start with `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]` or `[!CAUTION]` get a
+  colored bar and title in Edit and Read mode and in exports, in every theme.
 
 ### Fixed
 - Text that stopped being part of a code block or front matter because of an edit further up no longer keeps

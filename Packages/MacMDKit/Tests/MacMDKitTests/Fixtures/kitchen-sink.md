@@ -57,6 +57,9 @@ graph LR
   B -- no --> A
 ```
 
+> [!TIP]
+> Press ⌘E to switch between writing and reading.
+
 ---
 
 Made with care · 日本語もOK · emoji 🎉

@@ -1,4 +1,5 @@
 import AppKit
+import MacMDKit
 import SwiftUI
 
 /// SwiftUI wrapper around the TextKit 2 editor.
@@ -76,7 +77,8 @@ struct EditorView: NSViewRepresentable {
 
     private func configure(_ textView: MarkdownTextView, scrollView: NSScrollView, coordinator: Coordinator) {
         coordinator.palette = DecorationPalette(
-            codeBackground: theme.codeBackground, quoteBar: theme.quoteBar, rule: theme.rule)
+            codeBackground: theme.codeBackground, quoteBar: theme.quoteBar, rule: theme.rule,
+            alertBars: Dictionary(uniqueKeysWithValues: AlertKind.allCases.map { ($0, theme.alertColor($0)) }))
         coordinator.engine?.theme = theme
         textView.backgroundColor = theme.background
         scrollView.backgroundColor = theme.background

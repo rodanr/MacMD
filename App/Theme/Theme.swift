@@ -1,4 +1,5 @@
 import AppKit
+import MacMDKit
 
 /// A complete visual theme: typography for the editor plus the id of the matching reader CSS.
 ///
@@ -126,6 +127,18 @@ struct Theme: Equatable, Sendable {
     var quoteBar: NSColor { .controlAccentColor.withAlphaComponent(Self.quoteBarAlpha) }
     var rule: NSColor { text.withAlphaComponent(0.14) }
     var mathColor: NSColor { .dynamic(light: 0x7A4BC2, dark: 0xC3A6F2) }
+
+    /// GitHub alert colors (`> [!NOTE]` …), shared by every theme. GitHub's hues, nudged to reach 4.5:1 on every
+    /// theme's paper (docs/DESIGN.md; mirrored in reader.css).
+    func alertColor(_ kind: AlertKind) -> NSColor {
+        switch kind {
+        case .note: .dynamic(light: 0x0966D3, dark: 0x599FF9)
+        case .tip: .dynamic(light: 0x197A35, dark: 0x3FB950)
+        case .important: .dynamic(light: 0x7C4CD4, dark: 0xB389F9)
+        case .warning: .dynamic(light: 0x8F6000, dark: 0xD29922)
+        case .caution: .dynamic(light: 0xCD232E, dark: 0xF9746D)
+        }
+    }
 
     // MARK: Design tokens (docs/DESIGN.md; mirrored in reader.css)
 

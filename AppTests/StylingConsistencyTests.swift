@@ -40,7 +40,7 @@ import Testing
     private static let fragments = [
         "**", "*", "`", "```\n", "# ", "## ", "\n", "\n\n", "- ", "1. ", "> ", "$", "$$\n", "---\n", "x", "word ",
         "[link](u)", "| c |", "~~", "<b>", "\\", "😀", "Title\n===\n",
-        "---", "...\n", "---\nkey: $v$\n---\n",
+        "---", "...\n", "---\nkey: $v$\n---\n", "> [!NOTE]\n", "[!TIP]", "> [!WARNING]\n> careful\n",
     ]
 
     @Test(arguments: 0..<40)

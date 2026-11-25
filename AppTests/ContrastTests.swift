@@ -1,4 +1,5 @@
 import AppKit
+import MacMDKit
 import Testing
 
 @testable import MacMD
@@ -40,5 +41,9 @@ import Testing
         #expect(Self.contrast(theme.listMarker, on: theme.background, appearance: appearance) >= 3)
         // Syntax markers are decorative and redundant with styling, so they only need to stay visible.
         #expect(Self.contrast(theme.syntaxMarker, on: theme.background, appearance: appearance) >= 2)
+        for kind in AlertKind.allCases {
+            #expect(
+                Self.contrast(theme.alertColor(kind), on: theme.background, appearance: appearance) >= 4.5, "\(kind)")
+        }
     }
 }

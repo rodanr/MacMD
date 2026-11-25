@@ -1,4 +1,5 @@
 import AppKit
+import MacMDKit
 
 extension NSAttributedString.Key {
     /// Marks a paragraph that gets a custom background (code block, quote bar, rule).
@@ -10,11 +11,34 @@ enum BlockDecoration: String {
     case codeFirst, codeMiddle, codeLast, codeSingle
     case quote
     case rule
+    /// A GitHub alert: a quote bar in the alert's color.
+    case alertNote, alertTip, alertImportant, alertWarning, alertCaution
 
     var isCode: Bool {
         switch self {
         case .codeFirst, .codeMiddle, .codeLast, .codeSingle: true
-        case .quote, .rule: false
+        default: false
+        }
+    }
+
+    static func alert(_ kind: AlertKind) -> BlockDecoration {
+        switch kind {
+        case .note: .alertNote
+        case .tip: .alertTip
+        case .important: .alertImportant
+        case .warning: .alertWarning
+        case .caution: .alertCaution
+        }
+    }
+
+    var alertKind: AlertKind? {
+        switch self {
+        case .alertNote: .note
+        case .alertTip: .tip
+        case .alertImportant: .important
+        case .alertWarning: .warning
+        case .alertCaution: .caution
+        default: nil
         }
     }
 
@@ -60,14 +84,15 @@ final class DecoratedLayoutFragment: NSTextLayoutFragment {
         switch decoration {
         case .codeFirst, .codeMiddle, .codeLast, .codeSingle:
             drawCodeBackground(in: frame, context: context)
-        case .quote:
+        case .quote, .alertNote, .alertTip, .alertImportant, .alertWarning, .alertCaution:
             // The fragment frame includes the paragraph spacing, so consecutive quote lines tile exactly.
             // Square segments with edges snapped to whole points abut without overlapping, which would
             // otherwise show as a darker seam through the translucent bar.
             let top = layoutFragmentFrame.minY.rounded() - layoutFragmentFrame.minY
             let bottom = layoutFragmentFrame.maxY.rounded() - layoutFragmentFrame.minY
             let bar = CGRect(x: frame.minX + 1, y: frame.minY + top, width: Theme.quoteBarWidth, height: bottom - top)
-            context.setFillColor(palette.quoteBar.cgColor)
+            let color = decoration.alertKind.flatMap { palette.alertBars[$0] } ?? palette.quoteBar
+            context.setFillColor(color.cgColor)
             context.fill(bar)
         case .rule:
             let y = (frame.midY).rounded() + 0.5
@@ -101,4 +126,5 @@ struct DecorationPalette {
     var codeBackground: NSColor = .quaternarySystemFill
     var quoteBar: NSColor = .controlAccentColor
     var rule: NSColor = .separatorColor
+    var alertBars: [AlertKind: NSColor] = [:]
 }

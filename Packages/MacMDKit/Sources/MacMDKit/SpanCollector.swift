@@ -129,6 +129,15 @@ private struct SpanWalker: MarkupWalker {
     mutating func visitBlockQuote(_ blockQuote: BlockQuote) {
         guard let range = mapper.nsRange(blockQuote.range) else { return }
         add(range, .blockQuote)
+        if let kind = Alert.kind(of: blockQuote), let paragraph = blockQuote.child(at: 0),
+            let start = mapper.nsRange(paragraph.range)?.location
+        {
+            add(range, .alert(kind))
+            let line = text.lineRange(for: NSRange(location: start, length: 0))
+            let marker = text.substring(with: NSRange(location: start, length: NSMaxRange(line) - start))
+            let length = (marker.trimmingCharacters(in: .whitespacesAndNewlines) as NSString).length
+            add(NSRange(location: start, length: length), .alertTitle(kind))
+        }
         let text = self.text
         var markers: [StyleSpan] = []
         text.enumerateSubstrings(in: range, options: [.byLines, .substringNotRequired]) { _, lineRange, _, _ in
