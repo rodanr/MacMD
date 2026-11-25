@@ -48,7 +48,10 @@ enum Footnotes {
                 fence = open
                 continue
             }
-            guard let match = content.prefixMatch(of: /( {0,3})\[\^([^\]\[\s^]+)\]:[ \t]*/) else { continue }
+            // Cheap test first: regex matching on every line of a long document is slow.
+            guard content.drop(while: { $0 == " " }).hasPrefix("[^"),
+                let match = content.prefixMatch(of: /( {0,3})\[\^([^\]\[\s^]+)\]:[ \t]*/)
+            else { continue }
             let indent = match.output.1.utf16.count
             let labelEnd = (content[..<match.range.upperBound].trimmingCharacters(in: .whitespaces) as NSString).length
             var lines = [String(content[match.range.upperBound...])]

@@ -301,7 +301,7 @@ private struct HTMLVisitor: MarkupWalker {
 
     mutating func visitText(_ text: Text) {
         let string = text.string
-        guard !footnotes.labels.isEmpty, linkDepth == 0 else {
+        guard !footnotes.labels.isEmpty, linkDepth == 0, string.contains("[^") else {
             output += inline(string)
             return
         }

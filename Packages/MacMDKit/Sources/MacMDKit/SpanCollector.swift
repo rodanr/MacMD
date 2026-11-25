@@ -220,6 +220,7 @@ private struct SpanWalker: MarkupWalker {
     mutating func visitText(_ textNode: Text) {
         guard !footnoteLabels.isEmpty, linkDepth == 0, let range = mapper.nsRange(textNode.range) else { return }
         let source = text.substring(with: range)
+        guard source.contains("[^") else { return }
         for match in source.matches(of: Footnotes.reference)
         where footnoteLabels.contains(match.output.1.lowercased()) {
             let start = range.location + source.utf16.distance(from: source.startIndex, to: match.range.lowerBound)
