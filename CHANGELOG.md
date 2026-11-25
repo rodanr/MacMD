@@ -7,6 +7,9 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+### Added
+- Install and update MacMD with Homebrew: `brew install --cask rodanr/tap/macmd`. No Open Anyway step needed.
+
 ## [0.8.0] - 2026-11-25
 
 ### Added

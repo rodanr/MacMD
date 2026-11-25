@@ -74,6 +74,19 @@ rather than a web wrapper.
 
 Requires macOS 26 Tahoe or later on Apple silicon.
 
+### Homebrew
+
+```sh
+brew install --cask rodanr/tap/macmd
+```
+
+Update with `brew upgrade macmd`, remove with `brew uninstall --zap macmd`. There's no Open Anyway step: the
+[cask](https://github.com/rodanr/homebrew-tap) clears the download quarantine flag after installing, since
+MacMD isn't notarized yet. If you installed the DMG before, delete `/Applications/MacMD.app` first or add
+`--force`.
+
+### DMG
+
 1. Download `MacMD-<version>.dmg` from the [latest release](https://github.com/rodanr/MacMD/releases/latest).
    Only download MacMD from this page.
 2. Open the DMG and drag **MacMD** onto **Applications**.
