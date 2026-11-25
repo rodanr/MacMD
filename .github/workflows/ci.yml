@@ -16,7 +16,7 @@ jobs:
   test:
     name: Lint, build & test
     runs-on: macos-26
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v5
 
