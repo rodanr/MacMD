@@ -12,8 +12,16 @@ final class MarkdownStyler {
     /// Attributes of plain body text for the current theme.
     private(set) var baseAttributes: [NSAttributedString.Key: Any]
 
-    /// Signatures of blocks styled by the last pass (multiset), used to skip unchanged blocks.
-    private(set) var appliedSignatures: [Int: Int] = [:]
+    /// A block styled by the last pass: its signature and where it started.
+    private struct AppliedBlock: Hashable {
+        let signature: Int
+        let location: Int
+    }
+
+    /// Blocks styled by the last pass, used to skip unchanged blocks. Matching needs the position too: a block
+    /// whose text was styled as something else (say, a line that was inside front matter or a code fence until an
+    /// edit far above it) must be restyled even if an identical block exists elsewhere in the document.
+    private var appliedBlocks: Set<AppliedBlock> = []
 
     init(theme: Theme) {
         self.theme = theme
@@ -24,12 +32,13 @@ final class MarkdownStyler {
         [.font: theme.bodyFont, .foregroundColor: theme.text, .paragraphStyle: paragraphStyle(theme: theme)]
     }
 
-    /// Applies `result` to `storage`. Blocks are restyled when they intersect `dirty`,
-    /// when their signature is new, or always when `full` is true.
-    func apply(_ result: StyleResult, to storage: NSTextStorage, dirty: NSRange?, full: Bool) {
+    /// Applies `result` to `storage`. Blocks are restyled when they intersect `dirty`, when no block with the same
+    /// signature started at the same place last time, or always when `full` is true. `delta` is the change in
+    /// length since the last pass; `dirty` covers every edit since then, in current coordinates.
+    func apply(_ result: StyleResult, to storage: NSTextStorage, dirty: NSRange?, delta: Int = 0, full: Bool) {
         let length = storage.length
-        var previous = full ? [:] : appliedSignatures
-        var current: [Int: Int] = [:]
+        let previous = full ? [] : shifted(appliedBlocks, dirty: dirty, delta: delta)
+        var current: Set<AppliedBlock> = []
         // Edits change the layout of the lines touching them, including the line right after an inserted line
         // break and the line before a deleted one, so those count as changed too.
         let dirtyParagraphs = dirty.map { range -> NSRange in
@@ -61,11 +70,9 @@ final class MarkdownStyler {
             // before this block, as in an indented list item, rewriting it changed this block's line too.
             let sharesRewrittenLine =
                 touchedBefore && range.location > 0 && !isLineBreak(text.character(at: range.location - 1))
-            current[block.signature, default: 0] += 1
-            if !sharesRewrittenLine, let count = previous[block.signature], count > 0,
-                !intersects(range, dirtyParagraphs)
-            {
-                previous[block.signature] = count - 1
+            let applied = AppliedBlock(signature: block.signature, location: range.location)
+            current.insert(applied)
+            if !sharesRewrittenLine, previous.contains(applied), !intersects(range, dirtyParagraphs) {
                 previousRestyled = false
             } else {
                 style(block, range: range, in: storage)
@@ -78,7 +85,20 @@ final class MarkdownStyler {
             if full || previousRestyled || intersects(tail, dirtyParagraphs) { resetGap(tail, in: storage) }
         }
         storage.endEditing()
-        appliedSignatures = current
+        appliedBlocks = current
+    }
+
+    /// Where last pass's blocks are now: text before the edits kept its place, text after them moved by `delta`,
+    /// and blocks that started inside the edited range are gone.
+    private func shifted(_ blocks: Set<AppliedBlock>, dirty: NSRange?, delta: Int) -> Set<AppliedBlock> {
+        guard let dirty else { return blocks }
+        let oldEnd = NSMaxRange(dirty) - delta
+        return Set(
+            blocks.compactMap { block in
+                if block.location < dirty.location { return block }
+                guard block.location >= oldEnd else { return nil }
+                return AppliedBlock(signature: block.signature, location: block.location + delta)
+            })
     }
 
     /// Styles a large document with base attributes only.
@@ -86,7 +106,7 @@ final class MarkdownStyler {
         storage.beginEditing()
         storage.setAttributes(baseAttributes, range: NSRange(location: 0, length: storage.length))
         storage.endEditing()
-        appliedSignatures = [:]
+        appliedBlocks = []
     }
 
     // MARK: Block styling

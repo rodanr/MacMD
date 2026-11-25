@@ -16,6 +16,8 @@ final class StyleEngine {
     private weak var textView: NSTextView?
     private var generation = 0
     private var dirty: NSRange?
+    /// Change in length since the last pass, so the styler can tell where unchanged blocks moved.
+    private var pendingDelta = 0
     private var needsFullPass = true
     /// Whether the document is currently shown unstyled because it is too large.
     private var isPlain = false
@@ -91,6 +93,7 @@ final class StyleEngine {
         } else {
             dirty = edited
         }
+        pendingDelta += delta
         schedule(immediately: storage.length < Self.debounceThreshold)
     }
 
@@ -112,6 +115,7 @@ final class StyleEngine {
             isPlain = true
             needsFullPass = false
             dirty = nil
+            pendingDelta = 0
             return
         }
         if isPlain {
@@ -123,10 +127,11 @@ final class StyleEngine {
         let text = storage.string
         let result = await Task.detached(priority: .userInitiated) { SpanCollector.collect(text) }.value
         guard expected == generation, !Task.isCancelled, textView?.hasMarkedText() != true else { return }
-        styler.apply(result, to: storage, dirty: dirty, full: full)
+        styler.apply(result, to: storage, dirty: dirty, delta: pendingDelta, full: full)
         refreshTypingAttributes()
         (textView as? MarkdownTextView)?.styleDidChange()
         needsFullPass = false
         dirty = nil
+        pendingDelta = 0
     }
 }
