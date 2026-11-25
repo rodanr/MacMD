@@ -7,6 +7,8 @@ MacMD is in early development (0.x): minor versions can change behavior and sett
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-25
+
 ### Added
 - Install and update MacMD with Homebrew: `brew install --cask rodanr/tap/macmd`. No Open Anyway step needed.
 - **Check for Updates** knows when MacMD was installed with Homebrew and offers to copy `brew upgrade macmd`
@@ -173,7 +175,8 @@ First public release.
 - About window with license, terms and privacy, and acknowledgements; manual Check for Updates… (the only time
   MacMD contacts GitHub). No analytics or telemetry; see [TERMS.md](TERMS.md).
 
-[Unreleased]: https://github.com/rodanr/MacMD/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/rodanr/MacMD/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/rodanr/MacMD/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/rodanr/MacMD/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/rodanr/MacMD/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/rodanr/MacMD/compare/v0.5.2...v0.6.0
