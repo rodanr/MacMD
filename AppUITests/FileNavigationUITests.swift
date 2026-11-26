@@ -190,24 +190,16 @@ final class FileNavigationUITests: XCTestCase {
     @MainActor
     func testOpenPanelCanCreateANewFile() throws {
         let folder = try makeFolder(["a.md": "# A"])
-        let app = launch([])
+        // The app starts the Open panel in this folder, so the test never drives the panel's Go to Folder sheet.
+        let app = launch(["-openPanelFolder", folder.path])
         XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 10))
         app.typeKey("o", modifierFlags: .command)
         // The system Open panel's own accessibility identifier.
         let panel = app.windows["open-panel"]
         XCTAssertTrue(panel.waitForExistence(timeout: 5))
-        // Go to Folder keeps the last path it was given, and typing a long temporary path key by key is slow
-        // (CI recordings show ~8 s), so replace the text and paste the path in one go. List view keeps the
-        // file in sight; column view can leave a deep folder's files off to the side.
-        panel.typeKey("2", modifierFlags: .command)
-        panel.typeKey("g", modifierFlags: [.command, .shift])
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(folder.path, forType: .string)
-        app.typeKey("a", modifierFlags: .command)
-        app.typeKey("v", modifierFlags: .command)
-        app.typeKey(.return, modifierFlags: [])
-        XCTAssertTrue(waitUntil(timeout: 15) { panel.textFields["a.md"].exists }, "the panel shows the folder")
-        panel.buttons["New File Here…"].click()
+        let newFile = panel.buttons["New File Here…"]
+        XCTAssertTrue(newFile.waitForExistence(timeout: 5))
+        newFile.click()
         answerNamePrompt(app, with: "from-open")
 
         XCTAssertTrue(app.windows["from-open.md"].waitForExistence(timeout: 10), "the new file opens")

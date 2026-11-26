@@ -37,7 +37,8 @@ test-app: setup ## Run the app's unit tests (styling engine, inside the app)
 	set -o pipefail; $(XCB) test -only-testing:MacMDTests -quiet 2>&1 | $(QUIET_XCB)
 
 test-ui: setup ## Run the app's UI tests (a failing test is retried once: UI timing can be flaky)
-	set -o pipefail; $(XCB) test -only-testing:MacMDUITests -retry-tests-on-failure -test-iterations 2 -quiet 2>&1 \
+	set -o pipefail; $(XCB) test -only-testing:MacMDUITests -retry-tests-on-failure -test-iterations 2 \
+		-test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 180 -quiet 2>&1 \
 		| $(QUIET_XCB)
 
 lint: ## Check formatting

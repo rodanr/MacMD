@@ -21,6 +21,11 @@ final class MarkdownDocumentController: NSDocumentController {
         newFileButton = button
         openPanel.accessoryView = button.view
         openPanel.isAccessoryViewDisclosed = true
+        // Test hook (`-openPanelFolder <path>`): UI tests start the panel in a known folder instead of driving
+        // its Go to Folder sheet, which is slow and timing-sensitive.
+        if let path = UserDefaults.standard.string(forKey: "openPanelFolder") {
+            openPanel.directoryURL = URL(filePath: path, directoryHint: .isDirectory)
+        }
         super.beginOpenPanel(openPanel, forTypes: inTypes) { [weak self] result in
             MainActor.assumeIsolated { self?.newFileButton = nil }
             completionHandler(result)
